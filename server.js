@@ -20,7 +20,7 @@ const sessions = new Map();
 const LAOZHANG_API_KEY = process.env.LAOZHANG_API_KEY || 'sk-cPzX75qEIsFhSLiVEeAc075bFbE54b3b8cD716A56aB74646';
 const LAOZHANG_API_URL = 'https://api.laozhang.ai/v1/chat/completions';
 
-async function askKimi(messages, model = 'kimi-k2-5') {
+async function askOpus(messages, model = 'claude-opus-4-6-thinking') {
     try {
         const response = await axios.post(LAOZHANG_API_URL, {
             model: model,
@@ -35,7 +35,7 @@ async function askKimi(messages, model = 'kimi-k2-5') {
         });
         return response.data.choices[0].message.content;
     } catch (error) {
-        console.error('Kimi API error:', error.response?.data || error.message);
+        console.error('Opus API error:', error.response?.data || error.message);
         throw error;
     }
 }
@@ -224,8 +224,8 @@ app.post('/api/clawbot/message', authMiddleware, async (req, res) => {
         } else if (lowerMsg.includes('status') || lowerMsg.includes('check')) {
             response = await handleStatusCheck(req.user);
         } else {
-            // Regular chat with Kimi
-            response = await askKimi(session.messages);
+            // Regular chat with Opus
+            response = await askOpus(session.messages);
         }
         
         session.messages.push({ role: 'assistant', content: response });
@@ -363,5 +363,5 @@ app.get('/api/auth/github/callback', async (req, res) => {
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 WordPress Claw API running on port ${PORT}`);
-    console.log(`🤖 Kimi AI integration: ${LAOZHANG_API_KEY ? 'Enabled' : 'Disabled'}`);
+    console.log(`🤖 Opus AI integration: ${LAOZHANG_API_KEY ? 'Enabled' : 'Disabled'}`);
 });
