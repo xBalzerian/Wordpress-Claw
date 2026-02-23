@@ -40,23 +40,59 @@ async function askOpus(messages, model = 'claude-opus-4-6-thinking') {
     }
 }
 
-// ========== GOOGLE OAUTH SETUP ==========
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://wordpress-claw.onrender.com/api/auth/google/callback';
-
-const oauth2Client = new google.auth.OAuth2(
-    GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET,
-    GOOGLE_REDIRECT_URI
-);
-
-const SCOPES = [
-    'https://www.googleapis.com/auth/spreadsheets.readonly',
-    'https://www.googleapis.com/auth/spreadsheets'
-];
+// ========== GOOGLE SERVICE ACCOUNT SETUP ==========
+// New method: Service Account (no OAuth needed)
+function getServiceAccountAuth() {
+    if (!process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+        return null;
+    }
+    try {
+        const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+        return new google.auth.GoogleAuth({
+            credentials,
+            scopes: [
+                'https://www.googleapis.com/auth/spreadsheets.readonly',
+                'https://www.googleapis.com/auth/spreadsheets'
+            ]
+        });
+    } catch (e) {
+        console.error('Failed to parse service account key:', e);
+        return null;
+    }
+}
 
 // ========== GOOGLE SHEETS INTEGRATION ==========
+// Method 1: Service Account (preferred - no OAuth needed)
+async function readSheetWithServiceAccount(spreadsheetId, range = 'A1:Z1000') {
+    const auth = getServiceAccountAuth();
+    if (!auth) {
+        throw new Error('Service account not configured');
+    }
+    
+    const sheets = google.sheets({ version: 'v4', auth });
+    const response = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range
+    });
+    return response.data.values;
+}
+
+async function writeSheetWithServiceAccount(spreadsheetId, range, values) {
+    const auth = getServiceAccountAuth();
+    if (!auth) {
+        throw new Error('Service account not configured');
+    }
+    
+    const sheets = google.sheets({ version: 'v4', auth });
+    await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range,
+        valueInputOption: 'RAW',
+        resource: { values }
+    });
+}
+
+// Method 2: OAuth (legacy - for backward compatibility)
 async function getGoogleSheetsClient(accessToken) {
     const auth = new google.auth.OAuth2();
     auth.setCredentials({ access_token: accessToken });
@@ -70,16 +106,6 @@ async function readSheet(accessToken, spreadsheetId, range = 'A1:Z1000') {
         range
     });
     return response.data.values;
-}
-
-async function writeSheet(accessToken, spreadsheetId, range, values) {
-    const sheets = await getGoogleSheetsClient(accessToken);
-    await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range,
-        valueInputOption: 'RAW',
-        resource: { values }
-    });
 }
 
 // ========== GITHUB INTEGRATION ==========
@@ -264,59 +290,63 @@ async function handleReadSheet(user) {
         return "❌ Google Sheets is not connected. Please connect your spreadsheet first in the Connections tab.";
     }
     
-    if (!user.connections?.sheets?.accessToken) {
-        return `⚠️ Google Sheets is connected but I don't have permission to read it yet.
+    const sheetId = user.connections.sheets.sheetId;
+    
+    // Try Service Account first (new method)
+    try {
+        const data = await readSheetWithServiceAccount(sheetId, 'A1:Z1000');
+        return formatSheetData(data);
+    } catch (serviceAccountError) {
+        console.log('Service account failed:', serviceAccountError.message);
+        
+        // Fallback to OAuth if available (legacy method)
+        if (user.connections?.sheets?.accessToken) {
+            try {
+                const data = await readSheet(user.connections.sheets.accessToken, sheetId, 'A1:Z1000');
+                return formatSheetData(data);
+            } catch (oauthError) {
+                console.log('OAuth fallback failed:', oauthError.message);
+            }
+        }
+        
+        // If both fail, guide user to share sheet
+        return `⚠️ I can't access your spreadsheet yet.
 
-To grant access:
-1. Go to the Connections tab
-2. Click "Authenticate with Google" 
-3. Allow access to your spreadsheets
+**To fix this, you need to share your sheet with ClawBot:**
 
-Once authenticated, I'll be able to:
-• Read all your topics
-• Check article status
-• Count images
-• Update after publishing`;
+1. Open your Google Sheet
+2. Click **Share** (top right)
+3. Add this email: **${process.env.SERVICE_ACCOUNT_EMAIL || 'wordpress-claw@your-project.iam.gserviceaccount.com'}**
+4. Give **Editor** permission
+5. Click **Send**
+
+Once shared, I can read your topics and images!`;
+    }
+}
+
+function formatSheetData(data) {
+    if (!data || data.length === 0) {
+        return "Your spreadsheet is empty. Please add some topics!";
     }
     
-    try {
-        const sheetId = user.connections.sheets.sheetId;
-        
-        // Check if token needs refresh
-        let accessToken = user.connections.sheets.accessToken;
-        const expiryDate = user.connections.sheets.expiryDate;
-        
-        if (expiryDate && Date.now() > expiryDate) {
-            // Token expired - in production, use refresh token
-            return `⚠️ Your Google access has expired. Please re-authenticate in the Connections tab.
-
-Your refresh token is stored, but automatic refresh needs to be implemented.`;
-        }
-        
-        const data = await readSheet(accessToken, sheetId, 'A1:Z1000');
-        
-        if (!data || data.length === 0) {
-            return "Your spreadsheet is empty or I couldn't read it. Please check the sheet ID and make sure it has data.";
-        }
-        
-        // Analyze the data
-        const headers = data[0];
-        const rows = data.slice(1);
-        
-        // Find image column (common names)
-        const imageColIndex = headers.findIndex(h => 
-            h.toLowerCase().includes('image') || 
-            h.toLowerCase().includes('img') ||
-            h.toLowerCase().includes('photo')
-        );
-        
-        const imageCount = imageColIndex >= 0 
-            ? rows.filter(r => r[imageColIndex] && r[imageColIndex].trim() !== '').length 
-            : 0;
-        
-        const totalRows = rows.length;
-        
-        return `📊 **Spreadsheet Analysis**
+    // Analyze the data
+    const headers = data[0];
+    const rows = data.slice(1);
+    
+    // Find image column (common names)
+    const imageColIndex = headers.findIndex(h => 
+        h.toLowerCase().includes('image') || 
+        h.toLowerCase().includes('img') ||
+        h.toLowerCase().includes('photo')
+    );
+    
+    const imageCount = imageColIndex >= 0 
+        ? rows.filter(r => r[imageColIndex] && r[imageColIndex].trim() !== '').length 
+        : 0;
+    
+    const totalRows = rows.length;
+    
+    return `📊 **Spreadsheet Analysis**
 
 **Headers:** ${headers.join(', ')}
 **Total Topics:** ${totalRows}
@@ -330,14 +360,6 @@ Would you like me to:
 • Read a specific topic in detail?
 • Check which articles are ready to publish?
 • Generate content for a topic?`;
-        
-    } catch (error) {
-        console.error('Sheet read error:', error);
-        if (error.message.includes('invalid_grant') || error.message.includes('token')) {
-            return `⚠️ Your Google access has expired. Please re-authenticate in the Connections tab.`;
-        }
-        return `❌ Error reading spreadsheet: ${error.message}`;
-    }
 }
 
 async function handleCreateArticle(user, message) {
@@ -423,9 +445,30 @@ app.post('/api/user/connections', authMiddleware, (req, res) => {
     res.json({ success: true, connections: req.user.connections });
 });
 
-// ========== GOOGLE OAUTH ROUTES ==========
+// ========== GOOGLE OAUTH ROUTES (Legacy - optional) ==========
 
-// Initiate Google OAuth
+// Get Service Account email for sharing
+app.get('/api/sheets/service-account', (req, res) => {
+    try {
+        if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+            const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+            res.json({ 
+                email: credentials.client_email,
+                method: 'service_account'
+            });
+        } else {
+            res.json({ 
+                email: null,
+                method: 'oauth',
+                message: 'Service account not configured. Use OAuth instead.'
+            });
+        }
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to get service account info' });
+    }
+});
+
+// Initiate Google OAuth (legacy method)
 app.get('/api/auth/google', (req, res) => {
     const authUrl = oauth2Client.generateAuthUrl({
         access_type: 'offline',
