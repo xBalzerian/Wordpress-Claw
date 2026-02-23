@@ -40,6 +40,22 @@ async function askOpus(messages, model = 'claude-opus-4-6-thinking') {
     }
 }
 
+// ========== GOOGLE OAUTH SETUP ==========
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://wordpress-claw.onrender.com/api/auth/google/callback';
+
+const oauth2Client = new google.auth.OAuth2(
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI
+);
+
+const SCOPES = [
+    'https://www.googleapis.com/auth/spreadsheets.readonly',
+    'https://www.googleapis.com/auth/spreadsheets'
+];
+
 // ========== GOOGLE SHEETS INTEGRATION ==========
 async function getGoogleSheetsClient(accessToken) {
     const auth = new google.auth.OAuth2();
@@ -245,21 +261,82 @@ app.post('/api/clawbot/message', authMiddleware, async (req, res) => {
 // Action handlers
 async function handleReadSheet(user) {
     if (!user.connections?.sheets?.connected) {
-        return "Google Sheets is not connected. Please connect your spreadsheet first in the Connections tab.";
+        return "❌ Google Sheets is not connected. Please connect your spreadsheet first in the Connections tab.";
+    }
+    
+    if (!user.connections?.sheets?.accessToken) {
+        return `⚠️ Google Sheets is connected but I don't have permission to read it yet.
+
+To grant access:
+1. Go to the Connections tab
+2. Click "Authenticate with Google" 
+3. Allow access to your spreadsheets
+
+Once authenticated, I'll be able to:
+• Read all your topics
+• Check article status
+• Count images
+• Update after publishing`;
     }
     
     try {
-        // This would actually read from the sheet
-        return `I can see your Google Sheets is connected (${user.connections.sheets.sheetId}). 
+        const sheetId = user.connections.sheets.sheetId;
+        
+        // Check if token needs refresh
+        let accessToken = user.connections.sheets.accessToken;
+        const expiryDate = user.connections.sheets.expiryDate;
+        
+        if (expiryDate && Date.now() > expiryDate) {
+            // Token expired - in production, use refresh token
+            return `⚠️ Your Google access has expired. Please re-authenticate in the Connections tab.
 
-To read actual data, I need you to provide Google OAuth access. In the meantime, here's what I can do once connected:
-- Read all topics from your sheet
-- Check which articles are pending
-- Update status after publishing
+Your refresh token is stored, but automatic refresh needs to be implemented.`;
+        }
+        
+        const data = await readSheet(accessToken, sheetId, 'A1:Z1000');
+        
+        if (!data || data.length === 0) {
+            return "Your spreadsheet is empty or I couldn't read it. Please check the sheet ID and make sure it has data.";
+        }
+        
+        // Analyze the data
+        const headers = data[0];
+        const rows = data.slice(1);
+        
+        // Find image column (common names)
+        const imageColIndex = headers.findIndex(h => 
+            h.toLowerCase().includes('image') || 
+            h.toLowerCase().includes('img') ||
+            h.toLowerCase().includes('photo')
+        );
+        
+        const imageCount = imageColIndex >= 0 
+            ? rows.filter(r => r[imageColIndex] && r[imageColIndex].trim() !== '').length 
+            : 0;
+        
+        const totalRows = rows.length;
+        
+        return `📊 **Spreadsheet Analysis**
 
-Would you like me to help you set up the Google OAuth flow?`;
+**Headers:** ${headers.join(', ')}
+**Total Topics:** ${totalRows}
+**Images Found:** ${imageCount}
+
+**First few topics:**
+${rows.slice(0, 5).map((r, i) => `${i+1}. ${r[0] || 'Untitled'}`).join('\n')}
+${rows.length > 5 ? `\n... and ${rows.length - 5} more` : ''}
+
+Would you like me to:
+• Read a specific topic in detail?
+• Check which articles are ready to publish?
+• Generate content for a topic?`;
+        
     } catch (error) {
-        return `Error reading sheet: ${error.message}`;
+        console.error('Sheet read error:', error);
+        if (error.message.includes('invalid_grant') || error.message.includes('token')) {
+            return `⚠️ Your Google access has expired. Please re-authenticate in the Connections tab.`;
+        }
+        return `❌ Error reading spreadsheet: ${error.message}`;
     }
 }
 
@@ -346,11 +423,67 @@ app.post('/api/user/connections', authMiddleware, (req, res) => {
     res.json({ success: true, connections: req.user.connections });
 });
 
-// Google Sheets OAuth callback
+// ========== GOOGLE OAUTH ROUTES ==========
+
+// Initiate Google OAuth
+app.get('/api/auth/google', (req, res) => {
+    const authUrl = oauth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: SCOPES,
+        prompt: 'consent'
+    });
+    res.redirect(authUrl);
+});
+
+// Google OAuth callback
 app.get('/api/auth/google/callback', async (req, res) => {
-    const { code, state } = req.query;
-    // Handle OAuth callback
-    res.redirect('/dashboard/connections.html?google=connected');
+    const { code } = req.query;
+    
+    if (!code) {
+        return res.status(400).json({ error: 'No authorization code provided' });
+    }
+    
+    try {
+        const { tokens } = await oauth2Client.getToken(code);
+        
+        // Store tokens with user (in production, use a database)
+        // For now, we'll redirect to frontend with the tokens
+        const tokenData = {
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token, // Important for long-term access
+            expiry_date: tokens.expiry_date
+        };
+        
+        const tokenParam = encodeURIComponent(JSON.stringify(tokenData));
+        res.redirect(`https://xbalzerian.github.io/Wordpress-Claw/frontend/dashboard/connections.html?google_auth=success&tokens=${tokenParam}`);
+    } catch (error) {
+        console.error('Google OAuth error:', error);
+        res.redirect(`https://xbalzerian.github.io/Wordpress-Claw/frontend/dashboard/connections.html?google_auth=error&message=${encodeURIComponent(error.message)}`);
+    }
+});
+
+// Store Google token after OAuth
+app.post('/api/auth/google/token', authMiddleware, (req, res) => {
+    const { accessToken, refreshToken, expiryDate } = req.body;
+    
+    if (!req.user.connections) {
+        req.user.connections = {};
+    }
+    if (!req.user.connections.sheets) {
+        req.user.connections.sheets = {};
+    }
+    
+    req.user.connections.sheets.accessToken = accessToken;
+    req.user.connections.sheets.refreshToken = refreshToken;
+    req.user.connections.sheets.expiryDate = expiryDate;
+    req.user.connections.sheets.connected = true;
+    req.user.connections.sheets.authenticated = true;
+    
+    res.json({ 
+        success: true, 
+        message: 'Google authentication stored for user',
+        connections: req.user.connections
+    });
 });
 
 // GitHub OAuth callback
@@ -358,6 +491,15 @@ app.get('/api/auth/github/callback', async (req, res) => {
     const { code, state } = req.query;
     // Handle OAuth callback
     res.redirect('/dashboard/connections.html?github=connected');
+});
+
+// Health check
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'healthy', 
+        version: '1.0.0',
+        timestamp: new Date().toISOString()
+    });
 });
 
 // Start server
