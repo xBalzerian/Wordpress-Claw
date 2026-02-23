@@ -349,7 +349,7 @@ app.post('/api/clawbot/message', authMiddleware, async (req, res) => {
         const lowerMsg = message.toLowerCase();
         let response;
         
-        if (lowerMsg.includes('read sheet') || lowerMsg.includes('get topics')) {
+        if (lowerMsg.includes('read') && (lowerMsg.includes('sheet') || lowerMsg.includes('spreadsheet'))) {
             response = await handleReadSheet(req.user);
         } else if (lowerMsg.includes('create article') || lowerMsg.includes('generate content')) {
             response = await handleCreateArticle(req.user, message);
