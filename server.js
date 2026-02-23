@@ -213,6 +213,98 @@ app.get('/', (req, res) => {
     res.json({ status: 'WordPress Claw API is running', version: '1.0.0' });
 });
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'healthy', version: '1.0.0', timestamp: new Date().toISOString() });
+});
+
+// ========== AUTH ROUTES ==========
+
+// Register
+app.post('/api/auth/register', async (req, res) => {
+    const { email, password, companyName } = req.body;
+    
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password required' });
+    }
+    
+    // Check if user exists
+    for (const user of users.values()) {
+        if (user.email === email) {
+            return res.status(400).json({ error: 'User already exists' });
+        }
+    }
+    
+    // Create user
+    const token = 'token_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const user = {
+        id: Date.now().toString(),
+        email,
+        password, // In production, hash this!
+        companyName: companyName || '',
+        tier: 'pro', // Default to pro for now
+        credits_included: 999,
+        credits_used: 0,
+        subscription_status: 'active',
+        businessProfile: {},
+        connections: {},
+        createdAt: new Date()
+    };
+    
+    users.set(token, user);
+    
+    res.json({
+        token,
+        user: {
+            id: user.id,
+            email: user.email,
+            companyName: user.companyName,
+            tier: user.tier,
+            credits_included: user.credits_included,
+            credits_used: user.credits_used,
+            subscription_status: user.subscription_status
+        }
+    });
+});
+
+// Login
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password required' });
+    }
+    
+    // Find user
+    let foundToken = null;
+    let foundUser = null;
+    
+    for (const [token, user] of users.entries()) {
+        if (user.email === email && user.password === password) {
+            foundToken = token;
+            foundUser = user;
+            break;
+        }
+    }
+    
+    if (!foundUser) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    res.json({
+        token: foundToken,
+        user: {
+            id: foundUser.id,
+            email: foundUser.email,
+            companyName: foundUser.companyName,
+            tier: foundUser.tier,
+            credits_included: foundUser.credits_included,
+            credits_used: foundUser.credits_used,
+            subscription_status: foundUser.subscription_status
+        }
+    });
+});
+
 // ClawBot - Spawn session
 app.post('/api/clawbot/spawn', authMiddleware, async (req, res) => {
     const sessionKey = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
