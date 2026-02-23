@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClawBot - WordPress Claw</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E53935;
+            --primary-dark: #C62828;
+            --text: #1a1a1a;
+            --text-secondary: #666;
+            --bg: #f8f9fa;
+            --bg-card: #ffffff;
+            --border: #e5e5e5;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--bg);
+        }
+
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-logo img {
+            height: 40px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: rgba(229, 57, 53, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .user-menu:hover {
+            background: var(--bg);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-tier {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: capitalize;
+        }
+
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Chat Container */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-card);
+        }
+
+        .chat-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--bg-card);
+        }
+
+        .chat-header-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .chat-header-info h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .chat-header-info p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .chat-header-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-btn:hover {
+            background: var(--bg);
+        }
+
+        /* Messages */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: #fafafa;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .message.assistant .message-avatar {
+            background: var(--primary);
+        }
+
+        .message.user .message-avatar {
+            background: var(--text-secondary);
+            color: white;
+        }
+
+        .message-content {
+            background: white;
+            padding: 14px 18px;
+            border-radius: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .message.assistant .message-content {
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .message-content {
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .message.user .message-time {
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Message Actions */
+        .message-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .message-action-btn {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .message-action-btn:hover {
+            background: var(--bg);
+            border-color: var(--primary);
+        }
+
+        .message-action-btn.primary {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .message-action-btn.primary:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Suggestions */
+        .suggestions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .suggestion-chip {
+            padding: 8px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-chip:hover {
+            background: var(--border);
+        }
+
+        /* Input Area */
+        .chat-input-area {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 12px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: none;
+            min-height: 52px;
+            max-height: 150px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .send-btn {
+            width: 52px;
+            height: 52px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            padding: 14px 18px;
+            background: white;
+            border-radius: 16px;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            width: fit-content;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        /* Quick Actions Sidebar */
+        .quick-sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border);
+            padding: 24px;
+            display: none;
+        }
+
+        .quick-sidebar h3 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .quick-action-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+
+        .quick-action-item:hover {
+            background: var(--bg);
+        }
+
+        .quick-action-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(229, 57, 53, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .quick-action-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        @media (min-width: 1200px) {
+            .quick-sidebar { display: block; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .message { max-width: 90%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <img src="../assets/logo.png" alt="WordPress Claw">
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="index.html" class="nav-item">
+                        <span class="nav-icon">📊</span>
+                        Dashboard
+                    </a>
+                    <a href="articles.html" class="nav-item">
+                        <span class="nav-icon">📝</span>
+                        Articles
+                    </a>
+                    <a href="clawbot.html" class="nav-item active">
+                        <span class="nav-icon">🤖</span>
+                        ClawBot
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a href="connections.html" class="nav-item">
+                        <span class="nav-icon">🔗</span>
+                        Connections
+                    </a>
+                    <a href="billing.html" class="nav-item">
+                        <span class="nav-icon">💳</span>
+                        Billing
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-menu" onclick="logout()">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">User</div>
+                        <div class="user-tier" id="userTier">Free</div>
+                    </div>
+                    <span>🚪</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="chat-header-avatar">🦞</div>
+                    <div class="chat-header-info">
+                        <h1>ClawBot</h1>
+                        <p>AI Content Assistant • Always here to help</p>
+                    </div>
+                    <div class="chat-header-actions">
+                        <button class="header-btn" onclick="clearChat()">Clear Chat</button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Welcome message -->
+                    <div class="message assistant">
+                        <div class="message-avatar">🦞</div>
+                        <div>
+                            <div class="message-content">
+                                Hey there! I'm ClawBot, your AI content assistant. I can help you:
+                                <br><br>
+                                • Generate SEO-optimized articles<br>
+                                • Publish directly to WordPress<br>
+                                • Manage your content strategy<br>
+                                • Answer questions about your account
+                                <br><br>
+                                What would you like to work on today?
+                            </div>
+                            <div class="suggestions">
+                                <span class="suggestion-chip" onclick="sendQuick('Generate an article about...')">Generate article</span>
+                                <span class="suggestion-chip" onclick="sendQuick('Check my credits')">Check credits</span>
+                                <span class="suggestion-chip" onclick="sendQuick('Help me get started')">Get started</span>
+                            </div>
+                            <div class="message-time">Just now</div>
+                        </div>
+                    </div>
+
+                    <div class="typing-indicator" id="typingIndicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="chat-input-container">
+                        <textarea class="chat-input" id="chatInput" placeholder="Type your message..." rows="1"></textarea>
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="quick-sidebar">
+            <h3>Quick Actions</h3>
+            
+            <div class="quick-action-item" onclick="sendQuick('Generate an article about digital marketing')">
+                <div class="quick-action-icon">✍️</div>
+                <span class="quick-action-text">Generate Article</span>
+            </div>
+            
+            <div class="quick-action-item" onclick="sendQuick('Publish my latest article')">
+                <div class="quick-action-icon">🚀</div>
+                <span class="quick-action-text">Publish to WordPress</span>
+            </div>
+            
+            <div class="quick-action-item" onclick="sendQuick('How many credits do I have?')">
+                <div class="quick-action-icon">💳</div>
+                <span class="quick-action-text">Check Credits</span>
+            </div>
+            
+            <div class="quick-action-item" onclick="sendQuick('Show my recent articles')">
+                <div class="quick-action-icon">📄</div>
+                <span class="quick-action-text">View Articles</span>
+            </div>
+            
+            <div class="quick-action-item" onclick="sendQuick('Help me connect WordPress')">
+                <div class="quick-action-icon">🔗</div>
+                <span class="quick-action-text">Setup Connection</span>
+            </div>
+            
+            <div class="quick-action-item" onclick="sendQuick('What can you do?')">
+                <div class="quick-action-icon">❓</div>
+                <span class="quick-action-text">Get Help</span>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        const API_URL = '';
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'User';
+        document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
+        document.getElementById('userAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
+
+        let clawbotSessionKey = null;
+        let isTyping = false;
+
+        // Auto-resize textarea
+        const chatInput = document.getElementById('chatInput');
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Initialize session
+        async function initSession() {
+            try {
+                const response = await fetch(`${API_URL}/api/clawbot/session`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    clawbotSessionKey = data.data.sessionKey;
+                    // Load previous messages if any
+                    if (data.data.messages.length > 1) {
+                        loadMessages(data.data.messages);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to init session:', err);
+            }
+        }
+
+        function loadMessages(messages) {
+            const container = document.getElementById('chatMessages');
+            // Clear except typing indicator
+            const typing = document.getElementById('typingIndicator');
+            container.innerHTML = '';
+            container.appendChild(typing);
+
+            messages.forEach(msg => {
+                if (msg.role === 'system') return;
+                addMessage(msg.content, msg.role === 'user', false);
+            });
+        }
+
+        function addMessage(content, isUser = false, showTime = true) {
+            const container = document.getElementById('chatMessages');
+            const typing = document.getElementById('typingIndicator');
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+            
+            const time = showTime ? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${isUser ? (user.name || 'U').charAt(0).toUpperCase() : '🦞'}</div>
+                <div>
+                    <div class="message-content">${escapeHtml(content)}</div>
+                    ${showTime ? `<div class="message-time">${time}</div>` : ''}
+                </div>
+            `;
+            
+            container.insertBefore(messageDiv, typing);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showTyping() {
+            document.getElementById('typingIndicator').classList.add('active');
+            const container = document.getElementById('chatMessages');
+            container.scrollTop = container.scrollHeight;
+            isTyping = true;
+        }
+
+        function hideTyping() {
+            document.getElementById('typingIndicator').classList.remove('active');
+            isTyping = false;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message || isTyping) return;
+
+            // Add user message
+            addMessage(message, true);
+            input.value = '';
+            input.style.height = 'auto';
+
+            // Show typing
+            showTyping();
+
+            try {
+                const response = await fetch(`${API_URL}/api/clawbot/message`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message, sessionKey: clawbotSessionKey })
+                });
+
+                const data = await response.json();
+                hideTyping();
+
+                if (data.success) {
+                    clawbotSessionKey = data.data.sessionKey;
+                    addMessage(data.data.message, false);
+                    
+                    // Add action buttons if any
+                    if (data.data.actions && data.data.actions.length > 0) {
+                        addActionButtons(data.data.actions);
+                    }
+                    
+                    // Add suggestions if any
+                    if (data.data.suggestions && data.data.suggestions.length > 0) {
+                        addSuggestions(data.data.suggestions);
+                    }
+                } else {
+                    addMessage('Sorry, I had trouble processing that. Please try again.');
+                }
+            } catch (err) {
+                hideTyping();
+                addMessage('Sorry, there was a network error. Please try again.');
+            }
+        }
+
+        function addActionButtons(actions) {
+            const container = document.getElementById('chatMessages');
+            const typing = document.getElementById('typingIndicator');
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'message assistant';
+            actionsDiv.innerHTML = `
+                <div class="message-avatar">🦞</div>
+                <div class="message-actions">
+                    ${actions.map(a => `
+                        <button class="message-action-btn ${a.type === 'generate_article' || a.type === 'publish_article' ? 'primary' : ''}" 
+                                onclick="handleAction('${a.type}', '${encodeURIComponent(JSON.stringify(a.params))}')">
+                            ${a.label}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            
+            container.insertBefore(actionsDiv, typing);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addSuggestions(suggestions) {
+            const container = document.getElementById('chatMessages');
+            const typing = document.getElementById('typingIndicator');
+            
+            const lastMessage = container.querySelector('.message.assistant:last-of-type > div:last-child');
+            if (lastMessage) {
+                const suggestionsDiv = document.createElement('div');
+                suggestionsDiv.className = 'suggestions';
+                suggestionsDiv.innerHTML = suggestions.map(s => 
+                    `<span class="suggestion-chip" onclick="sendQuick('${escapeHtml(s)}')">${escapeHtml(s)}</span>`
+                ).join('');
+                lastMessage.appendChild(suggestionsDiv);
+            }
+        }
+
+        function sendQuick(text) {
+            document.getElementById('chatInput').value = text;
+            sendMessage();
+        }
+
+        function handleAction(type, paramsEncoded) {
+            const params = JSON.parse(decodeURIComponent(paramsEncoded));
+            
+            switch(type) {
+                case 'generate_article':
+                    if (params.keyword) {
+                        window.location.href = `articles.html?generate=${encodeURIComponent(params.keyword)}`;
+                    }
+                    break;
+                case 'publish_article':
+                    // Would trigger publish
+                    addMessage(`I'll publish article #${params.articleId} for you. (Feature coming soon)`);
+                    break;
+                case 'navigate':
+                    if (params.path) {
+                        window.location.href = params.path;
+                    }
+                    break;
+                default:
+                    addMessage(`Action "${type}" triggered!`);
+            }
+        }
+
+        async function clearChat() {
+            if (!confirm('Clear chat history?')) return;
+            
+            try {
+                await fetch(`${API_URL}/api/clawbot/session/${clawbotSessionKey}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                location.reload();
+            } catch (err) {
+                console.error('Failed to clear chat:', err);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
+
+        // Initialize
+        initSession();
+    </script>
+</body>
+</html>
