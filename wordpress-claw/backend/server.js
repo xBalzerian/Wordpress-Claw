@@ -94,16 +94,16 @@ app.use('/api/articles', articlesRoutes);
 app.use('/api/clawbot', clawbotRoutes);
 
 // Serve static files from frontend directory
-app.use(express.static(path.join(__dirname, '../frontend')));
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 // Serve dashboard routes
 app.get('/dashboard/*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dashboard/index.html'));
+    res.sendFile(path.join(__dirname, 'frontend/dashboard/index.html'));
 });
 
 // Catch-all for SPA routing (frontend handles routing)
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+    res.sendFile(path.join(__dirname, 'frontend/index.html'));
 });
 
 // Error handling middleware

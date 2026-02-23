@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing - WordPress Claw</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E53935;
+            --primary-dark: #C62828;
+            --text: #1a1a1a;
+            --text-secondary: #666;
+            --bg: #f8f9fa;
+            --bg-card: #ffffff;
+            --border: #e5e5e5;
+            --success: #4caf50;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--bg);
+        }
+
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-logo img {
+            height: 40px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: rgba(229, 57, 53, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .user-menu:hover {
+            background: var(--bg);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-tier {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: capitalize;
+        }
+
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* Credit Stats */
+        .credit-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .credit-stat {
+            text-align: center;
+            padding: 24px;
+            background: var(--bg);
+            border-radius: 12px;
+        }
+
+        .credit-stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .credit-stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Progress Bar */
+        .credit-progress {
+            margin-top: 24px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        /* Pricing Cards */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .pricing-card {
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .pricing-card.current {
+            border-color: var(--primary);
+            background: rgba(229, 57, 53, 0.02);
+        }
+
+        .current-badge {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .pricing-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .pricing-price {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .pricing-price span {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-secondary);
+        }
+
+        .pricing-credits {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 24px;
+        }
+
+        .pricing-features li {
+            padding: 8px 0;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pricing-features li::before {
+            content: "✓";
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        /* Buy Credits */
+        .credits-form {
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .credits-total {
+            background: var(--bg);
+            padding: 16px 24px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .credits-total-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .credits-total-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* History Table */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .history-table th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .history-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-completed { background: #e8f5e9; color: #2e7d32; }
+        .status-pending { background: #fff3e0; color: #ef6c00; }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .credit-stats,
+            .pricing-grid { grid-template-columns: 1fr; }
+            .credits-form { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <img src="../assets/logo.png" alt="WordPress Claw">
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="index.html" class="nav-item">
+                        <span class="nav-icon">📊</span>
+                        Dashboard
+                    </a>
+                    <a href="articles.html" class="nav-item">
+                        <span class="nav-icon">📝</span>
+                        Articles
+                    </a>
+                    <a href="clawbot.html" class="nav-item">
+                        <span class="nav-icon">🤖</span>
+                        ClawBot
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a href="connections.html" class="nav-item">
+                        <span class="nav-icon">🔗</span>
+                        Connections
+                    </a>
+                    <a href="billing.html" class="nav-item active">
+                        <span class="nav-icon">💳</span>
+                        Billing
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-menu" onclick="logout()">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">User</div>
+                        <div class="user-tier" id="userTier">Free</div>
+                    </div>
+                    <span>🚪</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="page-header">
+                <h1>Billing</h1>
+                <p>Manage your subscription and credits.</p>
+            </div>
+
+            <!-- Credit Usage -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Credit Usage</h2>
+                </div>
+                <div class="card-body">
+                    <div class="credit-stats">
+                        <div class="credit-stat">
+                            <div class="credit-stat-value" id="includedCredits">0</div>
+                            <div class="credit-stat-label">Included</div>
+                        </div>
+                        <div class="credit-stat">
+                            <div class="credit-stat-value" id="usedCredits">0</div>
+                            <div class="credit-stat-label">Used</div>
+                        </div>
+                        <div class="credit-stat">
+                            <div class="credit-stat-value" id="availableCredits">0</div>
+                            <div class="credit-stat-label">Available</div>
+                        </div>
+                    </div>
+                    
+                    <div class="credit-progress" id="creditProgress">
+                        <div class="progress-header">
+                            <span>Credits used this period</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscription Plans -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Subscription Plans</h2>
+                </div>
+                <div class="card-body">
+                    <div class="pricing-grid">
+                        <div class="pricing-card" id="freePlan">
+                            <h3>Free</h3>
+                            <div class="pricing-price">$0<span>/mo</span></div>
+                            <div class="pricing-credits">0 credits</div>
+                            <ul class="pricing-features">
+                                <li>Business profile</li>
+                                <li>WordPress connection</li>
+                                <li>Manual articles</li>
+                            </ul>
+                            <button class="btn btn-secondary" disabled>Current Plan</button>
+                        </div>
+                        
+                        <div class="pricing-card" id="starterPlan">
+                            <h3>Starter</h3>
+                            <div class="pricing-price">$49<span>/mo</span></div>
+                            <div class="pricing-credits">50 credits/mo</div>
+                            <ul class="pricing-features">
+                                <li>Everything in Free</li>
+                                <li>AI article generation</li>
+                                <li>GitHub image hosting</li>
+                                <li>Priority support</li>
+                            </ul>
+                            <button class="btn btn-primary" onclick="upgradePlan('starter')">Upgrade</button>
+                        </div>
+                        
+                        <div class="pricing-card" id="proPlan">
+                            <h3>Pro</h3>
+                            <div class="pricing-price">$169<span>/mo</span></div>
+                            <div class="pricing-credits">Unlimited credits</div>
+                            <ul class="pricing-features">
+                                <li>Everything in Starter</li>
+                                <li>ClawBot AI agent</li>
+                                <li>Unlimited articles</li>
+                                <li>Dedicated support</li>
+                            </ul>
+                            <button class="btn btn-primary" onclick="upgradePlan('pro')">Upgrade</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buy Additional Credits -->
+            <div class="card" id="buyCreditsCard">
+                <div class="card-header">
+                    <h2>Buy Additional Credits</h2>
+                </div>
+                <div class="card-body">
+                    <div class="credits-form">
+                        <div class="form-group">
+                            <label>Number of Credits</label>
+                            <select id="creditsAmount" onchange="updateCreditsTotal()">
+                                <option value="10">10 credits</option>
+                                <option value="25">25 credits</option>
+                                <option value="50">50 credits</option>
+                                <option value="100">100 credits</option>
+                            </select>
+                        </div>
+                        
+                        <div class="credits-total">
+                            <div class="credits-total-label">Total</div>
+                            <div class="credits-total-value" id="creditsTotal">$16.10</div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="buyCredits()" style="width: auto; padding: 12px 32px;">Purchase</button>
+                    </div>
+                    
+                    <p style="margin-top: 16px; font-size: 13px; color: var(--text-secondary);">
+                        Credits cost $1.61 each and never expire. 1 credit = 1 article with 1 image.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Payment History -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Payment History</h2>
+                </div>
+                <div class="card-body">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentHistory">
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: var(--text-secondary);">No payments yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = '';
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'User';
+        document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
+        document.getElementById('userAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
+
+        // Update UI based on current plan
+        function updatePlanUI() {
+            const tier = user.tier || 'free';
+            
+            // Highlight current plan
+            document.querySelectorAll('.pricing-card').forEach(card => {
+                card.classList.remove('current');
+                card.querySelector('.current-badge')?.remove();
+                const btn = card.querySelector('.btn');
+                btn.disabled = false;
+                btn.textContent = 'Upgrade';
+            });
+
+            const currentCard = document.getElementById(`${tier}Plan`);
+            if (currentCard) {
+                currentCard.classList.add('current');
+                currentCard.insertAdjacentHTML('afterbegin', '<div class="current-badge">Current</div>');
+                const btn = currentCard.querySelector('.btn');
+                btn.disabled = true;
+                btn.textContent = 'Current Plan';
+            }
+
+            // Hide buy credits for Pro users
+            if (tier === 'pro') {
+                document.getElementById('buyCreditsCard').style.display = 'none';
+                document.getElementById('creditProgress').style.display = 'none';
+            }
+
+            // Update credit stats
+            const included = user.credits_included || 0;
+            const used = user.credits_used || 0;
+            const available = tier === 'pro' ? '∞' : Math.max(0, included - used);
+
+            document.getElementById('includedCredits').textContent = tier === 'pro' ? '∞' : included;
+            document.getElementById('usedCredits').textContent = used;
+            document.getElementById('availableCredits').textContent = available;
+
+            if (tier !== 'pro' && included > 0) {
+                const percent = Math.round((used / included) * 100);
+                document.getElementById('progressPercent').textContent = `${percent}%`;
+                document.getElementById('progressFill').style.width = `${Math.min(percent, 100)}%`;
+            }
+        }
+
+        function updateCreditsTotal() {
+            const amount = parseInt(document.getElementById('creditsAmount').value);
+            const total = (amount * 1.61).toFixed(2);
+            document.getElementById('creditsTotal').textContent = `$${total}`;
+        }
+
+        function buyCredits() {
+            const amount = document.getElementById('creditsAmount').value;
+            alert(`Credit purchase would open Stripe checkout for ${amount} credits. (Stripe integration required)`);
+        }
+
+        function upgradePlan(plan) {
+            alert(`Upgrade to ${plan} would open Stripe checkout. (Stripe integration required)`);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
+
+        updatePlanUI();
+    </script>
+</body>
+</html>

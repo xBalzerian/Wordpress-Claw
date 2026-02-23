@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connections - WordPress Claw</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E53935;
+            --primary-dark: #C62828;
+            --text: #1a1a1a;
+            --text-secondary: #666;
+            --bg: #f8f9fa;
+            --bg-card: #ffffff;
+            --border: #e5e5e5;
+            --success: #4caf50;
+            --error: #f44336;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--bg);
+        }
+
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-logo img {
+            height: 40px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: rgba(229, 57, 53, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .user-menu:hover {
+            background: var(--bg);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-tier {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: capitalize;
+        }
+
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+        }
+
+        /* Connection Cards */
+        .connections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .connection-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .connection-header {
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .connection-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .connection-icon.wordpress { background: #21759b; color: white; }
+        .connection-icon.github { background: #333; color: white; }
+        .connection-icon.googlesheets { background: #0f9d58; color: white; }
+
+        .connection-info h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .connection-info p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .connection-body {
+            padding: 24px;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.active { background: var(--success); }
+        .status-dot.error { background: var(--error); }
+        .status-dot.pending { background: #ff9800; }
+
+        .connection-details {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .connection-details p {
+            margin-bottom: 4px;
+        }
+
+        .connection-actions {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-danger {
+            background: #ffebee;
+            color: var(--error);
+        }
+
+        .btn-danger:hover {
+            background: #ffcdd2;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .alert.error {
+            background: #ffebee;
+            color: var(--error);
+            display: block;
+        }
+
+        .alert.success {
+            background: #e8f5e9;
+            color: var(--success);
+            display: block;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .connections-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <img src="../assets/logo.png" alt="WordPress Claw">
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="index.html" class="nav-item">
+                        <span class="nav-icon">📊</span>
+                        Dashboard
+                    </a>
+                    <a href="articles.html" class="nav-item">
+                        <span class="nav-icon">📝</span>
+                        Articles
+                    </a>
+                    <a href="clawbot.html" class="nav-item">
+                        <span class="nav-icon">🤖</span>
+                        ClawBot
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a href="connections.html" class="nav-item active">
+                        <span class="nav-icon">🔗</span>
+                        Connections
+                    </a>
+                    <a href="billing.html" class="nav-item">
+                        <span class="nav-icon">💳</span>
+                        Billing
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-menu" onclick="logout()">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">User</div>
+                        <div class="user-tier" id="userTier">Free</div>
+                    </div>
+                    <span>🚪</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="page-header">
+                <h1>Connections</h1>
+                <p>Connect your tools to enable automatic publishing and content management.</p>
+            </div>
+
+            <div class="connections-grid" id="connectionsList">
+                <!-- WordPress Card -->
+                <div class="connection-card">
+                    <div class="connection-header">
+                        <div class="connection-icon wordpress">W</div>
+                        <div class="connection-info">
+                            <h3>WordPress</h3>
+                            <p>Publish articles directly</p>
+                        </div>
+                    </div>
+                    
+                    <div class="connection-body" id="wpBody">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔗</div>
+                            <p>Not connected yet</p>
+                        </div>
+                    </div>
+                    
+                    <div class="connection-actions">
+                        <button class="btn btn-primary" id="wpConnectBtn" onclick="openWpModal()">Connect</button>
+                    </div>
+                </div>
+
+                <!-- GitHub Card -->
+                <div class="connection-card">
+                    <div class="connection-header">
+                        <div class="connection-icon github">G</div>
+                        <div class="connection-info">
+                            <h3>GitHub</h3>
+                            <p>Image hosting & storage</p>
+                        </div>
+                    </div>
+                    
+                    <div class="connection-body" id="ghBody">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔗</div>
+                            <p>Not connected yet</p>
+                        </div>
+                    </div>
+                    
+                    <div class="connection-actions">
+                        <button class="btn btn-primary" id="ghConnectBtn" onclick="openGhModal()">Connect</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- WordPress Modal -->
+    <div class="modal-overlay" id="wpModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Connect WordPress</h2>
+                <button class="modal-close" onclick="closeWpModal()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <div id="wpAlert" class="alert"></div>
+                
+                <div class="form-group">
+                    <label for="wpUrl">WordPress Site URL *</label>
+                    <input type="url" id="wpUrl" placeholder="https://yoursite.com">
+                    <p class="form-hint">Your WordPress site URL without /wp-admin</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="wpUsername">Username *</label>
+                    <input type="text" id="wpUsername" placeholder="Your WordPress username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="wpPassword">Application Password *</label>
+                    <input type="password" id="wpPassword" placeholder="Your application password">
+                    <p class="form-hint">Generate this in WordPress: Users → Profile → Application Passwords</p>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeWpModal()">Cancel</button>
+                <button class="btn btn-primary" id="wpSaveBtn" onclick="saveWpConnection()">Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GitHub Modal -->
+    <div class="modal-overlay" id="ghModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Connect GitHub</h2>
+                <button class="modal-close" onclick="closeGhModal()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <div id="ghAlert" class="alert"></div>
+                
+                <div class="form-group">
+                    <label for="ghToken">Personal Access Token *</label>
+                    <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
+                    <p class="form-hint">Create at GitHub → Settings → Developer settings → Personal access tokens</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="ghRepo">Repository (optional)</label>
+                    <input type="text" id="ghRepo" placeholder="username/images">
+                    <p class="form-hint">Repo for hosting images. Will create if doesn't exist.</p>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeGhModal()">Cancel</button>
+                <button class="btn btn-primary" id="ghSaveBtn" onclick="saveGhConnection()">Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'User';
+        document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
+        document.getElementById('userAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
+
+        let connections = [];
+
+        async function loadConnections() {
+            try {
+                const response = await fetch(`${API_URL}/api/connections`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    connections = data.data.connections;
+                    updateConnectionCards();
+                }
+            } catch (err) {
+                console.error('Failed to load connections:', err);
+            }
+        }
+
+        function updateConnectionCards() {
+            const wpConn = connections.find(c => c.type === 'wordpress');
+            const ghConn = connections.find(c => c.type === 'github');
+
+            if (wpConn) {
+                document.getElementById('wpBody').innerHTML = `
+                    <div class="connection-status">
+                        <span class="status-dot ${wpConn.status}"></span>
+                        <span>${wpConn.status === 'active' ? 'Connected' : 'Connection error'}</span>
+                    </div>
+                    ${wpConn.last_error ? `<div class="alert error" style="display: block;">${wpConn.last_error}</div>` : ''}
+                `;
+                document.getElementById('wpConnectBtn').textContent = 'Test Connection';
+                document.getElementById('wpConnectBtn').onclick = () => testConnection(wpConn.id);
+            }
+
+            if (ghConn) {
+                document.getElementById('ghBody').innerHTML = `
+                    <div class="connection-status">
+                        <span class="status-dot ${ghConn.status}"></span>
+                        <span>${ghConn.status === 'active' ? 'Connected' : 'Connection error'}</span>
+                    </div>
+                    ${ghConn.last_error ? `<div class="alert error" style="display: block;">${ghConn.last_error}</div>` : ''}
+                `;
+                document.getElementById('ghConnectBtn').textContent = 'Test Connection';
+                document.getElementById('ghConnectBtn').onclick = () => testConnection(ghConn.id);
+            }
+        }
+
+        function openWpModal() {
+            document.getElementById('wpModal').classList.add('active');
+        }
+
+        function closeWpModal() {
+            document.getElementById('wpModal').classList.remove('active');
+            document.getElementById('wpAlert').className = 'alert';
+            document.getElementById('wpAlert').textContent = '';
+        }
+
+        function openGhModal() {
+            document.getElementById('ghModal').classList.add('active');
+        }
+
+        function closeGhModal() {
+            document.getElementById('ghModal').classList.remove('active');
+            document.getElementById('ghAlert').className = 'alert';
+            document.getElementById('ghAlert').textContent = '';
+        }
+
+        async function saveWpConnection() {
+            const url = document.getElementById('wpUrl').value.trim();
+            const username = document.getElementById('wpUsername').value.trim();
+            const password = document.getElementById('wpPassword').value.trim();
+            const alert = document.getElementById('wpAlert');
+            const btn = document.getElementById('wpSaveBtn');
+
+            if (!url || !username || !password) {
+                alert.className = 'alert error';
+                alert.textContent = 'Please fill in all fields';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Connecting...';
+
+            try {
+                const response = await fetch(`${API_URL}/api/connections`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'wordpress',
+                        name: 'WordPress Site',
+                        credentials: { url, username, password }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert.className = 'alert success';
+                    alert.textContent = data.data.connection.status === 'active' ? 'Connected successfully!' : 'Connected but test failed - check your credentials';
+                    setTimeout(() => {
+                        closeWpModal();
+                        loadConnections();
+                    }, 1500);
+                } else {
+                    alert.className = 'alert error';
+                    alert.textContent = data.error || 'Failed to connect';
+                    btn.disabled = false;
+                    btn.textContent = 'Connect';
+                }
+            } catch (err) {
+                alert.className = 'alert error';
+                alert.textContent = 'Network error. Please try again.';
+                btn.disabled = false;
+                btn.textContent = 'Connect';
+            }
+        }
+
+        async function saveGhConnection() {
+            const token = document.getElementById('ghToken').value.trim();
+            const repo = document.getElementById('ghRepo').value.trim();
+            const alert = document.getElementById('ghAlert');
+            const btn = document.getElementById('ghSaveBtn');
+
+            if (!token) {
+                alert.className = 'alert error';
+                alert.textContent = 'Please enter your GitHub token';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Connecting...';
+
+            try {
+                const response = await fetch(`${API_URL}/api/connections`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'github',
+                        name: 'GitHub Images',
+                        credentials: { token, repo }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert.className = 'alert success';
+                    alert.textContent = 'Connected successfully!';
+                    setTimeout(() => {
+                        closeGhModal();
+                        loadConnections();
+                    }, 1500);
+                } else {
+                    alert.className = 'alert error';
+                    alert.textContent = data.error || 'Failed to connect';
+                    btn.disabled = false;
+                    btn.textContent = 'Connect';
+                }
+            } catch (err) {
+                alert.className = 'alert error';
+                alert.textContent = 'Network error. Please try again.';
+                btn.disabled = false;
+                btn.textContent = 'Connect';
+            }
+        }
+
+        async function testConnection(id) {
+            try {
+                const response = await fetch(`${API_URL}/api/connections/${id}/test`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                alert(data.success ? 'Connection test successful!' : `Test failed: ${data.error}`);
+                loadConnections();
+            } catch (err) {
+                alert('Failed to test connection');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
+
+        // Close modals on overlay click
+        document.getElementById('wpModal').addEventListener('click', (e) => {
+            if (e.target.id === 'wpModal') closeWpModal();
+        });
+        document.getElementById('ghModal').addEventListener('click', (e) => {
+            if (e.target.id === 'ghModal') closeGhModal();
+        });
+
+        loadConnections();
+    </script>
+</body>
+</html>
