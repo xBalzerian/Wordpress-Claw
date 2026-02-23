@@ -2,16 +2,16 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-const NANO_BANANA_API_KEY = process.env.NANO_BANANA_API_KEY;
-const NANO_BANANA_BASE_URL = process.env.NANO_BANANA_BASE_URL || 'https://api.nano-banana.pro/v1';
-const NANO_BANANA_MODEL = process.env.NANO_BANANA_MODEL || 'gemini-3-pro-image-preview';
+const LAOZHANG_API_KEY = process.env.LAOZHANG_API_KEY;
+const LAOZHANG_BASE_URL = process.env.LAOZHANG_BASE_URL || 'https://api.laozhang.ai/v1';
+const LAOZHANG_IMAGE_MODEL = process.env.LAOZHANG_IMAGE_MODEL || 'gemini-3-pro-image-preview';
 
 /**
- * Generate featured image using Nano Banana Pro / Gemini API
+ * Generate featured image using Laozhang AI / Gemini API
  */
 async function generateFeaturedImage({ prompt, articleTitle, keyword, width = 1200, height = 630 }) {
-    if (!NANO_BANANA_API_KEY) {
-        throw new Error('Nano Banana API key not configured');
+    if (!LAOZHANG_API_KEY) {
+        throw new Error('Laozhang API key not configured');
     }
 
     // Enhance the prompt for better results
@@ -19,9 +19,9 @@ async function generateFeaturedImage({ prompt, articleTitle, keyword, width = 12
 
     try {
         const response = await axios.post(
-            `${NANO_BANANA_BASE_URL}/images/generations`,
+            `${LAOZHANG_BASE_URL}/images/generations`,
             {
-                model: NANO_BANANA_MODEL,
+                model: LAOZHANG_IMAGE_MODEL,
                 prompt: enhancedPrompt,
                 n: 1,
                 size: `${width}x${height}`,
@@ -30,7 +30,7 @@ async function generateFeaturedImage({ prompt, articleTitle, keyword, width = 12
             },
             {
                 headers: {
-                    'Authorization': `Bearer ${NANO_BANANA_API_KEY}`,
+                    'Authorization': `Bearer ${LAOZHANG_API_KEY}`,
                     'Content-Type': 'application/json'
                 },
                 timeout: 120000, // 2 minute timeout
@@ -71,7 +71,7 @@ async function generateFeaturedImage({ prompt, articleTitle, keyword, width = 12
     } catch (err) {
         console.error('Image generation error:', err.message);
         if (err.response) {
-            console.error('Nano Banana API error:', err.response.data?.toString() || err.response.statusText);
+            console.error('Laozhang API error:', err.response.data?.toString() || err.response.statusText);
         }
         throw new Error(`Failed to generate image: ${err.message}`);
     }
@@ -129,15 +129,15 @@ function enhanceImagePrompt(prompt, articleTitle, keyword) {
  * Generate multiple image variations
  */
 async function generateImageVariations({ prompt, n = 3, width = 1200, height = 630 }) {
-    if (!NANO_BANANA_API_KEY) {
-        throw new Error('Nano Banana API key not configured');
+    if (!LAOZHANG_API_KEY) {
+        throw new Error('Laozhang API key not configured');
     }
 
     try {
         const response = await axios.post(
-            `${NANO_BANANA_BASE_URL}/images/generations`,
+            `${LAOZHANG_BASE_URL}/images/generations`,
             {
-                model: NANO_BANANA_MODEL,
+                model: LAOZHANG_IMAGE_MODEL,
                 prompt: prompt,
                 n: n,
                 size: `${width}x${height}`,
@@ -145,7 +145,7 @@ async function generateImageVariations({ prompt, n = 3, width = 1200, height = 6
             },
             {
                 headers: {
-                    'Authorization': `Bearer ${NANO_BANANA_API_KEY}`,
+                    'Authorization': `Bearer ${LAOZHANG_API_KEY}`,
                     'Content-Type': 'application/json'
                 },
                 timeout: 180000 // 3 minute timeout for multiple images
@@ -191,8 +191,8 @@ async function generateImageVariations({ prompt, n = 3, width = 1200, height = 6
  * Edit an existing image (if API supports it)
  */
 async function editImage({ imageBuffer, prompt, mask }) {
-    if (!NANO_BANANA_API_KEY) {
-        throw new Error('Nano Banana API key not configured');
+    if (!LAOZHANG_API_KEY) {
+        throw new Error('Laozhang API key not configured');
     }
 
     try {
@@ -215,12 +215,12 @@ async function editImage({ imageBuffer, prompt, mask }) {
 function validateConfig() {
     const errors = [];
     
-    if (!NANO_BANANA_API_KEY) {
-        errors.push('NANO_BANANA_API_KEY is not configured');
+    if (!LAOZHANG_API_KEY) {
+        errors.push('LAOZHANG_API_KEY is not configured');
     }
     
-    if (!NANO_BANANA_BASE_URL) {
-        errors.push('NANO_BANANA_BASE_URL is not configured');
+    if (!LAOZHANG_BASE_URL) {
+        errors.push('LAOZHANG_BASE_URL is not configured');
     }
 
     return {
