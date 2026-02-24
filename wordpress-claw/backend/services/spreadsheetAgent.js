@@ -21,7 +21,7 @@ class SpreadsheetAgent {
      */
     async initialize() {
         // Get user's Google Sheets connection
-        this.connection = db.prepare(`
+        this.connection = await db.prepare(`
             SELECT * FROM connections 
             WHERE user_id = ? AND type = ? AND status = ?
         `).get(this.userId, 'googlesheets', 'active');
@@ -406,7 +406,7 @@ class SpreadsheetAgent {
                 config.spreadsheetId = result.spreadsheetId;
                 config.sheetName = 'Topics';
                 
-                db.prepare(`
+                await db.prepare(`
                     UPDATE connections 
                     SET config = ?, updated_at = CURRENT_TIMESTAMP 
                     WHERE id = ?

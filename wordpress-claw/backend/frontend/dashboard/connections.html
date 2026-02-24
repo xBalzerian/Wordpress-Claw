@@ -285,6 +285,7 @@
         }
 
         .status-dot.active { background: var(--success); }
+        .status-dot.connected { background: var(--success); }
         .status-dot.error { background: var(--error); }
         .status-dot.pending { background: #ff9800; }
 
@@ -996,6 +997,76 @@
                 alert.style.display = 'block';
             }
         });
+        
+        // Load and display existing connections on page load
+        async function loadConnections() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+                
+                const response = await fetch('/api/connections', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) return;
+                
+                const result = await response.json();
+                if (!result.success) return;
+                
+                const connections = result.data.connections || [];
+                
+                connections.forEach(conn => {
+                    if (conn.type === 'googlesheets') {
+                        updateCardToConnected('gs', conn);
+                    } else if (conn.type === 'wordpress') {
+                        updateCardToConnected('wp', conn);
+                    } else if (conn.type === 'github') {
+                        updateCardToConnected('gh', conn);
+                    }
+                });
+            } catch (err) {
+                console.error('Failed to load connections:', err);
+            }
+        }
+        
+        function updateCardToConnected(type, conn) {
+            const body = document.getElementById(type + 'Body');
+            const card = body.closest('.connection-card');
+            const btn = card.querySelector('.connection-actions button');
+            
+            if (body) {
+                body.innerHTML = `
+                    <div class="connection-status">
+                        <span class="status-dot ${conn.status === 'active' ? 'connected' : 'error'}"></span>
+                        <span>${conn.status === 'active' ? 'Connected' : 'Connection Error'}</span>
+                    </div>
+                    ${conn.name ? `<p style="margin-top: 8px; font-size: 14px; color: #666;">${conn.name}</p>` : ''}
+                `;
+            }
+            
+            if (btn) {
+                btn.textContent = 'Test Connection';
+                btn.onclick = function() { testConnection(conn.id); };
+            }
+        }
+        
+        async function testConnection(id) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/connections/${id}/test`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+                alert(result.success ? 'Connection test successful!' : 'Test failed: ' + result.error);
+                if (result.success) location.reload();
+            } catch (err) {
+                alert('Test failed: ' + err.message);
+            }
+        }
+        
+        // Load connections when page loads
+        document.addEventListener('DOMContentLoaded', loadConnections);
     </script>
 </body>
 </html>

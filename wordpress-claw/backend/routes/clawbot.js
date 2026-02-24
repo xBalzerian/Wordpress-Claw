@@ -14,7 +14,7 @@ const router = express.Router();
 router.get('/session', authenticateToken, async (req, res) => {
     try {
         // Look for existing active session
-        let session = db.prepare(`
+        let session = await db.prepare(`
             SELECT * FROM clawbot_sessions 
             WHERE user_id = ? 
             ORDER BY last_activity_at DESC 
@@ -29,9 +29,9 @@ router.get('/session', authenticateToken, async (req, res) => {
         if (!session) {
             // Create new session
             const sessionKey = uuidv4();
-            const initialContext = buildInitialContext(req.user.id);
+            const initialContext = await buildInitialContext(req.user.id);
             
-            const result = db.prepare(`
+            const result = await db.prepare(`
                 INSERT INTO clawbot_sessions (user_id, session_key, messages, context)
                 VALUES (?, ?, ?, ?)
             `).run(
@@ -48,10 +48,10 @@ router.get('/session', authenticateToken, async (req, res) => {
                 JSON.stringify(initialContext)
             );
 
-            session = db.prepare('SELECT * FROM clawbot_sessions WHERE id = ?').get(result.lastInsertRowid);
+            session = await db.prepare('SELECT * FROM clawbot_sessions WHERE id = ?').get(result.lastInsertRowid);
         } else {
             // Update context with latest user state
-            const updatedContext = buildInitialContext(req.user.id);
+            const updatedContext = await buildInitialContext(req.user.id);
             
             // Check if we should update the greeting (if it's been a while)
             const lastActivity = new Date(session.last_activity_at);
@@ -69,7 +69,7 @@ router.get('/session', authenticateToken, async (req, res) => {
                     suggestions: greeting.suggestions || null
                 });
 
-                db.prepare(`
+                await db.prepare(`
                     UPDATE clawbot_sessions 
                     SET messages = ?, context = ?, last_activity_at = CURRENT_TIMESTAMP
                     WHERE id = ?
@@ -82,7 +82,7 @@ router.get('/session', authenticateToken, async (req, res) => {
                 session.messages = JSON.stringify(messages);
                 session.context = JSON.stringify(updatedContext);
             } else {
-                db.prepare(`
+                await db.prepare(`
                     UPDATE clawbot_sessions 
                     SET context = ?, last_activity_at = CURRENT_TIMESTAMP
                     WHERE id = ?
@@ -166,7 +166,7 @@ router.post('/message', authenticateToken, async (req, res) => {
         };
 
         // Update session
-        db.prepare(`
+        await db.prepare(`
             UPDATE clawbot_sessions 
             SET messages = ?, context = ?, last_activity_at = CURRENT_TIMESTAMP
             WHERE id = ?
@@ -212,7 +212,7 @@ router.post('/action', authenticateToken, async (req, res) => {
             });
         }
 
-        const session = db.prepare('SELECT * FROM clawbot_sessions WHERE session_key = ? AND user_id = ?')
+        const session = await db.prepare('SELECT * FROM clawbot_sessions WHERE session_key = ? AND user_id = ?')
             .get(sessionKey, req.user.id);
         
         if (!session) {
@@ -255,7 +255,7 @@ router.post('/action', authenticateToken, async (req, res) => {
             });
         }
 
-        db.prepare(`
+        await db.prepare(`
             UPDATE clawbot_sessions 
             SET messages = ?, context = ?, last_activity_at = CURRENT_TIMESTAMP 
             WHERE id = ?
@@ -330,7 +330,7 @@ router.post('/workflow/content', authenticateToken, async (req, res) => {
             lastTopic: 'content_creation'
         };
 
-        db.prepare(`
+        await db.prepare(`
             UPDATE clawbot_sessions 
             SET messages = ?, context = ?, last_activity_at = CURRENT_TIMESTAMP 
             WHERE id = ?
@@ -375,7 +375,7 @@ router.post('/workflow/generate', authenticateToken, async (req, res) => {
         }
 
         // Check credits
-        const user = db.prepare('SELECT tier, credits_included, credits_used FROM users WHERE id = ?').get(req.user.id);
+        const user = await db.prepare('SELECT tier, credits_included, credits_used FROM users WHERE id = ?').get(req.user.id);
         const creditsAvailable = user.tier === 'pro' 
             ? Infinity 
             : Math.max(0, user.credits_included - user.credits_used);
@@ -389,8 +389,9 @@ router.post('/workflow/generate', authenticateToken, async (req, res) => {
         }
 
         // Get session
-        const session = db.prepare('SELECT * FROM clawbot_sessions WHERE session_key = ? AND user_id = ?')
-            .get(sessionKey, req.user.id);
+        const session = sessionKey ? 
+            await db.prepare('SELECT * FROM clawbot_sessions WHERE session_key = ? AND user_id = ?').get(sessionKey, req.user.id) : 
+            null;
 
         // Initialize agent
         const agent = new SummonAgent(req.user.id);
@@ -424,7 +425,7 @@ router.post('/workflow/generate', authenticateToken, async (req, res) => {
                 workflowState: agent.workflowState
             };
 
-            db.prepare(`
+            await db.prepare(`
                 UPDATE clawbot_sessions 
                 SET messages = ?, context = ?, last_activity_at = CURRENT_TIMESTAMP 
                 WHERE id = ?
@@ -468,7 +469,7 @@ router.post('/workflow/image', authenticateToken, async (req, res) => {
         }
 
         const session = sessionKey ? 
-            db.prepare('SELECT * FROM clawbot_sessions WHERE session_key = ? AND user_id = ?').get(sessionKey, req.user.id) : 
+            await db.prepare('SELECT * FROM clawbot_sessions WHERE session_key = ? AND user_id = ?').get(sessionKey, req.user.id) : 
             null;
 
         const agent = new SummonAgent(req.user.id);
@@ -525,7 +526,7 @@ router.post('/workflow/publish', authenticateToken, async (req, res) => {
 
         // Update session if exists
         if (sessionKey) {
-            const session = db.prepare('SELECT * FROM clawbot_sessions WHERE session_key = ? AND user_id = ?')
+            const session = await db.prepare('SELECT * FROM clawbot_sessions WHERE session_key = ? AND user_id = ?')
                 .get(sessionKey, req.user.id);
             
             if (session) {
@@ -538,7 +539,7 @@ router.post('/workflow/publish', authenticateToken, async (req, res) => {
                     data: result.data
                 });
 
-                db.prepare(`
+                await db.prepare(`
                     UPDATE clawbot_sessions 
                     SET messages = ?, last_activity_at = CURRENT_TIMESTAMP 
                     WHERE id = ?
@@ -755,9 +756,9 @@ router.post('/spreadsheet/create-template', authenticateToken, async (req, res) 
 /**
  * Clear chat history
  */
-router.delete('/session/:sessionKey', authenticateToken, (req, res) => {
+router.delete('/session/:sessionKey', authenticateToken, async (req, res) => {
     try {
-        const result = db.prepare(`
+        const result = await db.prepare(`
             DELETE FROM clawbot_sessions WHERE session_key = ? AND user_id = ?
         `).run(req.params.sessionKey, req.user.id);
 
@@ -787,15 +788,15 @@ async function getOrCreateSession(sessionKey, userId) {
     let session;
     
     if (sessionKey) {
-        session = db.prepare('SELECT * FROM clawbot_sessions WHERE session_key = ? AND user_id = ?')
+        session = await db.prepare('SELECT * FROM clawbot_sessions WHERE session_key = ? AND user_id = ?')
             .get(sessionKey, userId);
     }
 
     if (!session) {
         const newSessionKey = uuidv4();
-        const initialContext = buildInitialContext(userId);
+        const initialContext = await buildInitialContext(userId);
         
-        const result = db.prepare(`
+        const result = await db.prepare(`
             INSERT INTO clawbot_sessions (user_id, session_key, messages, context)
             VALUES (?, ?, ?, ?)
         `).run(
@@ -805,17 +806,17 @@ async function getOrCreateSession(sessionKey, userId) {
             JSON.stringify(initialContext)
         );
 
-        session = db.prepare('SELECT * FROM clawbot_sessions WHERE id = ?').get(result.lastInsertRowid);
+        session = await db.prepare('SELECT * FROM clawbot_sessions WHERE id = ?').get(result.lastInsertRowid);
     }
 
     return session;
 }
 
-function buildInitialContext(userId) {
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
-    const businessProfile = db.prepare('SELECT * FROM business_profiles WHERE user_id = ?').get(userId);
-    const connections = db.prepare('SELECT type, status FROM connections WHERE user_id = ?').all(userId);
-    const articleCount = db.prepare('SELECT COUNT(*) as count FROM articles WHERE user_id = ?').get(userId);
+async function buildInitialContext(userId) {
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    const businessProfile = await db.prepare('SELECT * FROM business_profiles WHERE user_id = ?').get(userId);
+    const connections = await db.prepare('SELECT type, status FROM connections WHERE user_id = ?').all(userId);
+    const articleCount = await db.prepare('SELECT COUNT(*) as count FROM articles WHERE user_id = ?').get(userId);
 
     const creditsAvailable = user?.tier === 'pro' 
         ? 'unlimited' 

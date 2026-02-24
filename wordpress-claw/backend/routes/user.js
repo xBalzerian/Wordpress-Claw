@@ -23,7 +23,7 @@ router.get('/profile', authenticateToken, (req, res) => {
 });
 
 // Update user profile
-router.patch('/profile', authenticateToken, (req, res) => {
+router.patch('/profile', authenticateToken, async (req, res) => {
     try {
         const { name } = req.body;
 
@@ -52,10 +52,10 @@ router.patch('/profile', authenticateToken, (req, res) => {
         updates.push('updated_at = CURRENT_TIMESTAMP');
         values.push(req.user.id);
 
-        db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+        await db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values);
 
         // Get updated user
-        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+        const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
 
         res.json({
             success: true,
@@ -82,12 +82,12 @@ router.patch('/profile', authenticateToken, (req, res) => {
 });
 
 // Get dashboard stats
-router.get('/dashboard', authenticateToken, (req, res) => {
+router.get('/dashboard', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
 
         // Get article stats
-        const articleStats = db.prepare(`
+        const articleStats = await db.prepare(`
             SELECT 
                 COUNT(*) as total,
                 SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) as published,
@@ -98,7 +98,7 @@ router.get('/dashboard', authenticateToken, (req, res) => {
         `).get(userId);
 
         // Get recent articles
-        const recentArticles = db.prepare(`
+        const recentArticles = await db.prepare(`
             SELECT id, title, status, keyword, wp_url, created_at
             FROM articles 
             WHERE user_id = ?
@@ -107,13 +107,13 @@ router.get('/dashboard', authenticateToken, (req, res) => {
         `).all(userId);
 
         // Get connections count
-        const connectionsCount = db.prepare(`
+        const connectionsCount = await db.prepare(`
             SELECT COUNT(*) as count FROM connections 
             WHERE user_id = ? AND status = 'active'
         `).get(userId);
 
         // Get business profile status
-        const businessProfile = db.prepare(`
+        const businessProfile = await db.prepare(`
             SELECT company_name, industry FROM business_profiles 
             WHERE user_id = ?
         `).get(userId);
@@ -158,12 +158,12 @@ router.get('/dashboard', authenticateToken, (req, res) => {
 });
 
 // Get user activity log
-router.get('/activity', authenticateToken, (req, res) => {
+router.get('/activity', authenticateToken, async (req, res) => {
     try {
         const limit = Math.min(parseInt(req.query.limit) || 20, 100);
         const offset = parseInt(req.query.offset) || 0;
 
-        const activities = db.prepare(`
+        const activities = await db.prepare(`
             SELECT action, entity_type, entity_id, details, created_at
             FROM activity_log 
             WHERE user_id = ?

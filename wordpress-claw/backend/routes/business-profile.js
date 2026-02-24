@@ -10,16 +10,16 @@ const VALID_CONTENT_TYPES = ['blog_post', 'article', 'news', 'tutorial', 'review
 const VALID_IMAGE_STYLES = ['photorealistic', 'illustration', '3d', 'photo'];
 
 // Get business profile
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
     try {
-        const profile = db.prepare(`
+        const profile = await db.prepare(`
             SELECT * FROM business_profiles WHERE user_id = ?
         `).get(req.user.id);
 
         if (!profile) {
             // Create default profile if none exists
-            db.prepare('INSERT INTO business_profiles (user_id) VALUES (?)').run(req.user.id);
-            const newProfile = db.prepare('SELECT * FROM business_profiles WHERE user_id = ?').get(req.user.id);
+            await db.prepare('INSERT INTO business_profiles (user_id) VALUES (?)').run(req.user.id);
+            const newProfile = await db.prepare('SELECT * FROM business_profiles WHERE user_id = ?').get(req.user.id);
             return res.json({
                 success: true,
                 data: { profile: newProfile }
@@ -40,13 +40,13 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // Get business profile completion status
-router.get('/completion', authenticateToken, (req, res) => {
+router.get('/completion', authenticateToken, async (req, res) => {
     try {
-        const profile = db.prepare(`
+        const profile = await db.prepare(`
             SELECT * FROM business_profiles WHERE user_id = ?
         `).get(req.user.id);
 
-        const connections = db.prepare(`
+        const connections = await db.prepare(`
             SELECT type, status FROM connections WHERE user_id = ?
         `).all(req.user.id);
 
@@ -117,7 +117,7 @@ router.get('/completion', authenticateToken, (req, res) => {
 });
 
 // Update business profile
-router.put('/', authenticateToken, (req, res) => {
+router.put('/', authenticateToken, async (req, res) => {
     try {
         const {
             companyName,
@@ -247,17 +247,17 @@ router.put('/', authenticateToken, (req, res) => {
         updates.push('updated_at = CURRENT_TIMESTAMP');
         values.push(req.user.id);
 
-        db.prepare(`
+        await db.prepare(`
             UPDATE business_profiles 
             SET ${updates.join(', ')} 
             WHERE user_id = ?
         `).run(...values);
 
         // Get updated profile
-        const profile = db.prepare('SELECT * FROM business_profiles WHERE user_id = ?').get(req.user.id);
+        const profile = await db.prepare('SELECT * FROM business_profiles WHERE user_id = ?').get(req.user.id);
 
         // Log activity
-        db.prepare(`
+        await db.prepare(`
             INSERT INTO activity_log (user_id, action, entity_type, details)
             VALUES (?, 'updated', 'business_profile', ?)
         `).run(req.user.id, JSON.stringify({ fields: updates.length }));
@@ -277,7 +277,7 @@ router.put('/', authenticateToken, (req, res) => {
 });
 
 // Patch business profile (partial update)
-router.patch('/', authenticateToken, (req, res) => {
+router.patch('/', authenticateToken, async (req, res) => {
     try {
         const allowedFields = [
             'companyName', 'industry', 'description', 'targetAudience',
@@ -306,13 +306,13 @@ router.patch('/', authenticateToken, (req, res) => {
         updates.push('updated_at = CURRENT_TIMESTAMP');
         values.push(req.user.id);
 
-        db.prepare(`
+        await db.prepare(`
             UPDATE business_profiles 
             SET ${updates.join(', ')} 
             WHERE user_id = ?
         `).run(...values);
 
-        const profile = db.prepare('SELECT * FROM business_profiles WHERE user_id = ?').get(req.user.id);
+        const profile = await db.prepare('SELECT * FROM business_profiles WHERE user_id = ?').get(req.user.id);
 
         res.json({
             success: true,

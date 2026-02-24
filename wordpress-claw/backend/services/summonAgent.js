@@ -28,11 +28,11 @@ class SummonAgent {
      * Build comprehensive user context
      */
     async buildUserContext() {
-        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(this.userId);
-        const businessProfile = db.prepare('SELECT * FROM business_profiles WHERE user_id = ?').get(this.userId);
-        const connections = db.prepare('SELECT type, status FROM connections WHERE user_id = ?').all(this.userId);
-        const articleCount = db.prepare('SELECT COUNT(*) as count FROM articles WHERE user_id = ?').get(this.userId);
-        const recentArticles = db.prepare(
+        const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(this.userId);
+        const businessProfile = await db.prepare('SELECT * FROM business_profiles WHERE user_id = ?').get(this.userId);
+        const connections = await db.prepare('SELECT type, status FROM connections WHERE user_id = ?').all(this.userId);
+        const articleCount = await db.prepare('SELECT COUNT(*) as count FROM articles WHERE user_id = ?').get(this.userId);
+        const recentArticles = await db.prepare(
             'SELECT title, keyword, status, created_at FROM articles WHERE user_id = ? ORDER BY created_at DESC LIMIT 5'
         ).all(this.userId);
 
@@ -400,7 +400,7 @@ class SummonAgent {
      */
     async uploadImageToGitHub(imageBuffer, filename) {
         try {
-            const githubConnection = db.prepare(
+            const githubConnection = await db.prepare(
                 'SELECT * FROM connections WHERE user_id = ? AND type = ? AND status = ?'
             ).get(this.userId, 'github', 'active');
 
@@ -451,7 +451,7 @@ class SummonAgent {
      */
     async saveArticle(contentData, imageUrl = null) {
         try {
-            const result = db.prepare(`
+            const result = await db.prepare(`
                 INSERT INTO articles 
                 (user_id, title, content, excerpt, keyword, status, meta_title, meta_description, 
                  tags, featured_image_url, credits_used, created_at, updated_at)
@@ -474,11 +474,11 @@ class SummonAgent {
 
             // Deduct credit if not pro
             if (this.context.user.tier !== 'pro') {
-                db.prepare('UPDATE users SET credits_used = credits_used + 1 WHERE id = ?').run(this.userId);
+                await db.prepare('UPDATE users SET credits_used = credits_used + 1 WHERE id = ?').run(this.userId);
             }
 
             // Log activity
-            db.prepare(`
+            await db.prepare(`
                 INSERT INTO activity_log (user_id, action, entity_type, entity_id, details)
                 VALUES (?, ?, ?, ?, ?)
             `).run(this.userId, 'generated', 'article', articleId, JSON.stringify({
@@ -521,7 +521,7 @@ class SummonAgent {
     async publishToWordPress(articleId) {
         try {
             // Get article
-            const article = db.prepare('SELECT * FROM articles WHERE id = ? AND user_id = ?')
+            const article = await db.prepare('SELECT * FROM articles WHERE id = ? AND user_id = ?')
                 .get(articleId, this.userId);
 
             if (!article) {
@@ -532,7 +532,7 @@ class SummonAgent {
             }
 
             // Get WordPress connection
-            const wpConnection = db.prepare(
+            const wpConnection = await db.prepare(
                 'SELECT * FROM connections WHERE user_id = ? AND type = ? AND status = ?'
             ).get(this.userId, 'wordpress', 'active');
 
@@ -553,14 +553,14 @@ class SummonAgent {
             });
 
             // Update article status
-            db.prepare(`
+            await db.prepare(`
                 UPDATE articles 
                 SET status = ?, wp_post_id = ?, wp_url = ?, published_at = CURRENT_TIMESTAMP 
                 WHERE id = ?
             `).run('published', publishResult.postId, publishResult.url, articleId);
 
             // Log activity
-            db.prepare(`
+            await db.prepare(`
                 INSERT INTO activity_log (user_id, action, entity_type, entity_id, details)
                 VALUES (?, ?, ?, ?, ?)
             `).run(this.userId, 'published', 'article', articleId, JSON.stringify({
@@ -785,8 +785,8 @@ class SummonAgent {
     /**
      * Handle publish intent
      */
-    handlePublishIntent() {
-        const drafts = db.prepare(
+    async handlePublishIntent() {
+        const drafts = await db.prepare(
             'SELECT id, title FROM articles WHERE user_id = ? AND status = ? ORDER BY created_at DESC LIMIT 5'
         ).all(this.userId, 'review');
 
@@ -917,7 +917,7 @@ class SummonAgent {
             case 'spreadsheet_process_row':
                 const rowAgent = new SpreadsheetAgent(this.userId);
                 // Get spreadsheet config from connection
-                const connection = db.prepare(`
+                const connection = await db.prepare(`
                     SELECT config FROM connections 
                     WHERE user_id = ? AND type = ? AND status = ?
                 `).get(this.userId, 'googlesheets', 'active');
@@ -930,7 +930,7 @@ class SummonAgent {
 
             case 'spreadsheet_process_all':
                 const allAgent = new SpreadsheetAgent(this.userId);
-                const allConnection = db.prepare(`
+                const allConnection = await db.prepare(`
                     SELECT config FROM connections 
                     WHERE user_id = ? AND type = ? AND status = ?
                 `).get(this.userId, 'googlesheets', 'active');

@@ -41,7 +41,7 @@ router.post('/register', async (req, res) => {
         }
 
         // Check if email exists
-        const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase());
+        const existingUser = await db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase());
         if (existingUser) {
             return res.status(409).json({
                 success: false,
@@ -53,18 +53,18 @@ router.post('/register', async (req, res) => {
         const passwordHash = await bcrypt.hash(password, 12);
 
         // Create user
-        const result = db.prepare(`
+        const result = await db.prepare(`
             INSERT INTO users (email, password_hash, name, tier, credits_included, subscription_status)
             VALUES (?, ?, ?, 'free', 0, 'inactive')
         `).run(email.toLowerCase(), passwordHash, name.trim());
 
         // Create empty business profile
-        db.prepare(`
+        await db.prepare(`
             INSERT INTO business_profiles (user_id) VALUES (?)
         `).run(result.lastInsertRowid);
 
         // Get created user
-        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+        const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
 
         // Generate token
         const token = generateToken(user);
@@ -108,7 +108,7 @@ router.post('/login', async (req, res) => {
         }
 
         // Find user
-        const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase());
+        const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase());
         if (!user) {
             return res.status(401).json({
                 success: false,
@@ -169,7 +169,7 @@ router.get('/verify', async (req, res) => {
         const jwt = require('jsonwebtoken');
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.userId);
+        const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.userId);
         if (!user) {
             return res.status(403).json({
                 success: false,

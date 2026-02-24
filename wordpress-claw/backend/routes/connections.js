@@ -5,9 +5,9 @@ const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
 
 // Get all connections for user
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
     try {
-        const connections = db.prepare(`
+        const connections = await db.prepare(`
             SELECT id, type, name, status, last_tested_at, last_error, created_at, updated_at
             FROM connections 
             WHERE user_id = ?
@@ -28,9 +28,9 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // Get single connection
-router.get('/:id', authenticateToken, (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
     try {
-        const connection = db.prepare(`
+        const connection = await db.prepare(`
             SELECT id, type, name, status, config, last_tested_at, last_error, created_at, updated_at
             FROM connections 
             WHERE id = ? AND user_id = ?
@@ -90,7 +90,7 @@ router.post('/', authenticateToken, async (req, res) => {
             testResult = { success: false, error: testErr.message };
         }
 
-        const result = db.prepare(`
+        const result = await db.prepare(`
             INSERT INTO connections (user_id, type, name, credentials, config, status, last_tested_at, last_error)
             VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
         `).run(
@@ -104,7 +104,7 @@ router.post('/', authenticateToken, async (req, res) => {
         );
 
         // Log activity
-        db.prepare(`
+        await db.prepare(`
             INSERT INTO activity_log (user_id, action, entity_type, entity_id, details)
             VALUES (?, 'created', 'connection', ?, ?)
         `).run(req.user.id, result.lastInsertRowid, JSON.stringify({ type, status: testResult.success ? 'active' : 'error' }));
@@ -138,7 +138,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
         const connectionId = req.params.id;
 
         // Check connection exists
-        const existing = db.prepare('SELECT * FROM connections WHERE id = ? AND user_id = ?').get(connectionId, req.user.id);
+        const existing = await db.prepare('SELECT * FROM connections WHERE id = ? AND user_id = ?').get(connectionId, req.user.id);
         if (!existing) {
             return res.status(404).json({
                 success: false,
@@ -180,7 +180,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
         updates.push('updated_at = CURRENT_TIMESTAMP');
         values.push(connectionId);
 
-        db.prepare(`UPDATE connections SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+        await db.prepare(`UPDATE connections SET ${updates.join(', ')} WHERE id = ?`).run(...values);
 
         res.json({
             success: true,
@@ -205,7 +205,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 // Test connection
 router.post('/:id/test', authenticateToken, async (req, res) => {
     try {
-        const connection = db.prepare('SELECT * FROM connections WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id);
+        const connection = await db.prepare('SELECT * FROM connections WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id);
         if (!connection) {
             return res.status(404).json({
                 success: false,
@@ -224,7 +224,7 @@ router.post('/:id/test', authenticateToken, async (req, res) => {
         }
 
         // Update connection status
-        db.prepare(`
+        await db.prepare(`
             UPDATE connections 
             SET status = ?, last_tested_at = CURRENT_TIMESTAMP, last_error = ?, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
@@ -249,9 +249,9 @@ router.post('/:id/test', authenticateToken, async (req, res) => {
 });
 
 // Delete connection
-router.delete('/:id', authenticateToken, (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
     try {
-        const result = db.prepare('DELETE FROM connections WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id);
+        const result = await db.prepare('DELETE FROM connections WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id);
         
         if (result.changes === 0) {
             return res.status(404).json({

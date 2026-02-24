@@ -36,7 +36,7 @@ function verifyToken(token) {
 /**
  * Authentication middleware
  */
-function authenticateToken(req, res, next) {
+async function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -57,18 +57,17 @@ function authenticateToken(req, res, next) {
 
     // Get fresh user data from database
     try {
-        let user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.userId);
+        let user = await db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.userId);
         
         // TEMPORARY FIX: If user not found but token is valid, recreate user
         if (!user) {
             console.log('User not found in DB, attempting to recreate from token:', decoded.email);
             try {
                 // Try to insert the user back
-                const result = db.prepare(`
-                    INSERT INTO users (id, email, name, password_hash, tier, credits_included, credits_used, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                const result = await db.prepare(`
+                    INSERT INTO users (email, name, password_hash, tier, credits_included, credits_used)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 `).run(
-                    decoded.userId,
                     decoded.email,
                     decoded.email.split('@')[0], // Use email prefix as name
                     'restored_from_token', // Placeholder password
@@ -77,8 +76,8 @@ function authenticateToken(req, res, next) {
                     0
                 );
                 
-                user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.userId);
-                console.log('User recreated successfully');
+                user = await db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+                console.log('User recreated successfully with new ID:', result.lastInsertRowid);
             } catch (insertErr) {
                 console.error('Failed to recreate user:', insertErr);
                 return res.status(403).json({ 
@@ -110,7 +109,7 @@ function authenticateToken(req, res, next) {
 /**
  * Optional authentication - doesn't fail if no token
  */
-function optionalAuth(req, res, next) {
+async function optionalAuth(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -118,7 +117,7 @@ function optionalAuth(req, res, next) {
         const decoded = verifyToken(token);
         if (decoded) {
             try {
-                const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.userId);
+                const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.userId);
                 if (user) {
                     req.user = {
                         id: user.id,

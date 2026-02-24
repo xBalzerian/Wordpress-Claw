@@ -9,7 +9,7 @@ const { publishToWordPress } = require('../services/wordpress');
 const router = express.Router();
 
 // Get all articles
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
     try {
         const status = req.query.status;
         const limit = Math.min(parseInt(req.query.limit) || 20, 100);
@@ -31,7 +31,7 @@ router.get('/', authenticateToken, (req, res) => {
         query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
         params.push(limit, offset);
 
-        const articles = db.prepare(query).all(...params);
+        const articles = await db.prepare(query).all(...params);
 
         // Get total count
         let countQuery = 'SELECT COUNT(*) as total FROM articles WHERE user_id = ?';
@@ -40,7 +40,7 @@ router.get('/', authenticateToken, (req, res) => {
             countQuery += ' AND status = ?';
             countParams.push(status);
         }
-        const { total } = db.prepare(countQuery).get(...countParams);
+        const { total } = await db.prepare(countQuery).get(...countParams);
 
         res.json({
             success: true,
@@ -64,9 +64,9 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // Get single article
-router.get('/:id', authenticateToken, (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
     try {
-        const article = db.prepare(`
+        const article = await db.prepare(`
             SELECT * FROM articles WHERE id = ? AND user_id = ?
         `).get(req.params.id, req.user.id);
 
@@ -91,7 +91,7 @@ router.get('/:id', authenticateToken, (req, res) => {
 });
 
 // Create new article (manual)
-router.post('/', authenticateToken, requireCredits, (req, res) => {
+router.post('/', authenticateToken, requireCredits, async (req, res) => {
     try {
         const { title, content, excerpt, keyword, metaTitle, metaDescription, tags, category } = req.body;
 
@@ -102,7 +102,7 @@ router.post('/', authenticateToken, requireCredits, (req, res) => {
             });
         }
 
-        const result = db.prepare(`
+        const result = await db.prepare(`
             INSERT INTO articles (user_id, title, content, excerpt, keyword, status, meta_title, meta_description, tags, category, credits_used)
             VALUES (?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, 0)
         `).run(
@@ -118,12 +118,12 @@ router.post('/', authenticateToken, requireCredits, (req, res) => {
         );
 
         // Log activity
-        db.prepare(`
+        await db.prepare(`
             INSERT INTO activity_log (user_id, action, entity_type, entity_id, details)
             VALUES (?, 'created', 'article', ?, ?)
         `).run(req.user.id, result.lastInsertRowid, JSON.stringify({ title, method: 'manual' }));
 
-        const article = db.prepare('SELECT * FROM articles WHERE id = ?').get(result.lastInsertRowid);
+        const article = await db.prepare('SELECT * FROM articles WHERE id = ?').get(result.lastInsertRowid);
 
         res.status(201).json({
             success: true,
@@ -152,20 +152,20 @@ router.post('/generate', authenticateToken, requireCredits, async (req, res) => 
         }
 
         // Get business profile for context
-        const businessProfile = db.prepare('SELECT * FROM business_profiles WHERE user_id = ?').get(req.user.id);
+        const businessProfile = await db.prepare('SELECT * FROM business_profiles WHERE user_id = ?').get(req.user.id);
 
         // Get WordPress connection
-        const wpConnection = db.prepare(`
+        const wpConnection = await db.prepare(`
             SELECT * FROM connections WHERE user_id = ? AND type = 'wordpress' AND status = 'active' LIMIT 1
         `).get(req.user.id);
 
         // Get GitHub connection for image uploads
-        const githubConnection = db.prepare(`
+        const githubConnection = await db.prepare(`
             SELECT * FROM connections WHERE user_id = ? AND type = 'github' AND status = 'active' LIMIT 1
         `).get(req.user.id);
 
         // Create article in generating status
-        const result = db.prepare(`
+        const result = await db.prepare(`
             INSERT INTO articles (user_id, keyword, status, credits_used)
             VALUES (?, ?, 'generating', 1)
         `).run(req.user.id, keyword);
@@ -173,7 +173,7 @@ router.post('/generate', authenticateToken, requireCredits, async (req, res) => 
         const articleId = result.lastInsertRowid;
 
         // Log activity
-        db.prepare(`
+        await db.prepare(`
             INSERT INTO activity_log (user_id, action, entity_type, entity_id, details)
             VALUES (?, 'started_generation', 'article', ?, ?)
         `).run(req.user.id, articleId, JSON.stringify({ keyword }));
@@ -242,7 +242,7 @@ router.post('/generate', authenticateToken, requireCredits, async (req, res) => 
                     }
 
                     // Log image generation
-                    db.prepare(`
+                    await db.prepare(`
                         INSERT INTO activity_log (user_id, action, entity_type, entity_id, details)
                         VALUES (?, 'generated_image', 'article', ?, ?)
                     `).run(req.user.id, articleId, JSON.stringify({ 
@@ -258,7 +258,7 @@ router.post('/generate', authenticateToken, requireCredits, async (req, res) => 
             }
 
             // Update article with generated content
-            db.prepare(`
+            await db.prepare(`
                 UPDATE articles 
                 SET title = ?, content = ?, excerpt = ?, meta_title = ?, meta_description = ?, 
                     tags = ?, status = ?, featured_image_url = ?, github_image_url = ?, 
@@ -280,13 +280,13 @@ router.post('/generate', authenticateToken, requireCredits, async (req, res) => 
 
             // Deduct credit
             if (req.user.tier !== 'pro') {
-                db.prepare('UPDATE users SET credits_used = credits_used + 1 WHERE id = ?').run(req.user.id);
+                await db.prepare('UPDATE users SET credits_used = credits_used + 1 WHERE id = ?').run(req.user.id);
             }
 
             // Auto-publish if enabled
             if (businessProfile?.auto_publish && wpConnection) {
                 try {
-                    const article = db.prepare('SELECT * FROM articles WHERE id = ?').get(articleId);
+                    const article = await db.prepare('SELECT * FROM articles WHERE id = ?').get(articleId);
                     const wpCredentials = JSON.parse(wpConnection.credentials);
                     
                     const publishResult = await publishToWordPress({
@@ -295,14 +295,14 @@ router.post('/generate', authenticateToken, requireCredits, async (req, res) => 
                     });
 
                     // Update article as published
-                    db.prepare(`
+                    await db.prepare(`
                         UPDATE articles 
                         SET status = ?, wp_post_id = ?, wp_url = ?, published_at = CURRENT_TIMESTAMP 
                         WHERE id = ?
                     `).run('published', publishResult.postId, publishResult.url, articleId);
 
                     // Log activity
-                    db.prepare(`
+                    await db.prepare(`
                         INSERT INTO activity_log (user_id, action, entity_type, entity_id, details)
                         VALUES (?, 'auto_published', 'article', ?, ?)
                     `).run(req.user.id, articleId, JSON.stringify({ wpUrl: publishResult.url }));
@@ -310,14 +310,14 @@ router.post('/generate', authenticateToken, requireCredits, async (req, res) => 
                 } catch (publishErr) {
                     console.error('Auto-publish error:', publishErr);
                     // Update status to review if auto-publish failed
-                    db.prepare(`
+                    await db.prepare(`
                         UPDATE articles SET status = 'review', updated_at = CURRENT_TIMESTAMP WHERE id = ?
                     `).run(articleId);
                 }
             }
 
             // Log activity
-            db.prepare(`
+            await db.prepare(`
                 INSERT INTO activity_log (user_id, action, entity_type, entity_id, details)
                 VALUES (?, 'generated', 'article', ?, ?)
             `).run(req.user.id, articleId, JSON.stringify({ 
@@ -326,13 +326,13 @@ router.post('/generate', authenticateToken, requireCredits, async (req, res) => 
                 autoPublished: businessProfile?.auto_publish && wpConnection
             }));
 
-        }).catch(err => {
+        }).catch(async (err) => {
             console.error('Generation error:', err);
-            db.prepare(`
+            await db.prepare(`
                 UPDATE articles SET status = 'failed', updated_at = CURRENT_TIMESTAMP WHERE id = ?
             `).run(articleId);
 
-            db.prepare(`
+            await db.prepare(`
                 INSERT INTO activity_log (user_id, action, entity_type, entity_id, details)
                 VALUES (?, 'generation_failed', 'article', ?, ?)
             `).run(req.user.id, articleId, JSON.stringify({ error: err.message }));
@@ -348,13 +348,13 @@ router.post('/generate', authenticateToken, requireCredits, async (req, res) => 
 });
 
 // Update article
-router.put('/:id', authenticateToken, (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
     try {
         const { title, content, excerpt, keyword, metaTitle, metaDescription, tags, category } = req.body;
         const articleId = req.params.id;
 
         // Check article exists
-        const existing = db.prepare('SELECT * FROM articles WHERE id = ? AND user_id = ?').get(articleId, req.user.id);
+        const existing = await db.prepare('SELECT * FROM articles WHERE id = ? AND user_id = ?').get(articleId, req.user.id);
         if (!existing) {
             return res.status(404).json({
                 success: false,
@@ -408,9 +408,9 @@ router.put('/:id', authenticateToken, (req, res) => {
         updates.push('updated_at = CURRENT_TIMESTAMP');
         values.push(articleId);
 
-        db.prepare(`UPDATE articles SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+        await db.prepare(`UPDATE articles SET ${updates.join(', ')} WHERE id = ?`).run(...values);
 
-        const article = db.prepare('SELECT * FROM articles WHERE id = ?').get(articleId);
+        const article = await db.prepare('SELECT * FROM articles WHERE id = ?').get(articleId);
 
         res.json({
             success: true,
@@ -432,7 +432,7 @@ router.post('/:id/publish', authenticateToken, async (req, res) => {
         const articleId = req.params.id;
 
         // Get article
-        const article = db.prepare('SELECT * FROM articles WHERE id = ? AND user_id = ?').get(articleId, req.user.id);
+        const article = await db.prepare('SELECT * FROM articles WHERE id = ? AND user_id = ?').get(articleId, req.user.id);
         if (!article) {
             return res.status(404).json({
                 success: false,
@@ -448,7 +448,7 @@ router.post('/:id/publish', authenticateToken, async (req, res) => {
         }
 
         // Get WordPress connection
-        const wpConnection = db.prepare(`
+        const wpConnection = await db.prepare(`
             SELECT * FROM connections WHERE user_id = ? AND type = 'wordpress' AND status = 'active' LIMIT 1
         `).get(req.user.id);
 
@@ -467,14 +467,14 @@ router.post('/:id/publish', authenticateToken, async (req, res) => {
         });
 
         // Update article
-        db.prepare(`
+        await db.prepare(`
             UPDATE articles 
             SET status = 'published', wp_post_id = ?, wp_url = ?, published_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
         `).run(publishResult.postId, publishResult.url, articleId);
 
         // Log activity
-        db.prepare(`
+        await db.prepare(`
             INSERT INTO activity_log (user_id, action, entity_type, entity_id, details)
             VALUES (?, 'published', 'article', ?, ?)
         `).run(req.user.id, articleId, JSON.stringify({ wpUrl: publishResult.url }));
@@ -498,9 +498,9 @@ router.post('/:id/publish', authenticateToken, async (req, res) => {
 });
 
 // Delete article
-router.delete('/:id', authenticateToken, (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
     try {
-        const result = db.prepare('DELETE FROM articles WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id);
+        const result = await db.prepare('DELETE FROM articles WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id);
         
         if (result.changes === 0) {
             return res.status(404).json({
