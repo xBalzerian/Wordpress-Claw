@@ -594,6 +594,11 @@
                 
                 <div class="nav-section">
                     <div class="nav-section-title">Settings</div>
+                    <a href="business-profile.html" class="nav-item" id="businessProfileLink">
+                        <span class="nav-icon">🏢</span>
+                        Business Profile
+                        <span class="completion-badge" id="sidebarCompletion" style="margin-left: auto; font-size: 11px; padding: 2px 6px; border-radius: 10px; background: #ff9800; color: white;">⚠️ 0%</span>
+                    </a>
                     <a href="connections.html" class="nav-item">
                         <span class="nav-icon">🔗</span>
                         Connections
@@ -824,6 +829,31 @@
             }
         }
 
+        // Load business profile completion for sidebar
+        async function loadProfileCompletion() {
+            try {
+                const response = await fetch(`${API_URL}/api/business-profile/completion`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const completion = data.data.completion || 0;
+                    const badge = document.getElementById('sidebarCompletion');
+                    
+                    if (completion >= 100) {
+                        badge.textContent = '✓ 100%';
+                        badge.style.background = '#4caf50';
+                    } else {
+                        badge.textContent = `⚠️ ${completion}%`;
+                        badge.style.background = '#ff9800';
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load profile completion:', err);
+            }
+        }
+
         // Initialize ClawBot session
         async function initClawBot() {
             try {
@@ -903,6 +933,7 @@
 
         // Load data
         loadDashboard();
+        loadProfileCompletion();
         initClawBot();
     </script>
 </body>

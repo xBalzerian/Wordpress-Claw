@@ -1,7 +1,9 @@
 const express = require('express');
 const db = require('../database/db');
 const { authenticateToken, requireCredits } = require('../middleware/auth');
-const { generateContent } = require('../services/contentGeneration');
+const { generateContent, generateImagePrompt } = require('../services/contentGeneration');
+const { generateFeaturedImage } = require('../services/imageGeneration');
+const { uploadImage } = require('../services/github');
 const { publishToWordPress } = require('../services/wordpress');
 
 const router = express.Router();
@@ -157,6 +159,11 @@ router.post('/generate', authenticateToken, requireCredits, async (req, res) => 
             SELECT * FROM connections WHERE user_id = ? AND type = 'wordpress' AND status = 'active' LIMIT 1
         `).get(req.user.id);
 
+        // Get GitHub connection for image uploads
+        const githubConnection = db.prepare(`
+            SELECT * FROM connections WHERE user_id = ? AND type = 'github' AND status = 'active' LIMIT 1
+        `).get(req.user.id);
+
         // Create article in generating status
         const result = db.prepare(`
             INSERT INTO articles (user_id, keyword, status, credits_used)
@@ -189,11 +196,73 @@ router.post('/generate', authenticateToken, requireCredits, async (req, res) => 
             userId: req.user.id,
             articleId
         }).then(async (generated) => {
+            let featuredImageUrl = null;
+            let githubImageUrl = null;
+            let githubImagePath = null;
+            let imageGenerationFailed = false;
+
+            // Generate images if business profile has image settings
+            if (businessProfile && businessProfile.image_count > 0) {
+                try {
+                    const imageCount = Math.min(businessProfile.image_count, 3);
+                    const imageStyle = businessProfile.image_style || 'photorealistic';
+
+                    // Generate image prompt
+                    const imagePrompt = await generateImagePrompt(generated.title, keyword, businessProfile);
+                    
+                    // Apply style to prompt
+                    const styledPrompt = `${imagePrompt}, ${imageStyle} style, high quality`;
+
+                    // Generate the featured image
+                    const imageResult = await generateFeaturedImage({
+                        prompt: styledPrompt,
+                        articleTitle: generated.title,
+                        keyword
+                    });
+
+                    // Upload to GitHub if connected
+                    if (githubConnection && imageResult.success) {
+                        try {
+                            const credentials = JSON.parse(githubConnection.credentials);
+                            const uploadResult = await uploadImage({
+                                imageBuffer: imageResult.buffer,
+                                filename: imageResult.filename,
+                                mimeType: imageResult.mimeType,
+                                credentials
+                            });
+
+                            githubImageUrl = uploadResult.url;
+                            githubImagePath = uploadResult.path;
+                            featuredImageUrl = uploadResult.url;
+                        } catch (uploadErr) {
+                            console.error('GitHub upload error:', uploadErr);
+                            // Still use the image even if upload fails
+                            imageGenerationFailed = true;
+                        }
+                    }
+
+                    // Log image generation
+                    db.prepare(`
+                        INSERT INTO activity_log (user_id, action, entity_type, entity_id, details)
+                        VALUES (?, 'generated_image', 'article', ?, ?)
+                    `).run(req.user.id, articleId, JSON.stringify({ 
+                        style: imageStyle,
+                        uploaded: !!githubImageUrl,
+                        failed: imageGenerationFailed
+                    }));
+
+                } catch (imageErr) {
+                    console.error('Image generation error:', imageErr);
+                    imageGenerationFailed = true;
+                }
+            }
+
             // Update article with generated content
             db.prepare(`
                 UPDATE articles 
                 SET title = ?, content = ?, excerpt = ?, meta_title = ?, meta_description = ?, 
-                    tags = ?, status = 'review', updated_at = CURRENT_TIMESTAMP
+                    tags = ?, status = ?, featured_image_url = ?, github_image_url = ?, 
+                    github_image_path = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             `).run(
                 generated.title,
@@ -202,6 +271,10 @@ router.post('/generate', authenticateToken, requireCredits, async (req, res) => 
                 generated.metaTitle,
                 generated.metaDescription,
                 generated.tags,
+                businessProfile?.auto_publish ? 'publishing' : 'review',
+                featuredImageUrl,
+                githubImageUrl,
+                githubImagePath,
                 articleId
             );
 
@@ -210,11 +283,48 @@ router.post('/generate', authenticateToken, requireCredits, async (req, res) => 
                 db.prepare('UPDATE users SET credits_used = credits_used + 1 WHERE id = ?').run(req.user.id);
             }
 
+            // Auto-publish if enabled
+            if (businessProfile?.auto_publish && wpConnection) {
+                try {
+                    const article = db.prepare('SELECT * FROM articles WHERE id = ?').get(articleId);
+                    const wpCredentials = JSON.parse(wpConnection.credentials);
+                    
+                    const publishResult = await publishToWordPress({
+                        article,
+                        credentials: wpCredentials
+                    });
+
+                    // Update article as published
+                    db.prepare(`
+                        UPDATE articles 
+                        SET status = ?, wp_post_id = ?, wp_url = ?, published_at = CURRENT_TIMESTAMP 
+                        WHERE id = ?
+                    `).run('published', publishResult.postId, publishResult.url, articleId);
+
+                    // Log activity
+                    db.prepare(`
+                        INSERT INTO activity_log (user_id, action, entity_type, entity_id, details)
+                        VALUES (?, 'auto_published', 'article', ?, ?)
+                    `).run(req.user.id, articleId, JSON.stringify({ wpUrl: publishResult.url }));
+
+                } catch (publishErr) {
+                    console.error('Auto-publish error:', publishErr);
+                    // Update status to review if auto-publish failed
+                    db.prepare(`
+                        UPDATE articles SET status = 'review', updated_at = CURRENT_TIMESTAMP WHERE id = ?
+                    `).run(articleId);
+                }
+            }
+
             // Log activity
             db.prepare(`
                 INSERT INTO activity_log (user_id, action, entity_type, entity_id, details)
                 VALUES (?, 'generated', 'article', ?, ?)
-            `).run(req.user.id, articleId, JSON.stringify({ title: generated.title }));
+            `).run(req.user.id, articleId, JSON.stringify({ 
+                title: generated.title,
+                hasImage: !!featuredImageUrl,
+                autoPublished: businessProfile?.auto_publish && wpConnection
+            }));
 
         }).catch(err => {
             console.error('Generation error:', err);

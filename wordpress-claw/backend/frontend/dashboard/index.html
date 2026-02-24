@@ -567,14 +567,14 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <a href="/" class="sidebar-logo">
-                    <img src="./assets/logo.png" alt="WordPress Claw">
+                    <img src="../assets/logo.png" alt="WordPress Claw">
                 </a>
             </div>
             
             <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">Main</div>
-                    <a href="/dashboard/" class="nav-item active">
+                    <a href="index.html" class="nav-item active">
                         <span class="nav-icon">📊</span>
                         Dashboard
                     </a>
@@ -586,10 +586,19 @@
                         <span class="nav-icon">🤖</span>
                         ClawBot
                     </a>
+                    <a href="spreadsheet.html" class="nav-item">
+                        <span class="nav-icon">📋</span>
+                        Spreadsheet
+                    </a>
                 </div>
                 
                 <div class="nav-section">
                     <div class="nav-section-title">Settings</div>
+                    <a href="business-profile.html" class="nav-item" id="businessProfileLink">
+                        <span class="nav-icon">🏢</span>
+                        Business Profile
+                        <span class="completion-badge" id="sidebarCompletion" style="margin-left: auto; font-size: 11px; padding: 2px 6px; border-radius: 10px; background: #ff9800; color: white;">⚠️ 0%</span>
+                    </a>
                     <a href="connections.html" class="nav-item">
                         <span class="nav-icon">🔗</span>
                         Connections
@@ -597,6 +606,14 @@
                     <a href="billing.html" class="nav-item">
                         <span class="nav-icon">💳</span>
                         Billing
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Help</div>
+                    <a href="../docs.html" class="nav-item" target="_blank">
+                        <span class="nav-icon">📚</span>
+                        Documentation
                     </a>
                 </div>
             </nav>
@@ -720,7 +737,7 @@
                             <div class="checklist-item">
                                 <div class="checklist-checkbox" id="checkProfile"></div>
                                 <span class="checklist-text" id="textProfile">Complete business profile</span>
-                                <a href="/business-profile.html" class="checklist-action">Set up →</a>
+                                <a href="../business-profile.html" class="checklist-action">Set up →</a>
                             </div>
                             <div class="checklist-item">
                                 <div class="checklist-checkbox" id="checkConnection"></div>
@@ -812,6 +829,31 @@
             }
         }
 
+        // Load business profile completion for sidebar
+        async function loadProfileCompletion() {
+            try {
+                const response = await fetch(`${API_URL}/api/business-profile/completion`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const completion = data.data.completion || 0;
+                    const badge = document.getElementById('sidebarCompletion');
+                    
+                    if (completion >= 100) {
+                        badge.textContent = '✓ 100%';
+                        badge.style.background = '#4caf50';
+                    } else {
+                        badge.textContent = `⚠️ ${completion}%`;
+                        badge.style.background = '#ff9800';
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load profile completion:', err);
+            }
+        }
+
         // Initialize ClawBot session
         async function initClawBot() {
             try {
@@ -891,6 +933,7 @@
 
         // Load data
         loadDashboard();
+        loadProfileCompletion();
         initClawBot();
     </script>
 </body>

@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS business_profiles (
     keywords TEXT,
     competitors TEXT,
     unique_selling_points TEXT,
+    image_count INTEGER DEFAULT 1 CHECK (image_count BETWEEN 1 AND 3),
+    image_style TEXT DEFAULT 'photorealistic' CHECK (image_style IN ('photorealistic', 'illustration', '3d', 'photo')),
+    auto_publish BOOLEAN DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

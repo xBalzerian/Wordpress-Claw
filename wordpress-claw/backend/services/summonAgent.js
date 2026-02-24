@@ -67,23 +67,62 @@ class SummonAgent {
             hasBusinessProfile: !!(businessProfile?.company_name && businessProfile?.industry),
             hasWordPress: connections.some(c => c.type === 'wordpress' && c.status === 'active'),
             hasGitHub: connections.some(c => c.type === 'github' && c.status === 'active'),
-            hasKeywords: !!(businessProfile?.keywords)
+            hasKeywords: !!(businessProfile?.keywords),
+            hasImagePreferences: !!(businessProfile?.image_count && businessProfile?.image_style),
+            hasDescription: !!(businessProfile?.description),
+            hasTargetAudience: !!(businessProfile?.target_audience)
         };
 
-        const ready = checks.hasBusinessProfile && checks.hasWordPress;
+        // Calculate completion percentage
+        const fields = [
+            { check: checks.hasBusinessProfile, name: 'business profile', weight: 25 },
+            { check: checks.hasKeywords, name: 'target keywords', weight: 15 },
+            { check: checks.hasImagePreferences, name: 'image preferences', weight: 10 },
+            { check: checks.hasDescription, name: 'company description', weight: 10 },
+            { check: checks.hasTargetAudience, name: 'target audience', weight: 10 },
+            { check: checks.hasWordPress, name: 'WordPress connection', weight: 20 },
+            { check: checks.hasGitHub, name: 'GitHub connection', weight: 10 }
+        ];
+
+        let completion = 0;
         const missing = [];
 
-        if (!checks.hasBusinessProfile) missing.push('business profile');
-        if (!checks.hasWordPress) missing.push('WordPress connection');
-        if (!checks.hasKeywords) missing.push('target keywords');
+        fields.forEach(field => {
+            if (field.check) {
+                completion += field.weight;
+            } else {
+                missing.push(field.name);
+            }
+        });
+
+        const ready = checks.hasBusinessProfile && checks.hasWordPress;
 
         return {
             ready,
+            completion: Math.min(100, completion),
             checks,
             missing,
             canGenerate: checks.hasBusinessProfile,
             canPublish: checks.hasWordPress
         };
+    }
+
+    /**
+     * Format progress bar for display
+     */
+    formatProgressBar(completion, missing) {
+        const filled = Math.round(completion / 10);
+        const empty = 10 - filled;
+        const bar = '█'.repeat(filled) + '░'.repeat(empty);
+        
+        let message = `Business Profile ${bar} ${completion}% complete`;
+        
+        if (missing.length > 0) {
+            const keyMissing = missing.slice(0, 3).join(', ');
+            message += `\nMissing: ${keyMissing}`;
+        }
+        
+        return message;
     }
 
     /**
@@ -95,7 +134,7 @@ class SummonAgent {
         if (!readiness.checks.hasBusinessProfile) {
             return {
                 type: 'onboarding_needed',
-                message: `Hey there! I'm ClawBot, your AI content strategist. 👋\n\nI see you haven't completed your business profile yet. Let's get that set up first so I can create content that truly represents your brand.`,
+                message: `Hey there! I'm ClawBot, your AI content strategist. 👋\n\n${this.formatProgressBar(readiness.completion, readiness.missing)}\n\nLet's complete your business profile first so I can create content that truly represents your brand.`,
                 actions: [{
                     type: 'navigate',
                     label: 'Complete Business Profile',
@@ -108,7 +147,7 @@ class SummonAgent {
         if (!readiness.checks.hasWordPress) {
             return {
                 type: 'connection_needed',
-                message: `Welcome back! 🎉\n\nYour business profile looks great. To publish content directly to your website, you'll need to connect your WordPress site.`,
+                message: `Welcome back! 🎉\n\n${this.formatProgressBar(readiness.completion, readiness.missing)}\n\nYour business profile looks great. To publish content directly to your website, you'll need to connect your WordPress site.`,
                 actions: [{
                     type: 'navigate',
                     label: 'Connect WordPress',
@@ -118,10 +157,23 @@ class SummonAgent {
             };
         }
 
+        if (!readiness.checks.hasImagePreferences) {
+            return {
+                type: 'image_preferences_needed',
+                message: `Almost there! 🎨\n\n${this.formatProgressBar(readiness.completion, readiness.missing)}\n\nSet your image preferences to automatically generate featured images for your articles.`,
+                actions: [{
+                    type: 'navigate',
+                    label: 'Set Image Preferences',
+                    params: { path: '/dashboard/business-profile.html' }
+                }],
+                suggestions: ['How does image generation work?', 'What styles are available?', 'Skip for now']
+            };
+        }
+
         if (!readiness.checks.hasKeywords) {
             return {
                 type: 'keywords_needed',
-                message: `Ready to create some amazing content! 🚀\n\nWhat keywords or topics do you want to rank for? I can help you research competitors and create SEO-optimized articles.`,
+                message: `Ready to create some amazing content! 🚀\n\n${this.formatProgressBar(readiness.completion, readiness.missing)}\n\nWhat keywords or topics do you want to rank for? I can help you research competitors and create SEO-optimized articles.`,
                 actions: [{
                     type: 'start_content_workflow',
                     label: 'Start Content Creation',
@@ -134,7 +186,7 @@ class SummonAgent {
         // Fully ready
         return {
             type: 'ready',
-            message: `Ready to dominate the search rankings! 💪\n\nI'm all set up with your business profile and WordPress connection. What content would you like to create today?`,
+            message: `Ready to dominate the search rankings! 💪\n\n${this.formatProgressBar(100, [])}\n\nI'm all set up with your business profile and WordPress connection. What content would you like to create today?`,
             actions: [{
                 type: 'start_content_workflow',
                 label: 'Create New Article',
@@ -301,10 +353,14 @@ class SummonAgent {
             const { generateImagePrompt } = require('./contentGeneration');
             const imagePrompt = await generateImagePrompt(title, keyword, this.context.businessProfile);
 
+            // Apply image style from business profile
+            const imageStyle = this.context.businessProfile?.image_style || 'photorealistic';
+            const styledPrompt = `${imagePrompt}, ${imageStyle} style, high quality`;
+
             // Generate the image
             const { generateFeaturedImage: generateImage } = require('./imageGeneration');
             const imageResult = await generateImage({
-                prompt: imagePrompt,
+                prompt: styledPrompt,
                 articleTitle: title,
                 keyword
             });
@@ -625,6 +681,12 @@ class SummonAgent {
             return this.handleStatusIntent();
         }
 
+        // Profile completion intent
+        if (lowerMessage.includes('profile') || lowerMessage.includes('setup') || 
+            lowerMessage.includes('completion') || lowerMessage.includes('progress')) {
+            return this.handleProfileIntent();
+        }
+
         // Help intent
         if (lowerMessage.includes('help') || lowerMessage.includes('what can you do') || 
             lowerMessage.includes('how do you work')) {
@@ -636,6 +698,24 @@ class SummonAgent {
             type: 'general',
             message: `I'm here to help you create SEO-optimized content that ranks! I can:\n\n📝 Research keywords and competitors\n✍️ Generate comprehensive articles\n🎨 Create featured images\n🚀 Publish directly to WordPress\n📊 Check your spreadsheet for topics\n\nWhat would you like to do today?`,
             suggestions: ['I want to rank for...', 'Show me content ideas', 'Check my spreadsheet', 'How does this work?']
+        };
+    }
+
+    /**
+     * Handle profile-related intents
+     */
+    handleProfileIntent() {
+        const { readiness } = this.context;
+        
+        return {
+            type: 'profile_status',
+            message: this.formatProgressBar(readiness.completion, readiness.missing),
+            actions: readiness.completion < 100 ? [{
+                type: 'navigate',
+                label: 'Complete Profile',
+                params: { path: '/dashboard/business-profile.html' }
+            }] : [],
+            suggestions: ['What\'s missing?', 'Help me complete it', 'Start creating content']
         };
     }
 
@@ -700,7 +780,7 @@ class SummonAgent {
             }],
             suggestions: ['Process all pending', 'How does this work?', 'Show me my sheet']
         };
-}
+    }
 
     /**
      * Handle publish intent
@@ -741,7 +821,7 @@ class SummonAgent {
         
         return {
             type: 'status',
-            message: `**Your Account Status:**\n\nPlan: ${user.tier.toUpperCase()}\nCredits: ${user.creditsAvailable === 'unlimited' ? 'Unlimited ♾️' : `${user.creditsAvailable} remaining`}\nArticles created: ${this.context.stats.totalArticles}\n\nReady to publish: ${readiness.ready ? '✅ Yes' : '❌ No'}`,
+            message: `**Your Account Status:**\n\nPlan: ${user.tier.toUpperCase()}\nCredits: ${user.creditsAvailable === 'unlimited' ? 'Unlimited ♾️' : `${user.creditsAvailable} remaining`}\nArticles created: ${this.context.stats.totalArticles}\n\n${this.formatProgressBar(readiness.completion, readiness.missing)}\n\nReady to publish: ${readiness.ready ? '✅ Yes' : '❌ No'}`,
             actions: user.tier !== 'pro' ? [{
                 type: 'navigate',
                 label: 'Upgrade Plan',

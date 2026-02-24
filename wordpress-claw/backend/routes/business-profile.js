@@ -4,6 +4,11 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Valid values for validation
+const VALID_TONES = ['professional', 'casual', 'friendly', 'formal', 'witty'];
+const VALID_CONTENT_TYPES = ['blog_post', 'article', 'news', 'tutorial', 'review'];
+const VALID_IMAGE_STYLES = ['photorealistic', 'illustration', '3d', 'photo'];
+
 // Get business profile
 router.get('/', authenticateToken, (req, res) => {
     try {
@@ -34,6 +39,83 @@ router.get('/', authenticateToken, (req, res) => {
     }
 });
 
+// Get business profile completion status
+router.get('/completion', authenticateToken, (req, res) => {
+    try {
+        const profile = db.prepare(`
+            SELECT * FROM business_profiles WHERE user_id = ?
+        `).get(req.user.id);
+
+        const connections = db.prepare(`
+            SELECT type, status FROM connections WHERE user_id = ?
+        `).all(req.user.id);
+
+        if (!profile) {
+            return res.json({
+                success: true,
+                data: {
+                    completion: 0,
+                    missing: ['company_name', 'industry', 'description', 'target_audience', 'keywords', 'image_preferences', 'wordpress_connection'],
+                    ready: false
+                }
+            });
+        }
+
+        // Calculate completion percentage
+        const fields = [
+            { name: 'company_name', value: profile.company_name, weight: 15 },
+            { name: 'industry', value: profile.industry, weight: 10 },
+            { name: 'description', value: profile.description, weight: 10 },
+            { name: 'target_audience', value: profile.target_audience, weight: 10 },
+            { name: 'keywords', value: profile.keywords, weight: 15 },
+            { name: 'image_preferences', value: profile.image_count && profile.image_style, weight: 10 },
+            { name: 'wordpress_connection', value: connections.some(c => c.type === 'wordpress' && c.status === 'active'), weight: 20 },
+            { name: 'github_connection', value: connections.some(c => c.type === 'github' && c.status === 'active'), weight: 10 }
+        ];
+
+        let completion = 0;
+        const missing = [];
+
+        fields.forEach(field => {
+            if (field.value) {
+                completion += field.weight;
+            } else {
+                missing.push(field.name);
+            }
+        });
+
+        // Cap at 100
+        completion = Math.min(100, completion);
+
+        res.json({
+            success: true,
+            data: {
+                completion,
+                missing,
+                ready: completion >= 80,
+                canGenerate: !!(profile.company_name && profile.industry),
+                canPublish: connections.some(c => c.type === 'wordpress' && c.status === 'active'),
+                fields: {
+                    hasCompanyName: !!profile.company_name,
+                    hasIndustry: !!profile.industry,
+                    hasDescription: !!profile.description,
+                    hasTargetAudience: !!profile.target_audience,
+                    hasKeywords: !!profile.keywords,
+                    hasImagePreferences: !!(profile.image_count && profile.image_style),
+                    hasWordPress: connections.some(c => c.type === 'wordpress' && c.status === 'active'),
+                    hasGitHub: connections.some(c => c.type === 'github' && c.status === 'active')
+                }
+            }
+        });
+    } catch (err) {
+        console.error('Get completion error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get profile completion'
+        });
+    }
+});
+
 // Update business profile
 router.put('/', authenticateToken, (req, res) => {
     try {
@@ -48,24 +130,25 @@ router.put('/', authenticateToken, (req, res) => {
             contentType,
             keywords,
             competitors,
-            uniqueSellingPoints
+            uniqueSellingPoints,
+            imageCount,
+            imageStyle,
+            autoPublish
         } = req.body;
 
         // Validate tone
-        const validTones = ['professional', 'casual', 'friendly', 'formal', 'witty'];
-        if (tone && !validTones.includes(tone)) {
+        if (tone && !VALID_TONES.includes(tone)) {
             return res.status(400).json({
                 success: false,
-                error: `Invalid tone. Must be one of: ${validTones.join(', ')}`
+                error: `Invalid tone. Must be one of: ${VALID_TONES.join(', ')}`
             });
         }
 
         // Validate content type
-        const validContentTypes = ['blog_post', 'article', 'news', 'tutorial', 'review'];
-        if (contentType && !validContentTypes.includes(contentType)) {
+        if (contentType && !VALID_CONTENT_TYPES.includes(contentType)) {
             return res.status(400).json({
                 success: false,
-                error: `Invalid content type. Must be one of: ${validContentTypes.join(', ')}`
+                error: `Invalid content type. Must be one of: ${VALID_CONTENT_TYPES.join(', ')}`
             });
         }
 
@@ -74,6 +157,22 @@ router.put('/', authenticateToken, (req, res) => {
             return res.status(400).json({
                 success: false,
                 error: 'Word count must be between 300 and 3000'
+            });
+        }
+
+        // Validate image count
+        if (imageCount !== undefined && (imageCount < 1 || imageCount > 3)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Image count must be between 1 and 3'
+            });
+        }
+
+        // Validate image style
+        if (imageStyle && !VALID_IMAGE_STYLES.includes(imageStyle)) {
+            return res.status(400).json({
+                success: false,
+                error: `Invalid image style. Must be one of: ${VALID_IMAGE_STYLES.join(', ')}`
             });
         }
 
@@ -125,6 +224,18 @@ router.put('/', authenticateToken, (req, res) => {
             updates.push('unique_selling_points = ?');
             values.push(uniqueSellingPoints || null);
         }
+        if (imageCount !== undefined) {
+            updates.push('image_count = ?');
+            values.push(imageCount);
+        }
+        if (imageStyle !== undefined) {
+            updates.push('image_style = ?');
+            values.push(imageStyle);
+        }
+        if (autoPublish !== undefined) {
+            updates.push('auto_publish = ?');
+            values.push(autoPublish ? 1 : 0);
+        }
 
         if (updates.length === 0) {
             return res.status(400).json({
@@ -171,7 +282,7 @@ router.patch('/', authenticateToken, (req, res) => {
         const allowedFields = [
             'companyName', 'industry', 'description', 'targetAudience',
             'location', 'tone', 'wordCount', 'contentType', 'keywords',
-            'competitors', 'uniqueSellingPoints'
+            'competitors', 'uniqueSellingPoints', 'imageCount', 'imageStyle', 'autoPublish'
         ];
 
         const updates = [];
