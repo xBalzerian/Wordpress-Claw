@@ -989,9 +989,7 @@
             if (e.target.id === 'gsModal') closeGsModal();
         });
 
-        loadConnections();
-
-        // Google Sheets functions
+        // Google Sheets functions - MUST be defined before loadConnections
         function openGsModal() {
             document.getElementById('gsModal').classList.add('active');
         }
@@ -1009,6 +1007,8 @@
             document.getElementById(`tab-${tab}`).classList.add('active');
             document.getElementById(`gs-content-${tab}`).classList.add('active');
         }
+
+        loadConnections();
 
         async function saveGsConnection() {
             const apiKey = document.getElementById('gsApiKey').value.trim();
