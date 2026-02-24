@@ -567,6 +567,29 @@
             </div>
 
             <div class="connections-grid" id="connectionsList">
+                <!-- Google Sheets Card - COMMAND CENTER (First) -->
+                <div class="connection-card" style="border: 2px solid #0f9d58; position: relative;">
+                    <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #0f9d58; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Command Center</div>
+                    <div class="connection-header">
+                        <div class="connection-icon googlesheets" style="background: #0f9d58;">📊</div>
+                        <div class="connection-info">
+                            <h3>Google Sheets</h3>
+                            <p>Your content command center</p>
+                        </div>
+                    </div>
+                    
+                    <div class="connection-body" id="gsBody">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔗</div>
+                            <p>Not connected yet</p>
+                        </div>
+                    </div>
+                    
+                    <div class="connection-actions">
+                        <button class="btn btn-primary" id="gsConnectBtn" onclick="openGsModal()">Connect</button>
+                    </div>
+                </div>
+
                 <!-- WordPress Card -->
                 <div class="connection-card">
                     <div class="connection-header">
@@ -608,28 +631,6 @@
                     
                     <div class="connection-actions">
                         <button class="btn btn-primary" id="ghConnectBtn" onclick="openGhModal()">Connect</button>
-                    </div>
-                </div>
-
-                <!-- Google Sheets Card -->
-                <div class="connection-card">
-                    <div class="connection-header">
-                        <div class="connection-icon googlesheets">S</div>
-                        <div class="connection-info">
-                            <h3>Google Sheets</h3>
-                            <p>Content command center</p>
-                        </div>
-                    </div>
-                    
-                    <div class="connection-body" id="gsBody">
-                        <div class="empty-state">
-                            <div class="empty-state-icon">🔗</div>
-                            <p>Not connected yet</p>
-                        </div>
-                    </div>
-                    
-                    <div class="connection-actions">
-                        <button class="btn btn-primary" id="gsConnectBtn" onclick="openGsModal()">Connect</button>
                     </div>
                 </div>
             </div>

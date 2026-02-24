@@ -614,22 +614,53 @@
             <!-- Buy Additional Credits -->
             <div class="card" id="buyCreditsCard">
                 <div class="card-header">
-                    <h2>Buy Additional Credits</h2>
+                    <h2>Pay Per Article - Transparent Pricing</h2>
                 </div>
                 <div class="card-body">
+                    <!-- Per-Component Breakdown -->
+                    <div style="background: var(--bg); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">$1.61 per article (1 Image) breakdown:</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; padding: 10px 12px; background: white; border-radius: 8px;">
+                                <span>🔍 Keyword Mapper</span>
+                                <span style="font-weight: 600;">$0.01</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 10px 12px; background: white; border-radius: 8px;">
+                                <span>✍️ Content Generation</span>
+                                <span style="font-weight: 600;">$0.60</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 10px 12px; background: white; border-radius: 8px;">
+                                <span>🖼️ 1 Image</span>
+                                <span style="font-weight: 600;">$0.80</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 10px 12px; background: white; border-radius: 8px;">
+                                <span>🚀 WordPress Posting</span>
+                                <span style="font-weight: 600;">$0.20</span>
+                            </div>
+                        </div>
+                        <div style="background: rgba(229, 57, 53, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid var(--primary);">
+                            <p style="font-size: 14px; margin-bottom: 8px;"><strong>Formula:</strong> $0.01 + $0.60 + $0.20 + ($0.80 × Images) = Total</p>
+                            <div style="display: flex; gap: 24px; flex-wrap: wrap; font-size: 14px;">
+                                <span>🖼️ 1 Image: <strong>$1.61</strong></span>
+                                <span>🖼️🖼️ 2 Images: <strong>$2.41</strong></span>
+                                <span>🖼️🖼️🖼️ 3 Images: <strong>$3.21</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="credits-form">
                         <div class="form-group">
-                            <label>Number of Credits</label>
+                            <label>Number of Articles</label>
                             <select id="creditsAmount" onchange="updateCreditsTotal()">
-                                <option value="10">10 credits</option>
-                                <option value="25">25 credits</option>
-                                <option value="50">50 credits</option>
-                                <option value="100">100 credits</option>
+                                <option value="10">10 articles</option>
+                                <option value="25">25 articles</option>
+                                <option value="50">50 articles</option>
+                                <option value="100">100 articles</option>
                             </select>
                         </div>
                         
                         <div class="credits-total">
-                            <div class="credits-total-label">Total</div>
+                            <div class="credits-total-label">Total (1 image each)</div>
                             <div class="credits-total-value" id="creditsTotal">$16.10</div>
                         </div>
                         
@@ -637,7 +668,7 @@
                     </div>
                     
                     <p style="margin-top: 16px; font-size: 13px; color: var(--text-secondary);">
-                        Credits cost $1.61 each and never expire. 1 credit = 1 article with 1 image.
+                        Credits never expire. Each credit covers one article with 1 AI-generated image. Additional images cost $0.80 each.
                     </p>
                 </div>
             </div>
