@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Articles - WordPress Claw</title>
+    <title>Articles - WordPress Claw Content Library</title>
+    <meta name="description" content="View, manage, and publish your AI-generated articles. Track content status and publish directly to WordPress.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://wordpress-claw.com/dashboard/articles.html">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -62,7 +66,10 @@
         }
 
         .sidebar-logo img {
-            height: 40px;
+            height: 72px;
+            width: auto;
+            max-width: 220px;
+            object-fit: contain;
         }
 
         .sidebar-nav {
@@ -519,9 +526,48 @@
             cursor: not-allowed;
         }
 
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 101;
+            width: 44px;
+            height: 44px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
         @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .main { margin-left: 0; }
+            .mobile-menu-toggle { display: flex; }
+            .sidebar { 
+                transform: translateX(-100%); 
+                transition: transform 0.3s ease;
+            }
+            .sidebar.show { transform: translateX(0); }
+            .main { margin-left: 0; padding-top: 80px; }
             .articles-table { font-size: 12px; }
             .articles-table th:nth-child(3),
             .articles-table td:nth-child(3) { display: none; }
@@ -529,11 +575,14 @@
     </style>
 </head>
 <body>
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+    <div class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+    
     <div class="dashboard">
         <aside class="sidebar">
             <div class="sidebar-header">
                 <a href="/" class="sidebar-logo">
-                    <img src="../assets/logo.png" alt="WordPress Claw">
+                    <img src="../assets/logo.png" alt="WordPress Claw Logo - Your Content Command Center">
                 </a>
             </div>
             
@@ -560,6 +609,10 @@
                 
                 <div class="nav-section">
                     <div class="nav-section-title">Settings</div>
+                    <a href="business-profile.html" class="nav-item">
+                        <span class="nav-icon">🏢</span>
+                        Business Profile
+                    </a>
                     <a href="connections.html" class="nav-item">
                         <span class="nav-icon">🔗</span>
                         Connections
@@ -874,6 +927,12 @@
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = '/login.html';
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            document.querySelector('.sidebar').classList.toggle('show');
+            document.querySelector('.sidebar-overlay').classList.toggle('show');
         }
 
         // Close modal on overlay click
