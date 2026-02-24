@@ -66,10 +66,6 @@
             width: auto;
             max-width: 200px;
             object-fit: contain;
-            height: 56px;
-            width: auto;
-            max-width: 200px;
-            object-fit: contain;
         }
 
         .sidebar-nav {
@@ -206,6 +202,26 @@
             border-radius: 12px;
             box-shadow: var(--shadow);
             overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .connection-card.command-center {
+            border: 2px solid #0f9d58;
+            position: relative;
+        }
+
+        .command-center-badge {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0f9d58;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
         .connection-header {
@@ -224,59 +240,12 @@
             align-items: center;
             justify-content: center;
             font-size: 28px;
+            font-weight: 700;
         }
 
         .connection-icon.wordpress { background: #21759b; color: white; }
         .connection-icon.github { background: #333; color: white; }
         .connection-icon.googlesheets { background: #0f9d58; color: white; }
-
-        .tab-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .tab {
-            padding: 8px 16px;
-            background: none;
-            border: none;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -1px;
-        }
-
-        .tab.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        textarea.form-control {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        textarea.form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
 
         .connection-info h3 {
             font-size: 18px;
@@ -309,18 +278,6 @@
         .status-dot.active { background: var(--success); }
         .status-dot.error { background: var(--error); }
         .status-dot.pending { background: #ff9800; }
-
-        .connection-details {
-            background: var(--bg);
-            border-radius: 8px;
-            padding: 16px;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .connection-details p {
-            margin-bottom: 4px;
-        }
 
         .connection-actions {
             padding: 16px 24px;
@@ -363,13 +320,17 @@
             background: var(--border);
         }
 
-        .btn-danger {
-            background: #ffebee;
-            color: var(--error);
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 24px;
+            color: var(--text-secondary);
         }
 
-        .btn-danger:hover {
-            background: #ffcdd2;
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
         }
 
         /* Modal */
@@ -384,10 +345,6 @@
             z-index: 1000;
             align-items: center;
             justify-content: center;
-        }
-
-        .modal-overlay.active {
-            display: flex;
         }
 
         .modal {
@@ -418,11 +375,22 @@
             font-size: 24px;
             cursor: pointer;
             color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .modal-close:hover {
+            background: var(--bg);
         }
 
         .modal-body {
             padding: 24px;
             overflow-y: auto;
+            max-height: 60vh;
         }
 
         .form-group {
@@ -436,7 +404,8 @@
             margin-bottom: 6px;
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group textarea {
             width: 100%;
             padding: 12px 16px;
             border: 1px solid var(--border);
@@ -445,9 +414,15 @@
             font-family: inherit;
         }
 
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group textarea:focus {
             outline: none;
             border-color: var(--primary);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
         }
 
         .form-hint {
@@ -484,17 +459,37 @@
             display: block;
         }
 
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 24px;
-            color: var(--text-secondary);
+        /* Tabs */
+        .tab-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-            opacity: 0.5;
+        .tab {
+            padding: 8px 16px;
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         @media (max-width: 768px) {
@@ -506,6 +501,7 @@
 </head>
 <body>
     <div class="dashboard">
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <a href="/" class="sidebar-logo">
@@ -560,7 +556,7 @@
             </nav>
             
             <div class="sidebar-footer">
-                <div class="user-menu" onclick="logout()">
+                <div class="user-menu" id="logoutBtn">
                     <div class="user-avatar" id="userAvatar">U</div>
                     <div class="user-info">
                         <div class="user-name" id="userName">User</div>
@@ -571,18 +567,19 @@
             </div>
         </aside>
 
+        <!-- Main Content -->
         <main class="main">
             <div class="page-header">
                 <h1>Connections</h1>
                 <p>Connect your tools to enable automatic publishing and content management.</p>
             </div>
 
-            <div class="connections-grid" id="connectionsList">
-                <!-- Google Sheets Card - COMMAND CENTER (First) -->
-                <div class="connection-card" style="border: 2px solid #0f9d58; position: relative;">
-                    <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #0f9d58; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Command Center</div>
+            <div class="connections-grid">
+                <!-- Google Sheets Card - COMMAND CENTER -->
+                <div class="connection-card command-center">
+                    <div class="command-center-badge">Command Center</div>
                     <div class="connection-header">
-                        <div class="connection-icon googlesheets" style="background: #0f9d58;">📊</div>
+                        <div class="connection-icon googlesheets">📊</div>
                         <div class="connection-info">
                             <h3>Google Sheets</h3>
                             <p>Your content command center</p>
@@ -653,7 +650,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Connect WordPress</h2>
-                <button class="modal-close" onclick="closeWpModal()">×</button>
+                <button class="modal-close" id="wpModalClose">&times;</button>
             </div>
             
             <div class="modal-body">
@@ -678,8 +675,8 @@
             </div>
             
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeWpModal()">Cancel</button>
-                <button class="btn btn-primary" id="wpSaveBtn" onclick="saveWpConnection()">Connect</button>
+                <button class="btn btn-secondary" id="wpCancelBtn">Cancel</button>
+                <button class="btn btn-primary" id="wpSaveBtn">Connect</button>
             </div>
         </div>
     </div>
@@ -689,7 +686,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Connect GitHub</h2>
-                <button class="modal-close" onclick="closeGhModal()">×</button>
+                <button class="modal-close" id="ghModalClose">&times;</button>
             </div>
             
             <div class="modal-body">
@@ -709,8 +706,8 @@
             </div>
             
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeGhModal()">Cancel</button>
-                <button class="btn btn-primary" id="ghSaveBtn" onclick="saveGhConnection()">Connect</button>
+                <button class="btn btn-secondary" id="ghCancelBtn">Cancel</button>
+                <button class="btn btn-primary" id="ghSaveBtn">Connect</button>
             </div>
         </div>
     </div>
@@ -720,18 +717,18 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Connect Google Sheets</h2>
-                <button class="modal-close" onclick="closeGsModal()">×</button>
+                <button class="modal-close" id="gsModalClose">&times;</button>
             </div>
             
             <div class="modal-body">
                 <div id="gsAlert" class="alert"></div>
                 
                 <div class="tab-group">
-                    <button class="tab active" onclick="switchGsTab('apikey')" id="tab-apikey">API Key</button>
-                    <button class="tab" onclick="switchGsTab('service')" id="tab-service">Service Account</button>
+                    <button class="tab active" id="tabApiKey">API Key</button>
+                    <button class="tab" id="tabService">Service Account</button>
                 </div>
 
-                <div id="gs-content-apikey" class="tab-content active">
+                <div id="gsContentApiKey" class="tab-content active">
                     <div class="form-group">
                         <label for="gsApiKey">Google API Key *</label>
                         <input type="password" id="gsApiKey" placeholder="AIzaSy...">
@@ -739,10 +736,10 @@
                     </div>
                 </div>
 
-                <div id="gs-content-service" class="tab-content">
+                <div id="gsContentService" class="tab-content">
                     <div class="form-group">
                         <label for="gsServiceAccount">Service Account JSON *</label>
-                        <textarea class="form-control" id="gsServiceAccount" placeholder='{"type": "service_account", "project_id": "..."}'></textarea>
+                        <textarea id="gsServiceAccount" placeholder='{"type": "service_account", "project_id": "..."}'></textarea>
                         <p class="form-hint">Paste the entire JSON from your service account key file</p>
                     </div>
                 </div>
@@ -761,384 +758,174 @@
             </div>
             
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeGsModal()">Cancel</button>
-                <button class="btn btn-primary" id="gsSaveBtn" onclick="saveGsConnection()">Connect</button>
+                <button class="btn btn-secondary" id="gsCancelBtn">Cancel</button>
+                <button class="btn btn-primary" id="gsSaveBtn">Connect</button>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = '';
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login.html';
-
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        document.getElementById('userName').textContent = user.name || 'User';
-        document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
-        document.getElementById('userAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
-
-        let connections = [];
-
-        // MODAL FUNCTIONS - Must be defined before any button clicks
+        // Simple function definitions
         function openWpModal() {
-            console.log('openWpModal called');
-            document.getElementById('wpModal').classList.add('active');
+            document.getElementById('wpModal').style.display = 'flex';
         }
-        window.openWpModal = openWpModal;
 
         function closeWpModal() {
-            document.getElementById('wpModal').classList.remove('active');
-            document.getElementById('wpAlert').className = 'alert';
+            document.getElementById('wpModal').style.display = 'none';
+            document.getElementById('wpAlert').style.display = 'none';
             document.getElementById('wpAlert').textContent = '';
         }
-        window.closeWpModal = closeWpModal;
 
         function openGhModal() {
-            console.log('openGhModal called');
-            document.getElementById('ghModal').classList.add('active');
+            document.getElementById('ghModal').style.display = 'flex';
         }
-        window.openGhModal = openGhModal;
 
         function closeGhModal() {
-            document.getElementById('ghModal').classList.remove('active');
-            document.getElementById('ghAlert').className = 'alert';
+            document.getElementById('ghModal').style.display = 'none';
+            document.getElementById('ghAlert').style.display = 'none';
             document.getElementById('ghAlert').textContent = '';
         }
-        window.closeGhModal = closeGhModal;
 
         function openGsModal() {
-            console.log('openGsModal called');
-            document.getElementById('gsModal').classList.add('active');
+            document.getElementById('gsModal').style.display = 'flex';
         }
-        window.openGsModal = openGsModal;
 
         function closeGsModal() {
-            document.getElementById('gsModal').classList.remove('active');
-            document.getElementById('gsAlert').className = 'alert';
+            document.getElementById('gsModal').style.display = 'none';
+            document.getElementById('gsAlert').style.display = 'none';
             document.getElementById('gsAlert').textContent = '';
         }
-        window.closeGsModal = closeGsModal;
 
+        // Tab switching for Google Sheets
         function switchGsTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
-            document.getElementById(`tab-${tab}`).classList.add('active');
-            document.getElementById(`gs-content-${tab}`).classList.add('active');
-        }
-        window.switchGsTab = switchGsTab;
-
-        // Attach event listeners to Connect buttons
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, attaching event listeners');
-            
-            const wpBtn = document.getElementById('wpConnectBtn');
-            const ghBtn = document.getElementById('ghConnectBtn');
-            const gsBtn = document.getElementById('gsConnectBtn');
-            
-            if (wpBtn) {
-                wpBtn.addEventListener('click', function() {
-                    console.log('WP Connect button clicked');
-                    openWpModal();
-                });
-            }
-            
-            if (ghBtn) {
-                ghBtn.addEventListener('click', function() {
-                    console.log('GH Connect button clicked');
-                    openGhModal();
-                });
-            }
-            
-            if (gsBtn) {
-                gsBtn.addEventListener('click', function() {
-                    console.log('GS Connect button clicked');
-                    openGsModal();
-                });
-            }
-            
-            // Load connections after DOM is ready
-            loadConnections();
-        });
-
-        async function loadConnections() {
-            try {
-                const response = await fetch(`${API_URL}/api/connections`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    connections = data.data.connections;
-                    updateConnectionCards();
-                }
-            } catch (err) {
-                console.error('Failed to load connections:', err);
-            }
-        }
-
-        function updateConnectionCards() {
-            const wpConn = connections.find(c => c.type === 'wordpress');
-            const ghConn = connections.find(c => c.type === 'github');
-            const gsConn = connections.find(c => c.type === 'googlesheets');
-
-            if (wpConn) {
-                document.getElementById('wpBody').innerHTML = `
-                    <div class="connection-status">
-                        <span class="status-dot ${wpConn.status}"></span>
-                        <span>${wpConn.status === 'active' ? 'Connected' : 'Connection error'}</span>
-                    </div>
-                    ${wpConn.last_error ? `<div class="alert error" style="display: block;">${wpConn.last_error}</div>` : ''}
-                `;
-                document.getElementById('wpConnectBtn').textContent = 'Test Connection';
-                document.getElementById('wpConnectBtn').onclick = () => testConnection(wpConn.id);
-            }
-
-            if (ghConn) {
-                document.getElementById('ghBody').innerHTML = `
-                    <div class="connection-status">
-                        <span class="status-dot ${ghConn.status}"></span>
-                        <span>${ghConn.status === 'active' ? 'Connected' : 'Connection error'}</span>
-                    </div>
-                    ${ghConn.last_error ? `<div class="alert error" style="display: block;">${ghConn.last_error}</div>` : ''}
-                `;
-                document.getElementById('ghConnectBtn').textContent = 'Test Connection';
-                document.getElementById('ghConnectBtn').onclick = () => testConnection(ghConn.id);
-            }
-
-            if (gsConn) {
-                document.getElementById('gsBody').innerHTML = `
-                    <div class="connection-status">
-                        <span class="status-dot ${gsConn.status}"></span>
-                        <span>${gsConn.status === 'active' ? 'Connected' : 'Connection error'}</span>
-                    </div>
-                    ${gsConn.last_error ? `<div class="alert error" style="display: block;">${gsConn.last_error}</div>` : ''}
-                `;
-                document.getElementById('gsConnectBtn').textContent = 'Test Connection';
-                document.getElementById('gsConnectBtn').onclick = () => testConnection(gsConn.id);
-            }
-        }
-
-        async function saveWpConnection() {
-            const url = document.getElementById('wpUrl').value.trim();
-            const username = document.getElementById('wpUsername').value.trim();
-            const password = document.getElementById('wpPassword').value.trim();
-            const alert = document.getElementById('wpAlert');
-            const btn = document.getElementById('wpSaveBtn');
-
-            if (!url || !username || !password) {
-                alert.className = 'alert error';
-                alert.textContent = 'Please fill in all fields';
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = 'Connecting...';
-
-            try {
-                const response = await fetch(`${API_URL}/api/connections`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        type: 'wordpress',
-                        name: 'WordPress Site',
-                        credentials: { url, username, password }
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    alert.className = 'alert success';
-                    alert.textContent = data.data.connection.status === 'active' ? 'Connected successfully!' : 'Connected but test failed - check your credentials';
-                    setTimeout(() => {
-                        closeWpModal();
-                        loadConnections();
-                    }, 1500);
-                } else {
-                    alert.className = 'alert error';
-                    alert.textContent = data.error || 'Failed to connect';
-                    btn.disabled = false;
-                    btn.textContent = 'Connect';
-                }
-            } catch (err) {
-                alert.className = 'alert error';
-                alert.textContent = 'Network error. Please try again.';
-                btn.disabled = false;
-                btn.textContent = 'Connect';
-            }
-        }
-
-        async function saveGhConnection() {
-            const token = document.getElementById('ghToken').value.trim();
-            const repo = document.getElementById('ghRepo').value.trim();
-            const alert = document.getElementById('ghAlert');
-            const btn = document.getElementById('ghSaveBtn');
-
-            if (!token) {
-                alert.className = 'alert error';
-                alert.textContent = 'Please enter your GitHub token';
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = 'Connecting...';
-
-            try {
-                const response = await fetch(`${API_URL}/api/connections`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        type: 'github',
-                        name: 'GitHub Images',
-                        credentials: { token, repo }
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    alert.className = 'alert success';
-                    alert.textContent = 'Connected successfully!';
-                    setTimeout(() => {
-                        closeGhModal();
-                        loadConnections();
-                    }, 1500);
-                } else {
-                    alert.className = 'alert error';
-                    alert.textContent = data.error || 'Failed to connect';
-                    btn.disabled = false;
-                    btn.textContent = 'Connect';
-                }
-            } catch (err) {
-                alert.className = 'alert error';
-                alert.textContent = 'Network error. Please try again.';
-                btn.disabled = false;
-                btn.textContent = 'Connect';
-            }
-        }
-
-        async function testConnection(id) {
-            try {
-                const response = await fetch(`${API_URL}/api/connections/${id}/test`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-                alert(data.success ? 'Connection test successful!' : `Test failed: ${data.error}`);
-                loadConnections();
-            } catch (err) {
-                alert('Failed to test connection');
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/login.html';
-        }
-
-        // Close modals on overlay click
-        document.getElementById('wpModal').addEventListener('click', (e) => {
-            if (e.target.id === 'wpModal') closeWpModal();
-        });
-        document.getElementById('ghModal').addEventListener('click', (e) => {
-            if (e.target.id === 'ghModal') closeGhModal();
-        });
-        document.getElementById('gsModal').addEventListener('click', (e) => {
-            if (e.target.id === 'gsModal') closeGsModal();
-        });
-
-        // Note: loadConnections() is now called in DOMContentLoaded above
-
-        async function saveGsConnection() {
-            const apiKey = document.getElementById('gsApiKey').value.trim();
-            const serviceAccount = document.getElementById('gsServiceAccount').value.trim();
-            const spreadsheetId = document.getElementById('gsSpreadsheetId').value.trim();
-            const sheetName = document.getElementById('gsSheetName').value.trim();
-            const alert = document.getElementById('gsAlert');
-            const btn = document.getElementById('gsSaveBtn');
-
-            // Determine which auth method is being used
-            const activeTab = document.querySelector('.tab.active').id;
-            let credentials = {};
-            let config = {};
-
-            if (activeTab === 'tab-apikey') {
-                if (!apiKey) {
-                    alert.className = 'alert error';
-                    alert.textContent = 'Please enter your API Key';
-                    return;
-                }
-                credentials.apiKey = apiKey;
+            if (tab === 'apikey') {
+                document.getElementById('tabApiKey').classList.add('active');
+                document.getElementById('tabService').classList.remove('active');
+                document.getElementById('gsContentApiKey').classList.add('active');
+                document.getElementById('gsContentService').classList.remove('active');
             } else {
-                if (!serviceAccount) {
-                    alert.className = 'alert error';
-                    alert.textContent = 'Please enter the Service Account JSON';
-                    return;
-                }
-                try {
-                    credentials.serviceAccount = JSON.parse(serviceAccount);
-                } catch (e) {
-                    alert.className = 'alert error';
-                    alert.textContent = 'Invalid JSON in Service Account field';
-                    return;
-                }
-            }
-
-            if (spreadsheetId) {
-                config.spreadsheetId = spreadsheetId;
-            }
-            if (sheetName) {
-                config.sheetName = sheetName;
-            }
-
-            btn.disabled = true;
-            btn.textContent = 'Connecting...';
-
-            try {
-                const response = await fetch(`${API_URL}/api/connections`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        type: 'googlesheets',
-                        name: 'Google Sheets',
-                        credentials,
-                        config: Object.keys(config).length > 0 ? config : null
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    alert.className = 'alert success';
-                    alert.textContent = data.data.connection.status === 'active' ? 'Connected successfully!' : 'Connected but test failed - check your credentials';
-                    setTimeout(() => {
-                        closeGsModal();
-                        loadConnections();
-                    }, 1500);
-                } else {
-                    alert.className = 'alert error';
-                    alert.textContent = data.error || 'Failed to connect';
-                    btn.disabled = false;
-                    btn.textContent = 'Connect';
-                }
-            } catch (err) {
-                alert.className = 'alert error';
-                alert.textContent = 'Network error. Please try again.';
-                btn.disabled = false;
-                btn.textContent = 'Connect';
+                document.getElementById('tabApiKey').classList.remove('active');
+                document.getElementById('tabService').classList.add('active');
+                document.getElementById('gsContentApiKey').classList.remove('active');
+                document.getElementById('gsContentService').classList.add('active');
             }
         }
+
+        // Attach listeners AFTER DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Connect buttons
+            document.getElementById('wpConnectBtn').addEventListener('click', openWpModal);
+            document.getElementById('ghConnectBtn').addEventListener('click', openGhModal);
+            document.getElementById('gsConnectBtn').addEventListener('click', openGsModal);
+
+            // Modal close buttons
+            document.getElementById('wpModalClose').addEventListener('click', closeWpModal);
+            document.getElementById('ghModalClose').addEventListener('click', closeGhModal);
+            document.getElementById('gsModalClose').addEventListener('click', closeGsModal);
+
+            // Cancel buttons
+            document.getElementById('wpCancelBtn').addEventListener('click', closeWpModal);
+            document.getElementById('ghCancelBtn').addEventListener('click', closeGhModal);
+            document.getElementById('gsCancelBtn').addEventListener('click', closeGsModal);
+
+            // Tab buttons
+            document.getElementById('tabApiKey').addEventListener('click', function() { switchGsTab('apikey'); });
+            document.getElementById('tabService').addEventListener('click', function() { switchGsTab('service'); });
+
+            // Close on overlay click
+            document.getElementById('wpModal').addEventListener('click', function(e) {
+                if (e.target === this) closeWpModal();
+            });
+            document.getElementById('ghModal').addEventListener('click', function(e) {
+                if (e.target === this) closeGhModal();
+            });
+            document.getElementById('gsModal').addEventListener('click', function(e) {
+                if (e.target === this) closeGsModal();
+            });
+
+            // Load user info
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            document.getElementById('userName').textContent = user.name || 'User';
+            document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
+            document.getElementById('userAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login.html';
+            });
+
+            // Save buttons (placeholder functionality)
+            document.getElementById('wpSaveBtn').addEventListener('click', function() {
+                const url = document.getElementById('wpUrl').value.trim();
+                const username = document.getElementById('wpUsername').value.trim();
+                const password = document.getElementById('wpPassword').value.trim();
+                const alert = document.getElementById('wpAlert');
+
+                if (!url || !username || !password) {
+                    alert.textContent = 'Please fill in all fields';
+                    alert.className = 'alert error';
+                    alert.style.display = 'block';
+                    return;
+                }
+
+                alert.textContent = 'Connecting...';
+                alert.className = 'alert';
+                alert.style.display = 'block';
+                
+                // TODO: Implement actual API call
+                console.log('WordPress connect:', { url, username });
+            });
+
+            document.getElementById('ghSaveBtn').addEventListener('click', function() {
+                const token = document.getElementById('ghToken').value.trim();
+                const alert = document.getElementById('ghAlert');
+
+                if (!token) {
+                    alert.textContent = 'Please enter your GitHub token';
+                    alert.className = 'alert error';
+                    alert.style.display = 'block';
+                    return;
+                }
+
+                alert.textContent = 'Connecting...';
+                alert.className = 'alert';
+                alert.style.display = 'block';
+                
+                // TODO: Implement actual API call
+                console.log('GitHub connect:', { token });
+            });
+
+            document.getElementById('gsSaveBtn').addEventListener('click', function() {
+                const apiKey = document.getElementById('gsApiKey').value.trim();
+                const serviceAccount = document.getElementById('gsServiceAccount').value.trim();
+                const alert = document.getElementById('gsAlert');
+
+                const isApiKeyTab = document.getElementById('tabApiKey').classList.contains('active');
+
+                if (isApiKeyTab && !apiKey) {
+                    alert.textContent = 'Please enter your API Key';
+                    alert.className = 'alert error';
+                    alert.style.display = 'block';
+                    return;
+                }
+
+                if (!isApiKeyTab && !serviceAccount) {
+                    alert.textContent = 'Please enter the Service Account JSON';
+                    alert.className = 'alert error';
+                    alert.style.display = 'block';
+                    return;
+                }
+
+                alert.textContent = 'Connecting...';
+                alert.className = 'alert';
+                alert.style.display = 'block';
+                
+                // TODO: Implement actual API call
+                console.log('Google Sheets connect:', { isApiKeyTab, apiKey, serviceAccount });
+            });
+        });
     </script>
 </body>
 </html>
