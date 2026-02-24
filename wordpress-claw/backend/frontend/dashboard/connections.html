@@ -347,6 +347,10 @@
             justify-content: center;
         }
 
+        .modal-overlay.show {
+            display: flex;
+        }
+
         .modal {
             background: white;
             border-radius: 16px;
@@ -500,6 +504,54 @@
     </style>
 </head>
 <body>
+    <script>
+        // Modal functions - defined BEFORE any buttons that use them
+        function openGsModal() {
+            document.getElementById('gsModal').classList.add('show');
+        }
+
+        function closeGsModal() {
+            document.getElementById('gsModal').classList.remove('show');
+            document.getElementById('gsAlert').style.display = 'none';
+            document.getElementById('gsAlert').textContent = '';
+        }
+
+        function openWpModal() {
+            document.getElementById('wpModal').classList.add('show');
+        }
+
+        function closeWpModal() {
+            document.getElementById('wpModal').classList.remove('show');
+            document.getElementById('wpAlert').style.display = 'none';
+            document.getElementById('wpAlert').textContent = '';
+        }
+
+        function openGhModal() {
+            document.getElementById('ghModal').classList.add('show');
+        }
+
+        function closeGhModal() {
+            document.getElementById('ghModal').classList.remove('show');
+            document.getElementById('ghAlert').style.display = 'none';
+            document.getElementById('ghAlert').textContent = '';
+        }
+
+        // Tab switching for Google Sheets
+        function switchGsTab(tab) {
+            if (tab === 'apikey') {
+                document.getElementById('tabApiKey').classList.add('active');
+                document.getElementById('tabService').classList.remove('active');
+                document.getElementById('gsContentApiKey').classList.add('active');
+                document.getElementById('gsContentService').classList.remove('active');
+            } else {
+                document.getElementById('tabApiKey').classList.remove('active');
+                document.getElementById('tabService').classList.add('active');
+                document.getElementById('gsContentApiKey').classList.remove('active');
+                document.getElementById('gsContentService').classList.add('active');
+            }
+        }
+    </script>
+
     <div class="dashboard">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -594,7 +646,7 @@
                     </div>
                     
                     <div class="connection-actions">
-                        <button class="btn btn-primary" onclick="openGsModal(); return false;">Connect</button>
+                        <button class="btn btn-primary" onclick="openGsModal()">Connect</button>
                     </div>
                 </div>
 
@@ -616,7 +668,7 @@
                     </div>
                     
                     <div class="connection-actions">
-                        <button class="btn btn-primary" onclick="openWpModal(); return false;">Connect</button>
+                        <button class="btn btn-primary" onclick="openWpModal()">Connect</button>
                     </div>
                 </div>
 
@@ -638,7 +690,7 @@
                     </div>
                     
                     <div class="connection-actions">
-                        <button class="btn btn-primary" onclick="openGhModal(); return false;">Connect</button>
+                        <button class="btn btn-primary" onclick="openGhModal()">Connect</button>
                     </div>
                 </div>
             </div>
@@ -650,7 +702,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Connect WordPress</h2>
-                <button class="modal-close" id="wpModalClose">&times;</button>
+                <button class="modal-close" onclick="closeWpModal()">&times;</button>
             </div>
             
             <div class="modal-body">
@@ -675,7 +727,7 @@
             </div>
             
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="wpCancelBtn">Cancel</button>
+                <button class="btn btn-secondary" onclick="closeWpModal()">Cancel</button>
                 <button class="btn btn-primary" id="wpSaveBtn">Connect</button>
             </div>
         </div>
@@ -686,7 +738,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Connect GitHub</h2>
-                <button class="modal-close" id="ghModalClose">&times;</button>
+                <button class="modal-close" onclick="closeGhModal()">&times;</button>
             </div>
             
             <div class="modal-body">
@@ -706,7 +758,7 @@
             </div>
             
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="ghCancelBtn">Cancel</button>
+                <button class="btn btn-secondary" onclick="closeGhModal()">Cancel</button>
                 <button class="btn btn-primary" id="ghSaveBtn">Connect</button>
             </div>
         </div>
@@ -717,15 +769,15 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Connect Google Sheets</h2>
-                <button class="modal-close" id="gsModalClose">&times;</button>
+                <button class="modal-close" onclick="closeGsModal()">&times;</button>
             </div>
             
             <div class="modal-body">
                 <div id="gsAlert" class="alert"></div>
                 
                 <div class="tab-group">
-                    <button class="tab active" id="tabApiKey">API Key</button>
-                    <button class="tab" id="tabService">Service Account</button>
+                    <button class="tab active" id="tabApiKey" onclick="switchGsTab('apikey')">API Key</button>
+                    <button class="tab" id="tabService" onclick="switchGsTab('service')">Service Account</button>
                 </div>
 
                 <div id="gsContentApiKey" class="tab-content active">
@@ -758,92 +810,26 @@
             </div>
             
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="gsCancelBtn">Cancel</button>
+                <button class="btn btn-secondary" onclick="closeGsModal()">Cancel</button>
                 <button class="btn btn-primary" id="gsSaveBtn">Connect</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Simple function definitions
-        function openWpModal() {
-            document.getElementById('wpModal').style.display = 'flex';
-        }
+        // Close modal when clicking on overlay
+        document.getElementById('wpModal').addEventListener('click', function(e) {
+            if (e.target === this) closeWpModal();
+        });
+        document.getElementById('ghModal').addEventListener('click', function(e) {
+            if (e.target === this) closeGhModal();
+        });
+        document.getElementById('gsModal').addEventListener('click', function(e) {
+            if (e.target === this) closeGsModal();
+        });
 
-        function closeWpModal() {
-            document.getElementById('wpModal').style.display = 'none';
-            document.getElementById('wpAlert').style.display = 'none';
-            document.getElementById('wpAlert').textContent = '';
-        }
-
-        function openGhModal() {
-            document.getElementById('ghModal').style.display = 'flex';
-        }
-
-        function closeGhModal() {
-            document.getElementById('ghModal').style.display = 'none';
-            document.getElementById('ghAlert').style.display = 'none';
-            document.getElementById('ghAlert').textContent = '';
-        }
-
-        function openGsModal() {
-            document.getElementById('gsModal').style.display = 'flex';
-        }
-
-        function closeGsModal() {
-            document.getElementById('gsModal').style.display = 'none';
-            document.getElementById('gsAlert').style.display = 'none';
-            document.getElementById('gsAlert').textContent = '';
-        }
-
-        // Tab switching for Google Sheets
-        function switchGsTab(tab) {
-            if (tab === 'apikey') {
-                document.getElementById('tabApiKey').classList.add('active');
-                document.getElementById('tabService').classList.remove('active');
-                document.getElementById('gsContentApiKey').classList.add('active');
-                document.getElementById('gsContentService').classList.remove('active');
-            } else {
-                document.getElementById('tabApiKey').classList.remove('active');
-                document.getElementById('tabService').classList.add('active');
-                document.getElementById('gsContentApiKey').classList.remove('active');
-                document.getElementById('gsContentService').classList.add('active');
-            }
-        }
-
-        // Attach listeners AFTER DOM is loaded
+        // Load user info
         document.addEventListener('DOMContentLoaded', function() {
-            // Connect buttons
-            document.getElementById('wpConnectBtn').addEventListener('click', openWpModal);
-            document.getElementById('ghConnectBtn').addEventListener('click', openGhModal);
-            document.getElementById('gsConnectBtn').addEventListener('click', openGsModal);
-
-            // Modal close buttons
-            document.getElementById('wpModalClose').addEventListener('click', closeWpModal);
-            document.getElementById('ghModalClose').addEventListener('click', closeGhModal);
-            document.getElementById('gsModalClose').addEventListener('click', closeGsModal);
-
-            // Cancel buttons
-            document.getElementById('wpCancelBtn').addEventListener('click', closeWpModal);
-            document.getElementById('ghCancelBtn').addEventListener('click', closeGhModal);
-            document.getElementById('gsCancelBtn').addEventListener('click', closeGsModal);
-
-            // Tab buttons
-            document.getElementById('tabApiKey').addEventListener('click', function() { switchGsTab('apikey'); });
-            document.getElementById('tabService').addEventListener('click', function() { switchGsTab('service'); });
-
-            // Close on overlay click
-            document.getElementById('wpModal').addEventListener('click', function(e) {
-                if (e.target === this) closeWpModal();
-            });
-            document.getElementById('ghModal').addEventListener('click', function(e) {
-                if (e.target === this) closeGhModal();
-            });
-            document.getElementById('gsModal').addEventListener('click', function(e) {
-                if (e.target === this) closeGsModal();
-            });
-
-            // Load user info
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             document.getElementById('userName').textContent = user.name || 'User';
             document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
@@ -855,76 +841,76 @@
                 localStorage.removeItem('user');
                 window.location.href = '/login.html';
             });
+        });
 
-            // Save buttons (placeholder functionality)
-            document.getElementById('wpSaveBtn').addEventListener('click', function() {
-                const url = document.getElementById('wpUrl').value.trim();
-                const username = document.getElementById('wpUsername').value.trim();
-                const password = document.getElementById('wpPassword').value.trim();
-                const alert = document.getElementById('wpAlert');
+        // Save buttons (placeholder functionality)
+        document.getElementById('wpSaveBtn').addEventListener('click', function() {
+            const url = document.getElementById('wpUrl').value.trim();
+            const username = document.getElementById('wpUsername').value.trim();
+            const password = document.getElementById('wpPassword').value.trim();
+            const alert = document.getElementById('wpAlert');
 
-                if (!url || !username || !password) {
-                    alert.textContent = 'Please fill in all fields';
-                    alert.className = 'alert error';
-                    alert.style.display = 'block';
-                    return;
-                }
-
-                alert.textContent = 'Connecting...';
-                alert.className = 'alert';
+            if (!url || !username || !password) {
+                alert.textContent = 'Please fill in all fields';
+                alert.className = 'alert error';
                 alert.style.display = 'block';
-                
-                // TODO: Implement actual API call
-                console.log('WordPress connect:', { url, username });
-            });
+                return;
+            }
 
-            document.getElementById('ghSaveBtn').addEventListener('click', function() {
-                const token = document.getElementById('ghToken').value.trim();
-                const alert = document.getElementById('ghAlert');
+            alert.textContent = 'Connecting...';
+            alert.className = 'alert';
+            alert.style.display = 'block';
+            
+            // TODO: Implement actual API call
+            console.log('WordPress connect:', { url, username });
+        });
 
-                if (!token) {
-                    alert.textContent = 'Please enter your GitHub token';
-                    alert.className = 'alert error';
-                    alert.style.display = 'block';
-                    return;
-                }
+        document.getElementById('ghSaveBtn').addEventListener('click', function() {
+            const token = document.getElementById('ghToken').value.trim();
+            const alert = document.getElementById('ghAlert');
 
-                alert.textContent = 'Connecting...';
-                alert.className = 'alert';
+            if (!token) {
+                alert.textContent = 'Please enter your GitHub token';
+                alert.className = 'alert error';
                 alert.style.display = 'block';
-                
-                // TODO: Implement actual API call
-                console.log('GitHub connect:', { token });
-            });
+                return;
+            }
 
-            document.getElementById('gsSaveBtn').addEventListener('click', function() {
-                const apiKey = document.getElementById('gsApiKey').value.trim();
-                const serviceAccount = document.getElementById('gsServiceAccount').value.trim();
-                const alert = document.getElementById('gsAlert');
+            alert.textContent = 'Connecting...';
+            alert.className = 'alert';
+            alert.style.display = 'block';
+            
+            // TODO: Implement actual API call
+            console.log('GitHub connect:', { token });
+        });
 
-                const isApiKeyTab = document.getElementById('tabApiKey').classList.contains('active');
+        document.getElementById('gsSaveBtn').addEventListener('click', function() {
+            const apiKey = document.getElementById('gsApiKey').value.trim();
+            const serviceAccount = document.getElementById('gsServiceAccount').value.trim();
+            const alert = document.getElementById('gsAlert');
 
-                if (isApiKeyTab && !apiKey) {
-                    alert.textContent = 'Please enter your API Key';
-                    alert.className = 'alert error';
-                    alert.style.display = 'block';
-                    return;
-                }
+            const isApiKeyTab = document.getElementById('tabApiKey').classList.contains('active');
 
-                if (!isApiKeyTab && !serviceAccount) {
-                    alert.textContent = 'Please enter the Service Account JSON';
-                    alert.className = 'alert error';
-                    alert.style.display = 'block';
-                    return;
-                }
-
-                alert.textContent = 'Connecting...';
-                alert.className = 'alert';
+            if (isApiKeyTab && !apiKey) {
+                alert.textContent = 'Please enter your API Key';
+                alert.className = 'alert error';
                 alert.style.display = 'block';
-                
-                // TODO: Implement actual API call
-                console.log('Google Sheets connect:', { isApiKeyTab, apiKey, serviceAccount });
-            });
+                return;
+            }
+
+            if (!isApiKeyTab && !serviceAccount) {
+                alert.textContent = 'Please enter the Service Account JSON';
+                alert.className = 'alert error';
+                alert.style.display = 'block';
+                return;
+            }
+
+            alert.textContent = 'Connecting...';
+            alert.className = 'alert';
+            alert.style.display = 'block';
+            
+            // TODO: Implement actual API call
+            console.log('Google Sheets connect:', { isApiKeyTab, apiKey, serviceAccount });
         });
     </script>
 </body>
