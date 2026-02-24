@@ -781,34 +781,43 @@
 
         // MODAL FUNCTIONS - Must be defined before any button clicks
         function openWpModal() {
+            console.log('openWpModal called');
             document.getElementById('wpModal').classList.add('active');
         }
+        window.openWpModal = openWpModal;
 
         function closeWpModal() {
             document.getElementById('wpModal').classList.remove('active');
             document.getElementById('wpAlert').className = 'alert';
             document.getElementById('wpAlert').textContent = '';
         }
+        window.closeWpModal = closeWpModal;
 
         function openGhModal() {
+            console.log('openGhModal called');
             document.getElementById('ghModal').classList.add('active');
         }
+        window.openGhModal = openGhModal;
 
         function closeGhModal() {
             document.getElementById('ghModal').classList.remove('active');
             document.getElementById('ghAlert').className = 'alert';
             document.getElementById('ghAlert').textContent = '';
         }
+        window.closeGhModal = closeGhModal;
 
         function openGsModal() {
+            console.log('openGsModal called');
             document.getElementById('gsModal').classList.add('active');
         }
+        window.openGsModal = openGsModal;
 
         function closeGsModal() {
             document.getElementById('gsModal').classList.remove('active');
             document.getElementById('gsAlert').className = 'alert';
             document.getElementById('gsAlert').textContent = '';
         }
+        window.closeGsModal = closeGsModal;
 
         function switchGsTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -817,6 +826,7 @@
             document.getElementById(`tab-${tab}`).classList.add('active');
             document.getElementById(`gs-content-${tab}`).classList.add('active');
         }
+        window.switchGsTab = switchGsTab;
 
         async function loadConnections() {
             try {
