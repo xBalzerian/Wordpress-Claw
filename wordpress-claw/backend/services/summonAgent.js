@@ -584,6 +584,12 @@ class SummonAgent {
     async processMessage(message, sessionContext = {}) {
         const lowerMessage = message.toLowerCase();
 
+        // Spreadsheet commands
+        if (lowerMessage.includes('spreadsheet') || lowerMessage.includes('my sheet') || 
+            lowerMessage.includes('google sheet') || lowerMessage.includes('check sheet')) {
+            return this.handleSpreadsheetIntent(message, lowerMessage);
+        }
+
         // Content creation intent
         if (lowerMessage.includes('rank for') || lowerMessage.includes('write about') || 
             lowerMessage.includes('create article') || lowerMessage.includes('generate content')) {
@@ -628,10 +634,73 @@ class SummonAgent {
         // Default response
         return {
             type: 'general',
-            message: `I'm here to help you create SEO-optimized content that ranks! I can:\n\n📝 Research keywords and competitors\n✍️ Generate comprehensive articles\n🎨 Create featured images\n🚀 Publish directly to WordPress\n\nWhat would you like to do today?`,
-            suggestions: ['I want to rank for...', 'Show me content ideas', 'Check my credits', 'How does this work?']
+            message: `I'm here to help you create SEO-optimized content that ranks! I can:\n\n📝 Research keywords and competitors\n✍️ Generate comprehensive articles\n🎨 Create featured images\n🚀 Publish directly to WordPress\n📊 Check your spreadsheet for topics\n\nWhat would you like to do today?`,
+            suggestions: ['I want to rank for...', 'Show me content ideas', 'Check my spreadsheet', 'How does this work?']
         };
     }
+
+    /**
+     * Handle spreadsheet-related intents
+     */
+    handleSpreadsheetIntent(message, lowerMessage) {
+        const hasGoogleSheets = this.context.connections.some(c => c.type === 'googlesheets' && c.status === 'active');
+
+        if (!hasGoogleSheets) {
+            return {
+                type: 'spreadsheet_not_connected',
+                message: `📊 You don't have a Google Sheets connection yet.\n\nConnect your spreadsheet to use it as a command center for bulk content creation. I can:\n\n• Read topics from your sheet\n• Process them automatically\n• Update status as I work\n• Write article URLs back`,
+                actions: [{
+                    type: 'navigate',
+                    label: 'Connect Google Sheets',
+                    params: { path: '/dashboard/connections.html' }
+                }],
+                suggestions: ['How does it work?', 'What columns do I need?', 'Show me an example']
+            };
+        }
+
+        // Check for specific row processing
+        const rowMatch = message.match(/(?:row|#)\s*(\d+)/i);
+        if (rowMatch) {
+            const rowIndex = parseInt(rowMatch[1]);
+            return {
+                type: 'spreadsheet_process_row',
+                message: `I'll process row ${rowIndex} from your spreadsheet. This will:\n1. Read the topic/keyword\n2. Generate an article\n3. Update the status to DONE\n4. Add the article URL`,
+                actions: [{
+                    type: 'spreadsheet_process_row',
+                    label: `Process Row ${rowIndex}`,
+                    params: { rowIndex }
+                }],
+                suggestions: ['Process all pending', 'Check spreadsheet first', 'Cancel']
+            };
+        }
+
+        // Check for "process all" or "process pending"
+        if (lowerMessage.includes('process all') || lowerMessage.includes('process pending') || 
+            lowerMessage.includes('do all') || lowerMessage.includes('run all')) {
+            return {
+                type: 'spreadsheet_process_all',
+                message: `I'll process all pending topics from your spreadsheet. I'll work through each row with status PENDING or empty.`,
+                actions: [{
+                    type: 'spreadsheet_process_all',
+                    label: 'Process All Pending',
+                    params: {}
+                }],
+                suggestions: ['Check first', 'Cancel']
+            };
+        }
+
+        // Default: check spreadsheet
+        return {
+            type: 'spreadsheet_check',
+            message: `I'll check your spreadsheet for new topics to process.`,
+            actions: [{
+                type: 'spreadsheet_check',
+                label: 'Check Spreadsheet',
+                params: {}
+            }],
+            suggestions: ['Process all pending', 'How does this work?', 'Show me my sheet']
+        };
+}
 
     /**
      * Handle publish intent
@@ -688,8 +757,8 @@ class SummonAgent {
     handleHelpIntent() {
         return {
             type: 'help',
-            message: `**How I Can Help You:**\n\n🎯 **Content Creation**\nSay "I want to rank for [keyword]" and I'll research competitors, create a strategy, and write an SEO-optimized article.\n\n📊 **Research**\nI analyze top-ranking content to find gaps and opportunities.\n\n🎨 **Images**\nI can generate featured images that match your content.\n\n🚀 **Publishing**\nConnect WordPress and I'll publish directly to your site with proper formatting.\n\n💾 **Memory**\nI remember your preferences, past articles, and business profile.`,
-            suggestions: ['Start creating content', 'Connect WordPress', 'Set up business profile']
+            message: `**How I Can Help You:**\n\n🎯 **Content Creation**\nSay "I want to rank for [keyword]" and I'll research competitors, create a strategy, and write an SEO-optimized article.\n\n📊 **Spreadsheet Command Center**\nConnect Google Sheets and use it to batch process topics. Add topics with status PENDING, and I'll process them all. Say "Check my spreadsheet" to get started.\n\n📊 **Research**\nI analyze top-ranking content to find gaps and opportunities.\n\n🎨 **Images**\nI can generate featured images that match your content.\n\n🚀 **Publishing**\nConnect WordPress and I'll publish directly to your site with proper formatting.\n\n💾 **Memory**\nI remember your preferences, past articles, and business profile.`,
+            suggestions: ['Start creating content', 'Check my spreadsheet', 'Connect WordPress', 'Set up business profile']
         };
     }
 
@@ -697,6 +766,8 @@ class SummonAgent {
      * Execute action from user
      */
     async executeAction(action, params) {
+        const SpreadsheetAgent = require('./spreadsheetAgent');
+
         switch (action) {
             case 'start_content_workflow':
                 if (params.keyword) {
@@ -757,6 +828,37 @@ class SummonAgent {
 
             case 'get_content_ideas':
                 return await this.getContentIdeas(params.seedKeyword);
+
+            // Spreadsheet actions
+            case 'spreadsheet_check':
+                const checkAgent = new SpreadsheetAgent(this.userId);
+                return await checkAgent.checkForNewTopics();
+
+            case 'spreadsheet_process_row':
+                const rowAgent = new SpreadsheetAgent(this.userId);
+                // Get spreadsheet config from connection
+                const connection = db.prepare(`
+                    SELECT config FROM connections 
+                    WHERE user_id = ? AND type = ? AND status = ?
+                `).get(this.userId, 'googlesheets', 'active');
+                const config = connection?.config ? JSON.parse(connection.config) : {};
+                return await rowAgent.processRow(
+                    config.spreadsheetId,
+                    config.sheetName || 'Sheet1',
+                    params.rowIndex
+                );
+
+            case 'spreadsheet_process_all':
+                const allAgent = new SpreadsheetAgent(this.userId);
+                const allConnection = db.prepare(`
+                    SELECT config FROM connections 
+                    WHERE user_id = ? AND type = ? AND status = ?
+                `).get(this.userId, 'googlesheets', 'active');
+                const allConfig = allConnection?.config ? JSON.parse(allConnection.config) : {};
+                return await allAgent.processAllPending(
+                    allConfig.spreadsheetId,
+                    allConfig.sheetName || 'Sheet1'
+                );
 
             default:
                 return {

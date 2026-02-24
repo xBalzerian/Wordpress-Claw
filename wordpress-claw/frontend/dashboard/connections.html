@@ -223,6 +223,54 @@
         .connection-icon.github { background: #333; color: white; }
         .connection-icon.googlesheets { background: #0f9d58; color: white; }
 
+        .tab-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        textarea.form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        textarea.form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
         .connection-info h3 {
             font-size: 18px;
             font-weight: 600;
@@ -473,6 +521,10 @@
                         <span class="nav-icon">🤖</span>
                         ClawBot
                     </a>
+                    <a href="spreadsheet.html" class="nav-item">
+                        <span class="nav-icon">📋</span>
+                        Spreadsheet
+                    </a>
                 </div>
                 
                 <div class="nav-section">
@@ -550,6 +602,28 @@
                         <button class="btn btn-primary" id="ghConnectBtn" onclick="openGhModal()">Connect</button>
                     </div>
                 </div>
+
+                <!-- Google Sheets Card -->
+                <div class="connection-card">
+                    <div class="connection-header">
+                        <div class="connection-icon googlesheets">S</div>
+                        <div class="connection-info">
+                            <h3>Google Sheets</h3>
+                            <p>Content command center</p>
+                        </div>
+                    </div>
+                    
+                    <div class="connection-body" id="gsBody">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔗</div>
+                            <p>Not connected yet</p>
+                        </div>
+                    </div>
+                    
+                    <div class="connection-actions">
+                        <button class="btn btn-primary" id="gsConnectBtn" onclick="openGsModal()">Connect</button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -621,6 +695,58 @@
         </div>
     </div>
 
+    <!-- Google Sheets Modal -->
+    <div class="modal-overlay" id="gsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Connect Google Sheets</h2>
+                <button class="modal-close" onclick="closeGsModal()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <div id="gsAlert" class="alert"></div>
+                
+                <div class="tab-group">
+                    <button class="tab active" onclick="switchGsTab('apikey')" id="tab-apikey">API Key</button>
+                    <button class="tab" onclick="switchGsTab('service')" id="tab-service">Service Account</button>
+                </div>
+
+                <div id="gs-content-apikey" class="tab-content active">
+                    <div class="form-group">
+                        <label for="gsApiKey">Google API Key *</label>
+                        <input type="password" id="gsApiKey" placeholder="AIzaSy...">
+                        <p class="form-hint">Get from Google Cloud Console → APIs & Services → Credentials</p>
+                    </div>
+                </div>
+
+                <div id="gs-content-service" class="tab-content">
+                    <div class="form-group">
+                        <label for="gsServiceAccount">Service Account JSON *</label>
+                        <textarea class="form-control" id="gsServiceAccount" placeholder='{"type": "service_account", "project_id": "..."}'></textarea>
+                        <p class="form-hint">Paste the entire JSON from your service account key file</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="gsSpreadsheetId">Spreadsheet ID (optional)</label>
+                    <input type="text" id="gsSpreadsheetId" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms">
+                    <p class="form-hint">From your Google Sheets URL. Leave empty to create a template.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="gsSheetName">Sheet Name (optional)</label>
+                    <input type="text" id="gsSheetName" placeholder="Sheet1">
+                    <p class="form-hint">The specific sheet/tab name. Defaults to Sheet1.</p>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeGsModal()">Cancel</button>
+                <button class="btn btn-primary" id="gsSaveBtn" onclick="saveGsConnection()">Connect</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = '';
         const token = localStorage.getItem('token');
@@ -652,6 +778,7 @@
         function updateConnectionCards() {
             const wpConn = connections.find(c => c.type === 'wordpress');
             const ghConn = connections.find(c => c.type === 'github');
+            const gsConn = connections.find(c => c.type === 'googlesheets');
 
             if (wpConn) {
                 document.getElementById('wpBody').innerHTML = `
@@ -675,6 +802,18 @@
                 `;
                 document.getElementById('ghConnectBtn').textContent = 'Test Connection';
                 document.getElementById('ghConnectBtn').onclick = () => testConnection(ghConn.id);
+            }
+
+            if (gsConn) {
+                document.getElementById('gsBody').innerHTML = `
+                    <div class="connection-status">
+                        <span class="status-dot ${gsConn.status}"></span>
+                        <span>${gsConn.status === 'active' ? 'Connected' : 'Connection error'}</span>
+                    </div>
+                    ${gsConn.last_error ? `<div class="alert error" style="display: block;">${gsConn.last_error}</div>` : ''}
+                `;
+                document.getElementById('gsConnectBtn').textContent = 'Test Connection';
+                document.getElementById('gsConnectBtn').onclick = () => testConnection(gsConn.id);
             }
         }
 
@@ -830,8 +969,113 @@
         document.getElementById('ghModal').addEventListener('click', (e) => {
             if (e.target.id === 'ghModal') closeGhModal();
         });
+        document.getElementById('gsModal').addEventListener('click', (e) => {
+            if (e.target.id === 'gsModal') closeGsModal();
+        });
 
         loadConnections();
+
+        // Google Sheets functions
+        function openGsModal() {
+            document.getElementById('gsModal').classList.add('active');
+        }
+
+        function closeGsModal() {
+            document.getElementById('gsModal').classList.remove('active');
+            document.getElementById('gsAlert').className = 'alert';
+            document.getElementById('gsAlert').textContent = '';
+        }
+
+        function switchGsTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.getElementById(`gs-content-${tab}`).classList.add('active');
+        }
+
+        async function saveGsConnection() {
+            const apiKey = document.getElementById('gsApiKey').value.trim();
+            const serviceAccount = document.getElementById('gsServiceAccount').value.trim();
+            const spreadsheetId = document.getElementById('gsSpreadsheetId').value.trim();
+            const sheetName = document.getElementById('gsSheetName').value.trim();
+            const alert = document.getElementById('gsAlert');
+            const btn = document.getElementById('gsSaveBtn');
+
+            // Determine which auth method is being used
+            const activeTab = document.querySelector('.tab.active').id;
+            let credentials = {};
+            let config = {};
+
+            if (activeTab === 'tab-apikey') {
+                if (!apiKey) {
+                    alert.className = 'alert error';
+                    alert.textContent = 'Please enter your API Key';
+                    return;
+                }
+                credentials.apiKey = apiKey;
+            } else {
+                if (!serviceAccount) {
+                    alert.className = 'alert error';
+                    alert.textContent = 'Please enter the Service Account JSON';
+                    return;
+                }
+                try {
+                    credentials.serviceAccount = JSON.parse(serviceAccount);
+                } catch (e) {
+                    alert.className = 'alert error';
+                    alert.textContent = 'Invalid JSON in Service Account field';
+                    return;
+                }
+            }
+
+            if (spreadsheetId) {
+                config.spreadsheetId = spreadsheetId;
+            }
+            if (sheetName) {
+                config.sheetName = sheetName;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Connecting...';
+
+            try {
+                const response = await fetch(`${API_URL}/api/connections`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'googlesheets',
+                        name: 'Google Sheets',
+                        credentials,
+                        config: Object.keys(config).length > 0 ? config : null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert.className = 'alert success';
+                    alert.textContent = data.data.connection.status === 'active' ? 'Connected successfully!' : 'Connected but test failed - check your credentials';
+                    setTimeout(() => {
+                        closeGsModal();
+                        loadConnections();
+                    }, 1500);
+                } else {
+                    alert.className = 'alert error';
+                    alert.textContent = data.error || 'Failed to connect';
+                    btn.disabled = false;
+                    btn.textContent = 'Connect';
+                }
+            } catch (err) {
+                alert.className = 'alert error';
+                alert.textContent = 'Network error. Please try again.';
+                btn.disabled = false;
+                btn.textContent = 'Connect';
+            }
+        }
     </script>
 </body>
 </html>

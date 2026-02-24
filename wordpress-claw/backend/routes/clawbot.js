@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../database/db');
 const { authenticateToken } = require('../middleware/auth');
 const SummonAgent = require('../services/summonAgent');
+const SpreadsheetAgent = require('../services/spreadsheetAgent');
 
 const router = express.Router();
 
@@ -587,6 +588,166 @@ router.get('/ideas', authenticateToken, async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to get content ideas'
+        });
+    }
+});
+
+/**
+ * SPREADSHEET ROUTES
+ * Google Sheets integration for command center functionality
+ */
+
+/**
+ * Check spreadsheet for new topics to process
+ * GET /api/clawbot/spreadsheet/check
+ */
+router.get('/spreadsheet/check', authenticateToken, async (req, res) => {
+    try {
+        const { spreadsheetId, sheetName } = req.query;
+
+        const spreadsheetAgent = new SpreadsheetAgent(req.user.id);
+        const result = await spreadsheetAgent.checkForNewTopics(spreadsheetId, sheetName);
+
+        res.json(result);
+    } catch (err) {
+        console.error('Spreadsheet check error:', err);
+        res.status(500).json({
+            success: false,
+            error: err.message || 'Failed to check spreadsheet'
+        });
+    }
+});
+
+/**
+ * Process a specific row from the spreadsheet
+ * POST /api/clawbot/spreadsheet/process-row
+ */
+router.post('/spreadsheet/process-row', authenticateToken, async (req, res) => {
+    try {
+        const { spreadsheetId, sheetName, rowIndex, options } = req.body;
+
+        if (!rowIndex) {
+            return res.status(400).json({
+                success: false,
+                error: 'Row index is required'
+            });
+        }
+
+        const spreadsheetAgent = new SpreadsheetAgent(req.user.id);
+        const result = await spreadsheetAgent.processRow(
+            spreadsheetId, 
+            sheetName || 'Sheet1', 
+            parseInt(rowIndex), 
+            options || {}
+        );
+
+        res.json(result);
+    } catch (err) {
+        console.error('Process row error:', err);
+        res.status(500).json({
+            success: false,
+            error: err.message || 'Failed to process row'
+        });
+    }
+});
+
+/**
+ * Process all pending rows
+ * POST /api/clawbot/spreadsheet/process-all
+ */
+router.post('/spreadsheet/process-all', authenticateToken, async (req, res) => {
+    try {
+        const { spreadsheetId, sheetName, options } = req.body;
+
+        const spreadsheetAgent = new SpreadsheetAgent(req.user.id);
+        const result = await spreadsheetAgent.processAllPending(
+            spreadsheetId, 
+            sheetName || 'Sheet1', 
+            options || {}
+        );
+
+        res.json(result);
+    } catch (err) {
+        console.error('Process all pending error:', err);
+        res.status(500).json({
+            success: false,
+            error: err.message || 'Failed to process pending rows'
+        });
+    }
+});
+
+/**
+ * Update spreadsheet status for a row
+ * POST /api/clawbot/spreadsheet/update-status
+ */
+router.post('/spreadsheet/update-status', authenticateToken, async (req, res) => {
+    try {
+        const { spreadsheetId, sheetName, rowIndex, status, metadata } = req.body;
+
+        if (!rowIndex || !status) {
+            return res.status(400).json({
+                success: false,
+                error: 'Row index and status are required'
+            });
+        }
+
+        const spreadsheetAgent = new SpreadsheetAgent(req.user.id);
+        const result = await spreadsheetAgent.updateSpreadsheetStatus(
+            spreadsheetId,
+            sheetName || 'Sheet1',
+            parseInt(rowIndex),
+            status,
+            metadata || {}
+        );
+
+        res.json(result);
+    } catch (err) {
+        console.error('Update spreadsheet status error:', err);
+        res.status(500).json({
+            success: false,
+            error: err.message || 'Failed to update spreadsheet status'
+        });
+    }
+});
+
+/**
+ * Get spreadsheet info and preview
+ * GET /api/clawbot/spreadsheet/info
+ */
+router.get('/spreadsheet/info', authenticateToken, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.query;
+
+        const spreadsheetAgent = new SpreadsheetAgent(req.user.id);
+        const result = await spreadsheetAgent.getSpreadsheetInfo(spreadsheetId);
+
+        res.json(result);
+    } catch (err) {
+        console.error('Get spreadsheet info error:', err);
+        res.status(500).json({
+            success: false,
+            error: err.message || 'Failed to get spreadsheet info'
+        });
+    }
+});
+
+/**
+ * Create a template spreadsheet
+ * POST /api/clawbot/spreadsheet/create-template
+ */
+router.post('/spreadsheet/create-template', authenticateToken, async (req, res) => {
+    try {
+        const { title } = req.body;
+
+        const spreadsheetAgent = new SpreadsheetAgent(req.user.id);
+        const result = await spreadsheetAgent.createTemplateSpreadsheet(title);
+
+        res.json(result);
+    } catch (err) {
+        console.error('Create template spreadsheet error:', err);
+        res.status(500).json({
+            success: false,
+            error: err.message || 'Failed to create template spreadsheet'
         });
     }
 });

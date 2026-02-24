@@ -328,9 +328,32 @@ async function testGitHubConnection(credentials) {
     }
 }
 
-async function testGoogleSheetsConnection(credentials) {
-    // Placeholder - would need Google API implementation
-    return { success: true, message: 'Google Sheets connection test not implemented' };
+async function testGoogleSheetsConnection(credentials, config = {}) {
+    try {
+        const GoogleSheetsService = require('../services/googleSheets');
+        
+        // Validate credentials
+        if (!credentials.apiKey && !credentials.serviceAccount && !credentials.accessToken) {
+            return { 
+                success: false, 
+                error: 'Missing credentials. Provide apiKey, serviceAccount JSON, or accessToken' 
+            };
+        }
+
+        // Initialize service
+        const sheetsService = new GoogleSheetsService(credentials);
+        
+        // Test connection with spreadsheet ID if provided
+        const testResult = await sheetsService.testConnection(config?.spreadsheetId);
+        
+        return testResult;
+    } catch (err) {
+        console.error('Google Sheets connection test error:', err);
+        return { 
+            success: false, 
+            error: err.message || 'Failed to test Google Sheets connection' 
+        };
+    }
 }
 
 module.exports = router;
