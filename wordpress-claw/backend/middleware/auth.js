@@ -57,12 +57,35 @@ function authenticateToken(req, res, next) {
 
     // Get fresh user data from database
     try {
-        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.userId);
+        let user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.userId);
+        
+        // TEMPORARY FIX: If user not found but token is valid, recreate user
         if (!user) {
-            return res.status(403).json({ 
-                success: false, 
-                error: 'User not found' 
-            });
+            console.log('User not found in DB, attempting to recreate from token:', decoded.email);
+            try {
+                // Try to insert the user back
+                const result = db.prepare(`
+                    INSERT INTO users (id, email, name, password_hash, tier, credits_included, credits_used, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                `).run(
+                    decoded.userId,
+                    decoded.email,
+                    decoded.email.split('@')[0], // Use email prefix as name
+                    'restored_from_token', // Placeholder password
+                    decoded.tier || 'free',
+                    decoded.tier === 'pro' ? 999999 : 50,
+                    0
+                );
+                
+                user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.userId);
+                console.log('User recreated successfully');
+            } catch (insertErr) {
+                console.error('Failed to recreate user:', insertErr);
+                return res.status(403).json({ 
+                    success: false, 
+                    error: 'User not found. Please register again.' 
+                });
+            }
         }
 
         req.user = {
