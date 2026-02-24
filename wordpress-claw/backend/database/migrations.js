@@ -1,6 +1,4 @@
-const db = require('./db');
-
-function runMigrations() {
+function runMigrations(db) {
     console.log('Running database migrations...');
     
     try {

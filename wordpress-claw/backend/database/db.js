@@ -35,6 +35,6 @@ console.log('Database initialized at:', DB_PATH);
 
 // Run migrations
 const { runMigrations } = require('./migrations');
-runMigrations();
+runMigrations(db);
 
 module.exports = db;
