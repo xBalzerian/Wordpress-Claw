@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WordPress Claw - AI Content Generation for Your Business</title>
+    <title>WordPress Claw - Your Content Command Center</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #E53935;
             --primary-dark: #C62828;
+            --primary-light: #FFEBEE;
             --text: #1a1a1a;
             --text-secondary: #666;
             --bg: #ffffff;
@@ -45,7 +46,7 @@
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
-            background: rgba(255,255,255,0.95);
+            background: rgba(255,255,255,0.98);
             backdrop-filter: blur(10px);
             z-index: 100;
         }
@@ -105,6 +106,7 @@
 
         .btn-primary:hover {
             background: var(--primary-dark);
+            transform: translateY(-1px);
         }
 
         .btn-secondary {
@@ -124,15 +126,29 @@
 
         /* Hero */
         .hero {
-            padding: 100px 0 80px;
+            padding: 80px 0 60px;
             text-align: center;
+            background: linear-gradient(180deg, var(--bg) 0%, var(--bg-secondary) 100%);
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 24px;
         }
 
         .hero h1 {
             font-size: 56px;
-            font-weight: 700;
+            font-weight: 800;
             line-height: 1.1;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             letter-spacing: -0.02em;
         }
 
@@ -140,11 +156,11 @@
             color: var(--primary);
         }
 
-        .hero p {
-            font-size: 20px;
+        .hero-subtitle {
+            font-size: 22px;
             color: var(--text-secondary);
             max-width: 600px;
-            margin: 0 auto 40px;
+            margin: 0 auto 32px;
         }
 
         .hero-buttons {
@@ -154,23 +170,83 @@
             margin-bottom: 60px;
         }
 
-        .hero-image {
-            max-width: 900px;
-            margin: 0 auto;
-            border-radius: 16px;
-            box-shadow: var(--shadow-lg);
-            overflow: hidden;
-        }
-
-        .hero-image img {
-            width: 100%;
-            display: block;
-        }
-
-        /* Features */
-        .features {
-            padding: 100px 0;
+        /* Flow Diagram */
+        .flow-section {
+            padding: 60px 0;
             background: var(--bg-secondary);
+        }
+
+        .flow-title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .flow-box {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 32px;
+            text-align: center;
+            min-width: 200px;
+            box-shadow: var(--shadow);
+        }
+
+        .flow-box.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.1);
+        }
+
+        .flow-box-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .flow-box h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .flow-box p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .flow-arrow {
+            font-size: 24px;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .flow-return {
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+            padding: 12px;
+            background: var(--primary-light);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--primary);
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 100px 0;
         }
 
         .section-header {
@@ -181,7 +257,7 @@
         .section-header h2 {
             font-size: 40px;
             font-weight: 700;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         .section-header p {
@@ -189,10 +265,56 @@
             color: var(--text-secondary);
         }
 
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .step {
+            text-align: center;
+        }
+
+        .step-number {
+            width: 48px;
+            height: 48px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 auto 16px;
+        }
+
+        .step h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .step p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Features */
+        .features {
+            padding: 100px 0;
+            background: var(--bg-secondary);
+        }
+
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 32px;
+            max-width: 900px;
+            margin: 0 auto;
         }
 
         .feature-card {
@@ -200,29 +322,31 @@
             padding: 32px;
             border-radius: 16px;
             box-shadow: var(--shadow);
+            display: flex;
+            gap: 20px;
         }
 
         .feature-icon {
             width: 56px;
             height: 56px;
-            background: rgba(229, 57, 53, 0.1);
+            background: var(--primary-light);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
             font-size: 28px;
+            flex-shrink: 0;
         }
 
-        .feature-card h3 {
-            font-size: 20px;
+        .feature-content h3 {
+            font-size: 18px;
             font-weight: 600;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
-        .feature-card p {
+        .feature-content p {
             color: var(--text-secondary);
-            font-size: 15px;
+            font-size: 14px;
             line-height: 1.6;
         }
 
@@ -241,7 +365,7 @@
 
         .pricing-card {
             background: white;
-            border: 1px solid var(--border);
+            border: 2px solid var(--border);
             border-radius: 16px;
             padding: 32px;
             position: relative;
@@ -249,7 +373,7 @@
 
         .pricing-card.featured {
             border-color: var(--primary);
-            box-shadow: 0 0 0 2px var(--primary);
+            box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.1);
         }
 
         .pricing-badge {
@@ -264,18 +388,17 @@
             font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         .pricing-card h3 {
             font-size: 20px;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 8px;
         }
 
         .pricing-price {
             font-size: 48px;
-            font-weight: 700;
+            font-weight: 800;
             margin-bottom: 8px;
         }
 
@@ -285,9 +408,9 @@
             color: var(--text-secondary);
         }
 
-        .pricing-credits {
+        .pricing-desc {
             color: var(--text-secondary);
-            font-size: 15px;
+            font-size: 14px;
             margin-bottom: 24px;
             padding-bottom: 24px;
             border-bottom: 1px solid var(--border);
@@ -300,7 +423,7 @@
 
         .pricing-features li {
             padding: 8px 0;
-            font-size: 15px;
+            font-size: 14px;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -319,8 +442,9 @@
         /* CTA */
         .cta {
             padding: 100px 0;
-            background: var(--bg-secondary);
+            background: var(--primary);
             text-align: center;
+            color: white;
         }
 
         .cta h2 {
@@ -331,8 +455,20 @@
 
         .cta p {
             font-size: 18px;
-            color: var(--text-secondary);
+            opacity: 0.9;
             margin-bottom: 32px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta .btn-primary {
+            background: white;
+            color: var(--primary);
+        }
+
+        .cta .btn-primary:hover {
+            background: var(--bg-secondary);
         }
 
         /* Footer */
@@ -397,14 +533,41 @@
         }
 
         /* Mobile */
-        @media (max-width: 900px) {
-            .features-grid,
-            .pricing-grid {
+        @media (max-width: 1024px) {
+            .steps {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero-subtitle {
+                font-size: 18px;
+            }
+
+            .flow-diagram {
+                flex-direction: column;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+            }
+
+            .features-grid {
                 grid-template-columns: 1fr;
             }
 
-            .hero h1 {
-                font-size: 40px;
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                max-width: 400px;
             }
 
             .nav-links {
@@ -414,11 +577,6 @@
             .footer-content {
                 flex-direction: column;
                 gap: 40px;
-            }
-
-            .footer-links {
-                flex-wrap: wrap;
-                gap: 30px;
             }
         }
     </style>
@@ -430,6 +588,7 @@
                 <img src="./assets/logo.png" alt="WordPress Claw">
             </a>
             <div class="nav-links">
+                <a href="/docs.html">Docs</a>
                 <a href="#features">Features</a>
                 <a href="#pricing">Pricing</a>
                 <a href="login.html">Sign In</a>
@@ -440,15 +599,77 @@
 
     <section class="hero">
         <div class="container">
-            <h1>AI-Powered Content<br>for <span>WordPress</span></h1>
-            <p>Generate SEO-optimized articles, publish directly to your WordPress site, and manage your content strategy—all with the help of ClawBot, your AI content assistant.</p>
+            <div class="hero-badge">
+                🦞 The Content Command Center
+            </div>
+            <h1>Your Content<br><span>Command Center</span></h1>
+            <p class="hero-subtitle">One spreadsheet. One agent. Unlimited content. ClawBot reads your Google Sheets, generates SEO-optimized articles, and publishes directly to WordPress.</p>
             <div class="hero-buttons">
                 <a href="register.html" class="btn btn-primary btn-lg">Start Free Trial</a>
-                <a href="#features" class="btn btn-secondary btn-lg">See How It Works</a>
+                <a href="/docs.html" class="btn btn-secondary btn-lg">Read the Docs</a>
             </div>
-            <div class="hero-image">
-                <div style="background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%); height: 400px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 18px;">
-                    Dashboard Preview
+        </div>
+    </section>
+
+    <section class="flow-section">
+        <div class="container">
+            <div class="flow-title">How The Flow Works</div>
+            <div class="flow-diagram">
+                <div class="flow-box active">
+                    <div class="flow-box-icon">📊</div>
+                    <h3>Google Sheets</h3>
+                    <p>Add Topics & Keywords</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box active">
+                    <div class="flow-box-icon">🤖</div>
+                    <h3>ClawBot Agent</h3>
+                    <p>Research & Generate</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box active">
+                    <div class="flow-box-icon">🚀</div>
+                    <h3>WordPress</h3>
+                    <p>Auto-Publish Live</p>
+                </div>
+            </div>
+            <div class="flow-return">
+                ↓ Status updates flow back to your spreadsheet automatically
+            </div>
+        </div>
+    </section>
+
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>How It Works</h2>
+                <p>From spreadsheet to live article in 5 simple steps</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Add Topics</h3>
+                    <p>Write topics & keywords in your Google Sheet</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Agent Reads</h3>
+                    <p>ClawBot scans for PENDING items</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>AI Generates</h3>
+                    <p>Research & write SEO-optimized content</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Auto-Publish</h3>
+                    <p>Publish directly to WordPress</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <h3>Track Status</h3>
+                    <p>Sheet updates with URL & status</p>
                 </div>
             </div>
         </div>
@@ -458,38 +679,36 @@
         <div class="container">
             <div class="section-header">
                 <h2>Everything You Need</h2>
-                <p>Powerful features to streamline your content workflow</p>
+                <p>Built for content teams who want to scale</p>
             </div>
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
-                    <h3>ClawBot Agent</h3>
-                    <p>Your personal AI assistant that understands your business, generates content, and publishes directly to WordPress.</p>
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-content">
+                        <h3>Spreadsheet Command Center</h3>
+                        <p>Your Google Sheet becomes the brain. Add topics, track status, see published URLs—all in one place you already know.</p>
+                    </div>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">✍️</div>
-                    <h3>AI Content Generation</h3>
-                    <p>Create SEO-optimized articles tailored to your industry, tone, and target audience in minutes.</p>
+                    <div class="feature-icon">🔍</div>
+                    <div class="feature-content">
+                        <h3>AI Research & Writing</h3>
+                        <p>ClawBot researches competitors, analyzes top-ranking content, and writes articles that rank—powered by Kimi AI.</p>
+                    </div>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🚀</div>
-                    <h3>One-Click Publishing</h3>
-                    <p>Publish directly to your WordPress site with proper formatting, tags, and featured images.</p>
+                    <div class="feature-content">
+                        <h3>One-Click Publishing</h3>
+                        <p>Connect your WordPress site and publish automatically. Proper formatting, featured images, SEO meta—all handled.</p>
+                    </div>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Content Management</h3>
-                    <p>Track all your articles, monitor publishing status, and manage your content calendar.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔗</div>
-                    <h3>WordPress Integration</h3>
-                    <p>Secure connection to your WordPress sites with automatic category and tag creation.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🖼️</div>
-                    <h3>Image Hosting</h3>
-                    <p>Automatic image generation and hosting via GitHub for fast, reliable featured images.</p>
+                    <div class="feature-icon">🤖</div>
+                    <div class="feature-content">
+                        <h3>ClawBot Agent</h3>
+                        <p>Your personal AI assistant. Ask it to check your sheet, process specific rows, or generate content on demand.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -499,18 +718,18 @@
         <div class="container">
             <div class="section-header">
                 <h2>Simple Pricing</h2>
-                <p>Choose the plan that fits your content needs</p>
+                <p>Start free, upgrade when you're ready</p>
             </div>
             <div class="pricing-grid">
                 <div class="pricing-card">
                     <h3>Free</h3>
                     <div class="pricing-price">$0<span>/mo</span></div>
-                    <div class="pricing-credits">0 credits • Basic tools only</div>
+                    <div class="pricing-desc">0 credits • Manual tools only</div>
                     <ul class="pricing-features">
                         <li>Business profile setup</li>
                         <li>WordPress connection</li>
                         <li>Manual article creation</li>
-                        <li>Basic analytics</li>
+                        <li>Basic dashboard</li>
                     </ul>
                     <a href="register.html" class="btn btn-secondary">Get Started</a>
                 </div>
@@ -518,26 +737,26 @@
                     <div class="pricing-badge">Most Popular</div>
                     <h3>Starter</h3>
                     <div class="pricing-price">$49<span>/mo</span></div>
-                    <div class="pricing-credits">50 credits/mo • $1.61 per extra credit</div>
+                    <div class="pricing-desc">50 credits/mo • $1.61 per extra</div>
                     <ul class="pricing-features">
                         <li>Everything in Free</li>
                         <li>AI article generation</li>
+                        <li>Google Sheets integration</li>
                         <li>GitHub image hosting</li>
-                        <li>Priority support</li>
-                        <li>Content scheduling</li>
+                        <li>Email support</li>
                     </ul>
                     <a href="register.html" class="btn btn-primary">Start Trial</a>
                 </div>
                 <div class="pricing-card">
                     <h3>Pro</h3>
                     <div class="pricing-price">$169<span>/mo</span></div>
-                    <div class="pricing-credits">Unlimited credits • Full ClawBot access</div>
+                    <div class="pricing-desc">Unlimited credits • Full ClawBot</div>
                     <ul class="pricing-features">
                         <li>Everything in Starter</li>
-                        <li>ClawBot AI agent</li>
+                        <li>ClawBot AI agent chat</li>
                         <li>Unlimited articles</li>
-                        <li>White-label options</li>
-                        <li>Dedicated support</li>
+                        <li>Priority support</li>
+                        <li>Custom integrations</li>
                     </ul>
                     <a href="register.html" class="btn btn-secondary">Contact Sales</a>
                 </div>
@@ -547,8 +766,8 @@
 
     <section class="cta">
         <div class="container">
-            <h2>Ready to Transform Your Content?</h2>
-            <p>Join hundreds of businesses using WordPress Claw to scale their content strategy.</p>
+            <h2>Ready to Automate Your Content?</h2>
+            <p>Join businesses using WordPress Claw to scale their content strategy—without hiring a full team.</p>
             <a href="register.html" class="btn btn-primary btn-lg">Get Started Free</a>
         </div>
     </section>
@@ -558,25 +777,27 @@
             <div class="footer-content">
                 <div class="footer-brand">
                     <img src="./assets/logo.png" alt="WordPress Claw">
-                    <p>AI-powered content generation for WordPress. Scale your content strategy with intelligent automation.</p>
+                    <p>Your content command center. One spreadsheet, one agent, unlimited content.</p>
                 </div>
                 <div class="footer-links">
                     <div class="footer-column">
                         <h4>Product</h4>
                         <a href="#features">Features</a>
                         <a href="#pricing">Pricing</a>
+                        <a href="/docs.html">Documentation</a>
                         <a href="dashboard/clawbot.html">ClawBot</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <a href="/docs.html#getting-started">Getting Started</a>
+                        <a href="/docs.html#spreadsheet">Spreadsheet Guide</a>
+                        <a href="/docs.html#connections">Connections</a>
                     </div>
                     <div class="footer-column">
                         <h4>Company</h4>
                         <a href="#">About</a>
-                        <a href="#">Blog</a>
                         <a href="#">Contact</a>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Legal</h4>
                         <a href="#">Privacy</a>
-                        <a href="#">Terms</a>
                     </div>
                 </div>
             </div>
