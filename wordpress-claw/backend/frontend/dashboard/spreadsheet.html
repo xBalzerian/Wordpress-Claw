@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spreadsheet - WordPress Claw</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E53935;
+            --primary-dark: #C62828;
+            --text: #1a1a1a;
+            --text-secondary: #666;
+            --bg: #f8f9fa;
+            --bg-card: #ffffff;
+            --border: #e5e5e5;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--bg);
+        }
+
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-logo img {
+            height: 56px;
+            width: auto;
+            max-width: 200px;
+            object-fit: contain;
+            height: 40px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: rgba(229, 57, 53, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .user-menu:hover {
+            background: var(--bg);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-tier {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: capitalize;
+        }
+
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        /* Spreadsheet Table */
+        .spreadsheet-container {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .spreadsheet-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .spreadsheet-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .spreadsheet-info {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .spreadsheet-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .spreadsheet-table th {
+            background: var(--bg);
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .spreadsheet-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .spreadsheet-table tr:hover {
+            background: var(--bg);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .status-processing {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .status-done {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .topic-cell {
+            font-weight: 500;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .url-cell a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .url-cell a:hover {
+            text-decoration: underline;
+        }
+
+        .action-cell {
+            white-space: nowrap;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        /* Alert */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .alert.error {
+            background: #ffebee;
+            color: var(--error);
+        }
+
+        .alert.success {
+            background: #e8f5e9;
+            color: var(--success);
+        }
+
+        .alert.info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 1100px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .spreadsheet-table { font-size: 12px; }
+            .spreadsheet-table th,
+            .spreadsheet-table td { padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <img src="../assets/logo.png" alt="WordPress Claw">
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="index.html" class="nav-item">
+                        <span class="nav-icon">📊</span>
+                        Dashboard
+                    </a>
+                    <a href="articles.html" class="nav-item">
+                        <span class="nav-icon">📝</span>
+                        Articles
+                    </a>
+                    <a href="clawbot.html" class="nav-item">
+                        <span class="nav-icon">🤖</span>
+                        ClawBot
+                    </a>
+                    <a href="spreadsheet.html" class="nav-item active">
+                        <span class="nav-icon">📋</span>
+                        Spreadsheet
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a href="connections.html" class="nav-item">
+                        <span class="nav-icon">🔗</span>
+                        Connections
+                    </a>
+                    <a href="billing.html" class="nav-item">
+                        <span class="nav-icon">💳</span>
+                        Billing
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Help</div>
+                    <a href="../docs.html" class="nav-item" target="_blank">
+                        <span class="nav-icon">📚</span>
+                        Documentation
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-menu" onclick="logout()">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">User</div>
+                        <div class="user-tier" id="userTier">Free</div>
+                    </div>
+                    <span>🚪</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="page-header">
+                <h1>📋 Spreadsheet Command Center</h1>
+                <p>Manage your content queue from Google Sheets. Add topics with status PENDING and ClawBot will process them.</p>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <div class="stats-grid" id="statsGrid" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-label">Total Topics</div>
+                    <div class="stat-value" id="totalTopics">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value" id="pendingCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Processing</div>
+                    <div class="stat-value" id="processingCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Completed</div>
+                    <div class="stat-value" id="completedCount">0</div>
+                </div>
+            </div>
+
+            <div class="action-bar" id="actionBar" style="display: none;">
+                <button class="btn btn-primary" id="checkBtn" onclick="checkSpreadsheet()">
+                    🔄 Check for New Topics
+                </button>
+                <button class="btn btn-primary" id="processAllBtn" onclick="processAllPending()" disabled>
+                    ⚡ Process All Pending
+                </button>
+                <button class="btn btn-secondary" onclick="createTemplate()">
+                    📄 Create Template
+                </button>
+                <a href="connections.html" class="btn btn-secondary">
+                    ⚙️ Configure
+                </a>
+            </div>
+
+            <div class="spreadsheet-container" id="spreadsheetContainer">
+                <div class="loading" id="loadingState">
+                    <div class="spinner"></div>
+                    Loading spreadsheet data...
+                </div>
+
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <div class="empty-state-icon">📋</div>
+                    <h3>No Google Sheets Connection</h3>
+                    <p>Connect your Google Sheets to use it as a command center for bulk content creation.</p>
+                    <br>
+                    <a href="connections.html" class="btn btn-primary">Connect Google Sheets</a>
+                </div>
+
+                <div id="spreadsheetContent" style="display: none;">
+                    <div class="spreadsheet-header">
+                        <div>
+                            <h2 id="sheetTitle">Spreadsheet</h2>
+                            <div class="spreadsheet-info" id="sheetInfo"></div>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="spreadsheet-table" id="spreadsheetTable">
+                            <thead id="tableHead"></thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = '';
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'User';
+        document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
+        document.getElementById('userAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
+
+        let currentData = null;
+        let isProcessing = false;
+
+        function showAlert(message, type = 'info') {
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `<div class="alert ${type}">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        async function loadSpreadsheetInfo() {
+            try {
+                const response = await fetch(`${API_URL}/api/clawbot/spreadsheet/info`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                document.getElementById('loadingState').style.display = 'none';
+
+                if (!data.success) {
+                    if (data.error.includes('No Google Sheets connection') || data.error.includes('No spreadsheet ID')) {
+                        document.getElementById('emptyState').style.display = 'block';
+                    } else {
+                        showAlert(data.error, 'error');
+                    }
+                    return;
+                }
+
+                currentData = data.data;
+                displaySpreadsheet(data.data);
+            } catch (err) {
+                console.error('Failed to load spreadsheet:', err);
+                document.getElementById('loadingState').style.display = 'none';
+                showAlert('Failed to load spreadsheet data', 'error');
+            }
+        }
+
+        function displaySpreadsheet(data) {
+            document.getElementById('statsGrid').style.display = 'grid';
+            document.getElementById('actionBar').style.display = 'flex';
+            document.getElementById('spreadsheetContent').style.display = 'block';
+
+            document.getElementById('sheetTitle').textContent = data.title || 'Spreadsheet';
+            document.getElementById('sheetInfo').textContent = `${data.totalRows} rows • ${data.sheets?.[0] || 'Sheet1'}`;
+
+            // Update stats
+            const pending = data.preview.filter(r => !r.status || r.status.toLowerCase() === 'pending').length;
+            const processing = data.preview.filter(r => r.status?.toLowerCase() === 'processing').length;
+            const done = data.preview.filter(r => r.status?.toLowerCase() === 'done').length;
+
+            document.getElementById('totalTopics').textContent = data.totalRows;
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('processingCount').textContent = processing;
+            document.getElementById('completedCount').textContent = done;
+
+            // Enable process all button if there are pending items
+            document.getElementById('processAllBtn').disabled = pending === 0 || isProcessing;
+
+            // Build table
+            const headers = data.headers || [];
+            const headRow = document.getElementById('tableHead');
+            headRow.innerHTML = '<tr>' + headers.map(h => `<th>${escapeHtml(h)}</th>`).join('') + '<th>Actions</th></tr>';
+
+            const body = document.getElementById('tableBody');
+            body.innerHTML = data.preview.map((row, index) => {
+                const status = (row.status || 'PENDING').toLowerCase();
+                const statusClass = status === 'done' ? 'status-done' : 
+                                   status === 'processing' ? 'status-processing' :
+                                   status === 'error' ? 'status-error' : 'status-pending';
+                
+                const cells = headers.map(h => {
+                    const key = h.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                    const value = row[key] || row[h] || '';
+                    
+                    if (h.toLowerCase().includes('status')) {
+                        return `<td><span class="status-badge ${statusClass}">${escapeHtml(value || 'PENDING')}</span></td>`;
+                    }
+                    if (h.toLowerCase().includes('url') && value) {
+                        return `<td class="url-cell"><a href="${escapeHtml(value)}" target="_blank">View →</a></td>`;
+                    }
+                    if (h.toLowerCase().includes('topic') || h.toLowerCase().includes('keyword')) {
+                        return `<td class="topic-cell" title="${escapeHtml(value)}">${escapeHtml(value)}</td>`;
+                    }
+                    return `<td>${escapeHtml(value)}</td>`;
+                }).join('');
+
+                const canProcess = status === 'pending' || status === '' || status === 'error';
+                
+                return `<tr>
+                    ${cells}
+                    <td class="action-cell">
+                        ${canProcess ? `<button class="btn btn-primary btn-small" onclick="processRow(${row._rowIndex})" ${isProcessing ? 'disabled' : ''}>Process</button>` : ''}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function checkSpreadsheet() {
+            const btn = document.getElementById('checkBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></span> Checking...';
+
+            try {
+                const response = await fetch(`${API_URL}/api/clawbot/spreadsheet/check`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    // Reload to get fresh data
+                    loadSpreadsheetInfo();
+                } else {
+                    showAlert(data.error, 'error');
+                }
+            } catch (err) {
+                showAlert('Failed to check spreadsheet', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🔄 Check for New Topics';
+            }
+        }
+
+        async function processRow(rowIndex) {
+            if (isProcessing) return;
+            isProcessing = true;
+            showAlert(`Processing row ${rowIndex}...`, 'info');
+
+            try {
+                const response = await fetch(`${API_URL}/api/clawbot/spreadsheet/process-row`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ rowIndex })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert(`✅ ${data.message}`, 'success');
+                    loadSpreadsheetInfo();
+                } else {
+                    showAlert(data.error, 'error');
+                }
+            } catch (err) {
+                showAlert('Failed to process row', 'error');
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        async function processAllPending() {
+            if (isProcessing) return;
+            isProcessing = true;
+            
+            const btn = document.getElementById('processAllBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></span> Processing...';
+
+            showAlert('Processing all pending topics... This may take a while.', 'info');
+
+            try {
+                const response = await fetch(`${API_URL}/api/clawbot/spreadsheet/process-all`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert(`✅ ${data.message}`, 'success');
+                    loadSpreadsheetInfo();
+                } else {
+                    showAlert(data.error, 'error');
+                }
+            } catch (err) {
+                showAlert('Failed to process pending topics', 'error');
+            } finally {
+                isProcessing = false;
+                btn.innerHTML = '⚡ Process All Pending';
+                btn.disabled = false;
+            }
+        }
+
+        async function createTemplate() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+
+            try {
+                const response = await fetch(`${API_URL}/api/clawbot/spreadsheet/create-template`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title: 'WordPress Claw - Content Calendar' })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert(`✅ Template created! <a href="${data.data.spreadsheetUrl}" target="_blank" style="color: inherit; text-decoration: underline;">Open in Google Sheets</a>`, 'success');
+                    setTimeout(loadSpreadsheetInfo, 1000);
+                } else {
+                    showAlert(data.error, 'error');
+                }
+            } catch (err) {
+                showAlert('Failed to create template', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📄 Create Template';
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
+
+        // Load on page load
+        loadSpreadsheetInfo();
+    </script>
+</body>
+</html>
