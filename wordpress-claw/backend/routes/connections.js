@@ -332,19 +332,31 @@ async function testGoogleSheetsConnection(credentials, config = {}) {
     try {
         const GoogleSheetsService = require('../services/googleSheets');
         
-        // Validate credentials
-        if (!credentials.apiKey && !credentials.serviceAccount && !credentials.accessToken) {
+        // Validate credentials - now we just need a spreadsheet URL or ID
+        if (!credentials.spreadsheetUrl && !credentials.spreadsheetId) {
             return { 
                 success: false, 
-                error: 'Missing credentials. Provide apiKey, serviceAccount JSON, or accessToken' 
+                error: 'Please provide a Google Sheets URL' 
             };
         }
 
-        // Initialize service
-        const sheetsService = new GoogleSheetsService(credentials);
+        // Extract spreadsheet ID from URL if provided
+        let spreadsheetId = credentials.spreadsheetId;
+        if (credentials.spreadsheetUrl && !spreadsheetId) {
+            spreadsheetId = GoogleSheetsService.extractSpreadsheetId(credentials.spreadsheetUrl);
+            if (!spreadsheetId) {
+                return {
+                    success: false,
+                    error: 'Could not extract spreadsheet ID from URL. Please check the URL is valid.'
+                };
+            }
+        }
+
+        // Initialize service with just the spreadsheet ID
+        const sheetsService = new GoogleSheetsService({ spreadsheetId });
         
-        // Test connection with spreadsheet ID if provided
-        const testResult = await sheetsService.testConnection(config?.spreadsheetId);
+        // Test connection
+        const testResult = await sheetsService.testConnection(spreadsheetId);
         
         return testResult;
     } catch (err) {

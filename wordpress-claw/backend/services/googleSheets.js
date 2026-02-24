@@ -1,108 +1,137 @@
 /**
  * Google Sheets Service
- * Handles connection to Google Sheets API and data operations
- * Smart column detection - adapts to any spreadsheet layout
+ * Simplified URL-based access - no API keys needed for public sheets
  */
 
-const { google } = require('googleapis');
 const axios = require('axios');
 
 class GoogleSheetsService {
-    constructor(credentials) {
+    constructor(credentials = {}) {
         this.credentials = credentials;
-        this.sheets = null;
-        this.auth = null;
+        this.spreadsheetId = credentials.spreadsheetId || null;
     }
 
     /**
-     * Initialize the Google Sheets API client
+     * Extract spreadsheet ID from various Google Sheets URL formats
      */
-    async initialize() {
-        try {
-            // Support multiple auth methods
-            if (this.credentials.apiKey) {
-                // API Key auth (read-only for public sheets)
-                this.auth = this.credentials.apiKey;
-            } else if (this.credentials.serviceAccount) {
-                // Service Account JSON
-                this.auth = new google.auth.GoogleAuth({
-                    credentials: this.credentials.serviceAccount,
-                    scopes: ['https://www.googleapis.com/auth/spreadsheets']
-                });
-            } else if (this.credentials.accessToken) {
-                // OAuth access token
-                this.auth = new google.auth.OAuth2();
-                this.auth.setCredentials({ access_token: this.credentials.accessToken });
-            } else {
-                throw new Error('No valid credentials provided. Need apiKey, serviceAccount, or accessToken');
-            }
-
-            this.sheets = google.sheets({ version: 'v4', auth: this.auth });
-            return true;
-        } catch (err) {
-            console.error('Google Sheets initialization error:', err);
-            throw err;
+    static extractSpreadsheetId(url) {
+        if (!url || typeof url !== 'string') {
+            return null;
         }
+
+        // Handle different URL formats:
+        // https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit
+        // https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit#gid=0
+        // https://docs.google.com/spreadsheets/d/SPREADSHEET_ID
+        // SPREADSHEET_ID (just the ID itself)
+
+        const patterns = [
+            /\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/,
+            /^([a-zA-Z0-9-_]{40,})$/ // Just the ID (44 chars typically)
+        ];
+
+        for (const pattern of patterns) {
+            const match = url.match(pattern);
+            if (match) {
+                return match[1];
+            }
+        }
+
+        return null;
     }
 
     /**
-     * Test connection to Google Sheets
+     * Build the Google Sheets CSV export URL
+     */
+    static getCsvUrl(spreadsheetId, sheetName = null) {
+        const gid = sheetName ? `&gid=${sheetName}` : '';
+        return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv${gid}`;
+    }
+
+    /**
+     * Test connection to a Google Sheet
+     * Uses the public CSV export endpoint
      */
     async testConnection(spreadsheetId = null) {
-        try {
-            if (!this.sheets) await this.initialize();
-
-            // If no spreadsheetId provided, just validate auth works
-            if (!spreadsheetId) {
-                return { success: true, message: 'Authentication successful' };
-            }
-
-            // Try to get spreadsheet info
-            const response = await this.sheets.spreadsheets.get({
-                spreadsheetId,
-                fields: 'properties.title,properties.locale,sheets.properties.title'
-            });
-
-            return {
-                success: true,
-                message: 'Connected successfully',
-                data: {
-                    title: response.data.properties.title,
-                    sheets: response.data.sheets.map(s => s.properties.title)
-                }
-            };
-        } catch (err) {
-            console.error('Google Sheets test connection error:', err);
+        const id = spreadsheetId || this.spreadsheetId;
+        
+        if (!id) {
             return {
                 success: false,
-                error: this.parseError(err)
+                error: 'No spreadsheet ID provided'
+            };
+        }
+
+        try {
+            // Try to fetch the sheet as CSV (public access)
+            const csvUrl = GoogleSheetsService.getCsvUrl(id);
+            const response = await axios.get(csvUrl, {
+                timeout: 10000,
+                maxRedirects: 5
+            });
+
+            if (response.status === 200 && response.data) {
+                // Parse first line to get headers
+                const lines = response.data.split('\n').filter(line => line.trim());
+                const headers = lines[0] ? this.parseCsvLine(lines[0]) : [];
+
+                return {
+                    success: true,
+                    message: 'Connected successfully',
+                    data: {
+                        spreadsheetId: id,
+                        headers: headers,
+                        rowCount: Math.max(0, lines.length - 1)
+                    }
+                };
+            }
+
+            return {
+                success: false,
+                error: 'Could not access spreadsheet. Make sure it is shared with "Anyone with the link can view"'
+            };
+        } catch (err) {
+            console.error('Google Sheets test connection error:', err.message);
+            
+            if (err.response?.status === 404) {
+                return {
+                    success: false,
+                    error: 'Spreadsheet not found. Check the URL is correct.'
+                };
+            }
+            
+            if (err.response?.status === 403 || err.response?.status === 401) {
+                return {
+                    success: false,
+                    error: 'Access denied. Make sure your sheet is shared with "Anyone with the link can view" or "Anyone with the link can edit"'
+                };
+            }
+
+            return {
+                success: false,
+                error: 'Could not access spreadsheet. Make sure it is shared with "Anyone with the link can view"'
             };
         }
     }
 
     /**
-     * Read data from a spreadsheet
-     * Returns raw data with detected column mapping
+     * Read data from a spreadsheet via CSV export
      */
-    async readSheet(spreadsheetId, sheetName = null, range = null) {
+    async readSheet(spreadsheetId = null, sheetName = null) {
+        const id = spreadsheetId || this.spreadsheetId;
+        
+        if (!id) {
+            throw new Error('No spreadsheet ID provided');
+        }
+
         try {
-            if (!this.sheets) await this.initialize();
-
-            // Build range string
-            let readRange = sheetName || 'Sheet1';
-            if (range) {
-                readRange = `${readRange}!${range}`;
-            }
-
-            const response = await this.sheets.spreadsheets.values.get({
-                spreadsheetId,
-                range: readRange,
-                valueRenderOption: 'FORMATTED_VALUE'
+            const csvUrl = GoogleSheetsService.getCsvUrl(id, sheetName);
+            const response = await axios.get(csvUrl, {
+                timeout: 30000,
+                maxRedirects: 5
             });
 
-            const rows = response.data.values || [];
-            
-            if (rows.length === 0) {
+            if (!response.data) {
                 return {
                     success: true,
                     data: [],
@@ -111,19 +140,35 @@ class GoogleSheetsService {
                 };
             }
 
-            // Detect columns from headers
-            const headers = rows[0];
+            // Parse CSV
+            const lines = response.data.split('\n').filter(line => line.trim());
+            
+            if (lines.length === 0) {
+                return {
+                    success: true,
+                    data: [],
+                    columns: {},
+                    headers: []
+                };
+            }
+
+            // Parse headers
+            const headers = this.parseCsvLine(lines[0]);
             const columnMap = this.detectColumns(headers);
 
             // Parse data rows
-            const data = rows.slice(1).map((row, index) => {
-                const rowData = { _rowIndex: index + 2 }; // 1-based with header
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const rowValues = this.parseCsvLine(lines[i]);
+                const rowData = { _rowIndex: i + 1 }; // 1-based with header
+                
                 headers.forEach((header, colIndex) => {
                     const key = columnMap[header] || this.sanitizeColumnName(header);
-                    rowData[key] = row[colIndex] || '';
+                    rowData[key] = rowValues[colIndex] || '';
                 });
-                return rowData;
-            });
+                
+                data.push(rowData);
+            }
 
             return {
                 success: true,
@@ -133,9 +178,49 @@ class GoogleSheetsService {
                 totalRows: data.length
             };
         } catch (err) {
-            console.error('Read sheet error:', err);
-            throw new Error(this.parseError(err));
+            console.error('Read sheet error:', err.message);
+            
+            if (err.response?.status === 403 || err.response?.status === 401) {
+                throw new Error('Access denied. Make sure your sheet is shared with "Anyone with the link can view"');
+            }
+            
+            throw new Error('Failed to read spreadsheet: ' + (err.message || 'Unknown error'));
         }
+    }
+
+    /**
+     * Parse a CSV line handling quoted values
+     */
+    parseCsvLine(line) {
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            const nextChar = line[i + 1];
+            
+            if (char === '"') {
+                if (inQuotes && nextChar === '"') {
+                    // Escaped quote
+                    current += '"';
+                    i++; // Skip next quote
+                } else {
+                    // Toggle quote state
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === ',' && !inQuotes) {
+                values.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        
+        // Don't forget the last value
+        values.push(current.trim());
+        
+        return values;
     }
 
     /**
@@ -217,108 +302,22 @@ class GoogleSheetsService {
 
     /**
      * Update cell values in the spreadsheet
+     * Note: This requires the sheet to be editable via Apps Script or similar
+     * For now, this is a placeholder - CSV export is read-only
      */
     async updateCells(spreadsheetId, updates, sheetName = 'Sheet1') {
-        try {
-            if (!this.sheets) await this.initialize();
-
-            // Build data for batch update
-            const data = updates.map(update => ({
-                range: `${sheetName}!${update.cell}`,
-                values: [[update.value]]
-            }));
-
-            const response = await this.sheets.spreadsheets.values.batchUpdate({
-                spreadsheetId,
-                requestBody: {
-                    valueInputOption: 'USER_ENTERED',
-                    data
-                }
-            });
-
-            return {
-                success: true,
-                updatedCells: response.data.totalUpdatedCells,
-                updates: updates.length
-            };
-        } catch (err) {
-            console.error('Update cells error:', err);
-            throw new Error(this.parseError(err));
-        }
+        // CSV export is read-only
+        // To support writes, we'd need to use Google Apps Script or OAuth
+        throw new Error('Write operations require OAuth authentication. Please use the Google Sheets API with OAuth for write access.');
     }
 
     /**
      * Update row status and add metadata
+     * Note: This requires write access via OAuth
      */
     async updateRowStatus(spreadsheetId, rowIndex, status, metadata = {}, sheetName = 'Sheet1', headers = []) {
-        try {
-            if (!this.sheets) await this.initialize();
-
-            const updates = [];
-            const statusColumnIndex = headers.findIndex(h => 
-                h.toLowerCase().includes('status')
-            );
-
-            if (statusColumnIndex >= 0) {
-                const statusCol = this.columnToLetter(statusColumnIndex + 1);
-                updates.push({
-                    cell: `${statusCol}${rowIndex}`,
-                    value: status
-                });
-            }
-
-            // Add URL if provided and URL column exists
-            if (metadata.url) {
-                const urlColumnIndex = headers.findIndex(h => 
-                    h.toLowerCase().includes('url') || 
-                    h.toLowerCase().includes('link')
-                );
-                if (urlColumnIndex >= 0) {
-                    const urlCol = this.columnToLetter(urlColumnIndex + 1);
-                    updates.push({
-                        cell: `${urlCol}${rowIndex}`,
-                        value: metadata.url
-                    });
-                }
-            }
-
-            // Add notes if provided
-            if (metadata.notes) {
-                const notesColumnIndex = headers.findIndex(h => 
-                    h.toLowerCase().includes('notes') || 
-                    h.toLowerCase().includes('comments')
-                );
-                if (notesColumnIndex >= 0) {
-                    const notesCol = this.columnToLetter(notesColumnIndex + 1);
-                    updates.push({
-                        cell: `${notesCol}${rowIndex}`,
-                        value: metadata.notes
-                    });
-                }
-            }
-
-            // Add timestamp
-            const updatedColumnIndex = headers.findIndex(h => 
-                h.toLowerCase().includes('updated') || 
-                h.toLowerCase().includes('modified')
-            );
-            if (updatedColumnIndex >= 0) {
-                const updatedCol = this.columnToLetter(updatedColumnIndex + 1);
-                updates.push({
-                    cell: `${updatedCol}${rowIndex}`,
-                    value: new Date().toISOString()
-                });
-            }
-
-            if (updates.length === 0) {
-                return { success: true, message: 'No columns to update' };
-            }
-
-            return await this.updateCells(spreadsheetId, updates, sheetName);
-        } catch (err) {
-            console.error('Update row status error:', err);
-            throw new Error(this.parseError(err));
-        }
+        // CSV export is read-only
+        throw new Error('Write operations require OAuth authentication. Please use the Google Sheets API with OAuth for write access.');
     }
 
     /**
@@ -346,76 +345,35 @@ class GoogleSheetsService {
 
     /**
      * Append rows to spreadsheet
+     * Note: Requires OAuth
      */
     async appendRows(spreadsheetId, rows, sheetName = 'Sheet1') {
-        try {
-            if (!this.sheets) await this.initialize();
-
-            const response = await this.sheets.spreadsheets.values.append({
-                spreadsheetId,
-                range: `${sheetName}!A1`,
-                valueInputOption: 'USER_ENTERED',
-                insertDataOption: 'INSERT_ROWS',
-                requestBody: {
-                    values: rows
-                }
-            });
-
-            return {
-                success: true,
-                updatedRange: response.data.updates.updatedRange,
-                updatedRows: response.data.updates.updatedRows
-            };
-        } catch (err) {
-            console.error('Append rows error:', err);
-            throw new Error(this.parseError(err));
-        }
+        throw new Error('Write operations require OAuth authentication. Please use the Google Sheets API with OAuth for write access.');
     }
 
     /**
      * Create a new spreadsheet
+     * Note: Requires OAuth
      */
     async createSpreadsheet(title, sheets = ['Topics']) {
-        try {
-            if (!this.sheets) await this.initialize();
-
-            const response = await this.sheets.spreadsheets.create({
-                requestBody: {
-                    properties: { title },
-                    sheets: sheets.map(name => ({
-                        properties: { title: name }
-                    }))
-                }
-            });
-
-            return {
-                success: true,
-                spreadsheetId: response.data.spreadsheetId,
-                spreadsheetUrl: response.data.spreadsheetUrl
-            };
-        } catch (err) {
-            console.error('Create spreadsheet error:', err);
-            throw new Error(this.parseError(err));
-        }
+        throw new Error('Create spreadsheet requires OAuth authentication. Please create a sheet manually and share it with "Anyone with the link can edit".');
     }
 
     /**
-     * Parse Google API errors into readable messages
+     * Get sharing instructions for users
      */
-    parseError(err) {
-        if (err.code === 403) {
-            return 'Access denied. Check your API key has Google Sheets API enabled and permissions are correct.';
-        }
-        if (err.code === 404) {
-            return 'Spreadsheet not found. Check the spreadsheet ID is correct.';
-        }
-        if (err.code === 400) {
-            return 'Invalid request: ' + (err.message || 'Bad request');
-        }
-        if (err.message?.includes('API key not valid')) {
-            return 'Invalid API key. Please check your credentials.';
-        }
-        return err.message || 'Unknown Google Sheets error';
+    static getSharingInstructions() {
+        return {
+            title: 'Share your Google Sheet',
+            steps: [
+                'Open your Google Sheet',
+                'Click "Share" in the top right',
+                'Change "Restricted" to "Anyone with the link"',
+                'Set permission to "Viewer" (read-only) or "Editor" (read/write)',
+                'Copy the link and paste it here'
+            ],
+            note: 'We only need "Viewer" access to read your content. "Editor" access is only needed if you want us to update statuses automatically.'
+        };
     }
 }
 

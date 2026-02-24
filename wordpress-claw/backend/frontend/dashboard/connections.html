@@ -435,6 +435,15 @@
             margin-top: 4px;
         }
 
+        .form-hint a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .form-hint a:hover {
+            text-decoration: underline;
+        }
+
         .modal-footer {
             padding: 16px 24px;
             border-top: 1px solid var(--border);
@@ -463,37 +472,31 @@
             display: block;
         }
 
-        /* Tabs */
-        .tab-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            border-bottom: 1px solid var(--border);
+        /* Help box */
+        .help-box {
+            background: #f0f7ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
         }
 
-        .tab {
-            padding: 8px 16px;
-            background: none;
-            border: none;
+        .help-box h4 {
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #0066cc;
+        }
+
+        .help-box ol {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 13px;
             color: var(--text-secondary);
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -1px;
         }
 
-        .tab.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
+        .help-box li {
+            margin-bottom: 4px;
         }
 
         @media (max-width: 768px) {
@@ -534,21 +537,6 @@
             document.getElementById('ghModal').classList.remove('show');
             document.getElementById('ghAlert').style.display = 'none';
             document.getElementById('ghAlert').textContent = '';
-        }
-
-        // Tab switching for Google Sheets
-        function switchGsTab(tab) {
-            if (tab === 'apikey') {
-                document.getElementById('tabApiKey').classList.add('active');
-                document.getElementById('tabService').classList.remove('active');
-                document.getElementById('gsContentApiKey').classList.add('active');
-                document.getElementById('gsContentService').classList.remove('active');
-            } else {
-                document.getElementById('tabApiKey').classList.remove('active');
-                document.getElementById('tabService').classList.add('active');
-                document.getElementById('gsContentApiKey').classList.remove('active');
-                document.getElementById('gsContentService').classList.add('active');
-            }
         }
     </script>
 
@@ -702,7 +690,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Connect WordPress</h2>
-                <button class="modal-close" onclick="closeWpModal()">&times;</button>
+                <button class="modal-close" onclick="closeWpModal()">×</button>
             </div>
             
             <div class="modal-body">
@@ -738,7 +726,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Connect GitHub</h2>
-                <button class="modal-close" onclick="closeGhModal()">&times;</button>
+                <button class="modal-close" onclick="closeGhModal()">×</button>
             </div>
             
             <div class="modal-body">
@@ -764,48 +752,38 @@
         </div>
     </div>
 
-    <!-- Google Sheets Modal -->
+    <!-- Google Sheets Modal - Simplified -->
     <div class="modal-overlay" id="gsModal">
         <div class="modal">
             <div class="modal-header">
                 <h2>Connect Google Sheets</h2>
-                <button class="modal-close" onclick="closeGsModal()">&times;</button>
+                <button class="modal-close" onclick="closeGsModal()">×</button>
             </div>
             
             <div class="modal-body">
                 <div id="gsAlert" class="alert"></div>
                 
-                <div class="tab-group">
-                    <button class="tab active" id="tabApiKey" onclick="switchGsTab('apikey')">API Key</button>
-                    <button class="tab" id="tabService" onclick="switchGsTab('service')">Service Account</button>
-                </div>
-
-                <div id="gsContentApiKey" class="tab-content active">
-                    <div class="form-group">
-                        <label for="gsApiKey">Google API Key *</label>
-                        <input type="password" id="gsApiKey" placeholder="AIzaSy...">
-                        <p class="form-hint">Get from Google Cloud Console → APIs & Services → Credentials</p>
-                    </div>
-                </div>
-
-                <div id="gsContentService" class="tab-content">
-                    <div class="form-group">
-                        <label for="gsServiceAccount">Service Account JSON *</label>
-                        <textarea id="gsServiceAccount" placeholder='{"type": "service_account", "project_id": "..."}'></textarea>
-                        <p class="form-hint">Paste the entire JSON from your service account key file</p>
-                    </div>
+                <div class="help-box">
+                    <h4>💡 How to share your sheet</h4>
+                    <ol>
+                        <li>Open your Google Sheet</li>
+                        <li>Click "Share" in the top right</li>
+                        <li>Change "Restricted" to "Anyone with the link"</li>
+                        <li>Set permission to "Viewer" or "Editor"</li>
+                        <li>Copy the link and paste it below</li>
+                    </ol>
                 </div>
 
                 <div class="form-group">
-                    <label for="gsSpreadsheetId">Spreadsheet ID (optional)</label>
-                    <input type="text" id="gsSpreadsheetId" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms">
-                    <p class="form-hint">From your Google Sheets URL. Leave empty to create a template.</p>
+                    <label for="gsSpreadsheetUrl">Google Sheets URL *</label>
+                    <input type="url" id="gsSpreadsheetUrl" placeholder="https://docs.google.com/spreadsheets/d/.../edit">
+                    <p class="form-hint">Paste your Google Sheets link here. Make sure it's shared with "Anyone with the link can view"</p>
                 </div>
 
                 <div class="form-group">
                     <label for="gsSheetName">Sheet Name (optional)</label>
                     <input type="text" id="gsSheetName" placeholder="Sheet1">
-                    <p class="form-hint">The specific sheet/tab name. Defaults to Sheet1.</p>
+                    <p class="form-hint">The specific sheet/tab name. Defaults to the first sheet.</p>
                 </div>
             </div>
             
@@ -884,22 +862,21 @@
             console.log('GitHub connect:', { token });
         });
 
-        document.getElementById('gsSaveBtn').addEventListener('click', function() {
-            const apiKey = document.getElementById('gsApiKey').value.trim();
-            const serviceAccount = document.getElementById('gsServiceAccount').value.trim();
+        document.getElementById('gsSaveBtn').addEventListener('click', async function() {
+            const url = document.getElementById('gsSpreadsheetUrl').value.trim();
+            const sheetName = document.getElementById('gsSheetName').value.trim();
             const alert = document.getElementById('gsAlert');
 
-            const isApiKeyTab = document.getElementById('tabApiKey').classList.contains('active');
-
-            if (isApiKeyTab && !apiKey) {
-                alert.textContent = 'Please enter your API Key';
+            if (!url) {
+                alert.textContent = 'Please enter your Google Sheets URL';
                 alert.className = 'alert error';
                 alert.style.display = 'block';
                 return;
             }
 
-            if (!isApiKeyTab && !serviceAccount) {
-                alert.textContent = 'Please enter the Service Account JSON';
+            // Basic URL validation
+            if (!url.includes('docs.google.com/spreadsheets')) {
+                alert.textContent = 'Please enter a valid Google Sheets URL';
                 alert.className = 'alert error';
                 alert.style.display = 'block';
                 return;
@@ -909,8 +886,47 @@
             alert.className = 'alert';
             alert.style.display = 'block';
             
-            // TODO: Implement actual API call
-            console.log('Google Sheets connect:', { isApiKeyTab, apiKey, serviceAccount });
+            // Make actual API call
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/connections', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        type: 'googlesheets',
+                        name: 'Google Sheets',
+                        credentials: {
+                            spreadsheetUrl: url
+                        },
+                        config: {
+                            sheetName: sheetName || null
+                        }
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert.textContent = 'Connected successfully!';
+                    alert.className = 'alert success';
+                    alert.style.display = 'block';
+                    setTimeout(() => {
+                        closeGsModal();
+                        location.reload();
+                    }, 1500);
+                } else {
+                    alert.textContent = result.error || 'Failed to connect';
+                    alert.className = 'alert error';
+                    alert.style.display = 'block';
+                }
+            } catch (err) {
+                alert.textContent = 'Error: ' + err.message;
+                alert.className = 'alert error';
+                alert.style.display = 'block';
+            }
         });
     </script>
 </body>
