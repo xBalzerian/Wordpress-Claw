@@ -9,11 +9,22 @@ class GoogleSheetsService {
     constructor(credentials = {}) {
         this.credentials = credentials;
         this.spreadsheetId = credentials.spreadsheetId || null;
+        
+        // Extract spreadsheet ID from URL if provided
+        if (credentials.spreadsheetUrl && !this.spreadsheetId) {
+            this.spreadsheetId = GoogleSheetsService.extractSpreadsheetId(credentials.spreadsheetUrl);
+        }
     }
 
     /**
-     * Extract spreadsheet ID from various Google Sheets URL formats
+     * Initialize the service (compatibility method)
      */
+    async initialize() {
+        if (!this.spreadsheetId) {
+            throw new Error('No spreadsheet ID available. Please provide a valid Google Sheets URL.');
+        }
+        return true;
+    }
     static extractSpreadsheetId(url) {
         if (!url || typeof url !== 'string') {
             return null;
