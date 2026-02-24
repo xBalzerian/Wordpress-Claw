@@ -33,4 +33,8 @@ for (const statement of statements) {
 
 console.log('Database initialized at:', DB_PATH);
 
+// Run migrations
+const { runMigrations } = require('./migrations');
+runMigrations();
+
 module.exports = db;
