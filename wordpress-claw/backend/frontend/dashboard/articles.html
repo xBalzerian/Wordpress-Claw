@@ -575,6 +575,9 @@
     </style>
 </head>
 <body>
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+    <div class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+    
     <div class="dashboard">
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -924,6 +927,12 @@
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = '/login.html';
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            document.querySelector('.sidebar').classList.toggle('show');
+            document.querySelector('.sidebar-overlay').classList.toggle('show');
         }
 
         // Close modal on overlay click
