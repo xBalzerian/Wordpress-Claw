@@ -775,6 +775,45 @@
 
         let connections = [];
 
+        // MODAL FUNCTIONS - Must be defined before any button clicks
+        function openWpModal() {
+            document.getElementById('wpModal').classList.add('active');
+        }
+
+        function closeWpModal() {
+            document.getElementById('wpModal').classList.remove('active');
+            document.getElementById('wpAlert').className = 'alert';
+            document.getElementById('wpAlert').textContent = '';
+        }
+
+        function openGhModal() {
+            document.getElementById('ghModal').classList.add('active');
+        }
+
+        function closeGhModal() {
+            document.getElementById('ghModal').classList.remove('active');
+            document.getElementById('ghAlert').className = 'alert';
+            document.getElementById('ghAlert').textContent = '';
+        }
+
+        function openGsModal() {
+            document.getElementById('gsModal').classList.add('active');
+        }
+
+        function closeGsModal() {
+            document.getElementById('gsModal').classList.remove('active');
+            document.getElementById('gsAlert').className = 'alert';
+            document.getElementById('gsAlert').textContent = '';
+        }
+
+        function switchGsTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.getElementById(`gs-content-${tab}`).classList.add('active');
+        }
+
         async function loadConnections() {
             try {
                 const response = await fetch(`${API_URL}/api/connections`, {
@@ -831,26 +870,6 @@
                 document.getElementById('gsConnectBtn').textContent = 'Test Connection';
                 document.getElementById('gsConnectBtn').onclick = () => testConnection(gsConn.id);
             }
-        }
-
-        function openWpModal() {
-            document.getElementById('wpModal').classList.add('active');
-        }
-
-        function closeWpModal() {
-            document.getElementById('wpModal').classList.remove('active');
-            document.getElementById('wpAlert').className = 'alert';
-            document.getElementById('wpAlert').textContent = '';
-        }
-
-        function openGhModal() {
-            document.getElementById('ghModal').classList.add('active');
-        }
-
-        function closeGhModal() {
-            document.getElementById('ghModal').classList.remove('active');
-            document.getElementById('ghAlert').className = 'alert';
-            document.getElementById('ghAlert').textContent = '';
         }
 
         async function saveWpConnection() {
@@ -988,25 +1007,6 @@
         document.getElementById('gsModal').addEventListener('click', (e) => {
             if (e.target.id === 'gsModal') closeGsModal();
         });
-
-        // Google Sheets functions - MUST be defined before loadConnections
-        function openGsModal() {
-            document.getElementById('gsModal').classList.add('active');
-        }
-
-        function closeGsModal() {
-            document.getElementById('gsModal').classList.remove('active');
-            document.getElementById('gsAlert').className = 'alert';
-            document.getElementById('gsAlert').textContent = '';
-        }
-
-        function switchGsTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
-            document.getElementById(`tab-${tab}`).classList.add('active');
-            document.getElementById(`gs-content-${tab}`).classList.add('active');
-        }
 
         loadConnections();
 
