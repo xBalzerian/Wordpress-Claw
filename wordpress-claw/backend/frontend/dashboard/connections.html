@@ -597,7 +597,7 @@
                     </div>
                     
                     <div class="connection-actions">
-                        <button class="btn btn-primary" id="gsConnectBtn" onclick="openGsModal()">Connect</button>
+                        <button class="btn btn-primary" id="gsConnectBtn">Connect</button>
                     </div>
                 </div>
 
@@ -619,7 +619,7 @@
                     </div>
                     
                     <div class="connection-actions">
-                        <button class="btn btn-primary" id="wpConnectBtn" onclick="openWpModal()">Connect</button>
+                        <button class="btn btn-primary" id="wpConnectBtn">Connect</button>
                     </div>
                 </div>
 
@@ -641,7 +641,7 @@
                     </div>
                     
                     <div class="connection-actions">
-                        <button class="btn btn-primary" id="ghConnectBtn" onclick="openGhModal()">Connect</button>
+                        <button class="btn btn-primary" id="ghConnectBtn">Connect</button>
                     </div>
                 </div>
             </div>
@@ -827,6 +827,39 @@
             document.getElementById(`gs-content-${tab}`).classList.add('active');
         }
         window.switchGsTab = switchGsTab;
+
+        // Attach event listeners to Connect buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, attaching event listeners');
+            
+            const wpBtn = document.getElementById('wpConnectBtn');
+            const ghBtn = document.getElementById('ghConnectBtn');
+            const gsBtn = document.getElementById('gsConnectBtn');
+            
+            if (wpBtn) {
+                wpBtn.addEventListener('click', function() {
+                    console.log('WP Connect button clicked');
+                    openWpModal();
+                });
+            }
+            
+            if (ghBtn) {
+                ghBtn.addEventListener('click', function() {
+                    console.log('GH Connect button clicked');
+                    openGhModal();
+                });
+            }
+            
+            if (gsBtn) {
+                gsBtn.addEventListener('click', function() {
+                    console.log('GS Connect button clicked');
+                    openGsModal();
+                });
+            }
+            
+            // Load connections after DOM is ready
+            loadConnections();
+        });
 
         async function loadConnections() {
             try {
@@ -1022,7 +1055,7 @@
             if (e.target.id === 'gsModal') closeGsModal();
         });
 
-        loadConnections();
+        // Note: loadConnections() is now called in DOMContentLoaded above
 
         async function saveGsConnection() {
             const apiKey = document.getElementById('gsApiKey').value.trim();
