@@ -1,9 +1,12 @@
 /**
  * Google Sheets Service
- * Simplified URL-based access - no API keys needed for public sheets
+ * Uses Google Sheets API v4 for reliable access to public sheets
  */
 
 const axios = require('axios');
+
+// API key for Google Sheets API v4 (public sheets only)
+const API_KEY = process.env.GOOGLE_SHEETS_API_KEY || '';
 
 class GoogleSheetsService {
     constructor(credentials = {}) {
@@ -25,6 +28,7 @@ class GoogleSheetsService {
         }
         return true;
     }
+
     static extractSpreadsheetId(url) {
         if (!url || typeof url !== 'string') {
             return null;
@@ -52,16 +56,7 @@ class GoogleSheetsService {
     }
 
     /**
-     * Build the Google Sheets CSV export URL
-     */
-    static getCsvUrl(spreadsheetId, sheetName = null) {
-        const gid = sheetName ? `&gid=${sheetName}` : '';
-        return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv${gid}`;
-    }
-
-    /**
-     * Test connection to a Google Sheet
-     * Uses the public CSV export endpoint
+     * Test connection to a Google Sheet using Sheets API v4
      */
     async testConnection(spreadsheetId = null) {
         const id = spreadsheetId || this.spreadsheetId;
@@ -73,26 +68,33 @@ class GoogleSheetsService {
             };
         }
 
+        if (!API_KEY) {
+            return {
+                success: false,
+                error: 'Google Sheets API key not configured. Please set GOOGLE_SHEETS_API_KEY environment variable.'
+            };
+        }
+
         try {
-            // Try to fetch the sheet as CSV (public access)
-            const csvUrl = GoogleSheetsService.getCsvUrl(id);
-            const response = await axios.get(csvUrl, {
-                timeout: 10000,
-                maxRedirects: 5
+            // Use Sheets API v4 to get spreadsheet metadata
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${id}?key=${API_KEY}&fields=properties.title,sheets.properties.title`;
+            
+            const response = await axios.get(url, {
+                timeout: 10000
             });
 
             if (response.status === 200 && response.data) {
-                // Parse first line to get headers
-                const lines = response.data.split('\n').filter(line => line.trim());
-                const headers = lines[0] ? this.parseCsvLine(lines[0]) : [];
-
+                const { properties, sheets } = response.data;
+                const sheetNames = sheets ? sheets.map(s => s.properties?.title).filter(Boolean) : [];
+                
                 return {
                     success: true,
                     message: 'Connected successfully',
                     data: {
                         spreadsheetId: id,
-                        headers: headers,
-                        rowCount: Math.max(0, lines.length - 1)
+                        title: properties?.title || 'Untitled',
+                        sheets: sheetNames,
+                        sheetCount: sheetNames.length
                     }
                 };
             }
@@ -111,38 +113,51 @@ class GoogleSheetsService {
                 };
             }
             
-            if (err.response?.status === 403 || err.response?.status === 401) {
+            if (err.response?.status === 403) {
                 return {
                     success: false,
-                    error: 'Access denied. Make sure your sheet is shared with "Anyone with the link can view" or "Anyone with the link can edit"'
+                    error: 'Access denied. Make sure your sheet is shared with "Anyone with the link can view" or check your API key.'
+                };
+            }
+
+            if (err.response?.status === 400) {
+                return {
+                    success: false,
+                    error: 'Invalid request. Check your spreadsheet ID and API key.'
                 };
             }
 
             return {
                 success: false,
-                error: 'Could not access spreadsheet. Make sure it is shared with "Anyone with the link can view"'
+                error: 'Could not access spreadsheet: ' + (err.message || 'Unknown error')
             };
         }
     }
 
     /**
-     * Read data from a spreadsheet via CSV export
+     * Read data from a spreadsheet using Sheets API v4
      */
-    async readSheet(spreadsheetId = null, sheetName = null) {
+    async readSheet(spreadsheetId = null, sheetName = 'Sheet1') {
         const id = spreadsheetId || this.spreadsheetId;
         
         if (!id) {
             throw new Error('No spreadsheet ID provided');
         }
 
+        if (!API_KEY) {
+            throw new Error('Google Sheets API key not configured. Please set GOOGLE_SHEETS_API_KEY environment variable.');
+        }
+
         try {
-            const csvUrl = GoogleSheetsService.getCsvUrl(id, sheetName);
-            const response = await axios.get(csvUrl, {
-                timeout: 30000,
-                maxRedirects: 5
+            // Use Sheets API v4 to get sheet values
+            const range = encodeURIComponent(sheetName);
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${range}?key=${API_KEY}`;
+            
+            const response = await axios.get(url, {
+                timeout: 30000
             });
 
-            if (!response.data) {
+            if (!response.data || !response.data.values) {
                 return {
                     success: true,
                     data: [],
@@ -151,10 +166,9 @@ class GoogleSheetsService {
                 };
             }
 
-            // Parse CSV
-            const lines = response.data.split('\n').filter(line => line.trim());
+            const values = response.data.values;
             
-            if (lines.length === 0) {
+            if (values.length === 0) {
                 return {
                     success: true,
                     data: [],
@@ -163,14 +177,14 @@ class GoogleSheetsService {
                 };
             }
 
-            // Parse headers
-            const headers = this.parseCsvLine(lines[0]);
+            // Parse headers (first row)
+            const headers = values[0].map(h => h || '');
             const columnMap = this.detectColumns(headers);
 
             // Parse data rows
             const data = [];
-            for (let i = 1; i < lines.length; i++) {
-                const rowValues = this.parseCsvLine(lines[i]);
+            for (let i = 1; i < values.length; i++) {
+                const rowValues = values[i] || [];
                 const rowData = { _rowIndex: i + 1 }; // 1-based with header
                 
                 headers.forEach((header, colIndex) => {
@@ -191,47 +205,16 @@ class GoogleSheetsService {
         } catch (err) {
             console.error('Read sheet error:', err.message);
             
-            if (err.response?.status === 403 || err.response?.status === 401) {
+            if (err.response?.status === 403) {
                 throw new Error('Access denied. Make sure your sheet is shared with "Anyone with the link can view"');
+            }
+            
+            if (err.response?.status === 404) {
+                throw new Error('Sheet not found. Check the sheet name exists.');
             }
             
             throw new Error('Failed to read spreadsheet: ' + (err.message || 'Unknown error'));
         }
-    }
-
-    /**
-     * Parse a CSV line handling quoted values
-     */
-    parseCsvLine(line) {
-        const values = [];
-        let current = '';
-        let inQuotes = false;
-        
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            const nextChar = line[i + 1];
-            
-            if (char === '"') {
-                if (inQuotes && nextChar === '"') {
-                    // Escaped quote
-                    current += '"';
-                    i++; // Skip next quote
-                } else {
-                    // Toggle quote state
-                    inQuotes = !inQuotes;
-                }
-            } else if (char === ',' && !inQuotes) {
-                values.push(current.trim());
-                current = '';
-            } else {
-                current += char;
-            }
-        }
-        
-        // Don't forget the last value
-        values.push(current.trim());
-        
-        return values;
     }
 
     /**
@@ -313,21 +296,17 @@ class GoogleSheetsService {
 
     /**
      * Update cell values in the spreadsheet
-     * Note: This requires the sheet to be editable via Apps Script or similar
-     * For now, this is a placeholder - CSV export is read-only
+     * Note: This requires OAuth authentication
      */
     async updateCells(spreadsheetId, updates, sheetName = 'Sheet1') {
-        // CSV export is read-only
-        // To support writes, we'd need to use Google Apps Script or OAuth
         throw new Error('Write operations require OAuth authentication. Please use the Google Sheets API with OAuth for write access.');
     }
 
     /**
      * Update row status and add metadata
-     * Note: This requires write access via OAuth
+     * Note: This requires OAuth authentication
      */
     async updateRowStatus(spreadsheetId, rowIndex, status, metadata = {}, sheetName = 'Sheet1', headers = []) {
-        // CSV export is read-only
         throw new Error('Write operations require OAuth authentication. Please use the Google Sheets API with OAuth for write access.');
     }
 
