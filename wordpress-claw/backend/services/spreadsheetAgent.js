@@ -477,8 +477,8 @@ class SpreadsheetAgent {
                         console.log(`Row ${idx}: status="${rawStatus}" (lowercase: "${status}")`);
                     }
 
-                    // Smart status detection
-                    if (status === 'done' || status === 'completed' || status === 'published' ||
+                    // Smart status detection - check if status contains "complete" (case insensitive)
+                    if (status.includes('complete') || status === 'done' || status === 'published' ||
                         status === 'success' || status === 'live') {
                         done++;
                     } else if (status === 'processing' || status === 'generating' || status === 'working') {
@@ -488,9 +488,9 @@ class SpreadsheetAgent {
                     } else if (status === 'pending' || status === '' || status === 'todo' || status === 'new') {
                         pending++;
                     } else {
-                        // Custom status - check if it has a WP POST URL
+                        // Custom status - check if WP Post URL column has any content (even "Content Complete" text)
                         const wpUrlHeader = sheetData.headers.find(h =>
-                            h.toLowerCase().includes('wp') && h.toLowerCase().includes('url')
+                            h.toLowerCase().includes('wp') && (h.toLowerCase().includes('url') || h.toLowerCase().includes('post'))
                         );
                         const wpUrlColumn = wpUrlHeader ? (sheetData.columns[wpUrlHeader] || wpUrlHeader) : null;
                         if (wpUrlColumn && row[wpUrlColumn] && row[wpUrlColumn].toString().trim() !== '') {
@@ -504,7 +504,7 @@ class SpreadsheetAgent {
             } else {
                 // No status column, check for WP URL to determine done vs pending
                 const wpUrlHeader = sheetData.headers.find(h =>
-                    h.toLowerCase().includes('wp') && h.toLowerCase().includes('url')
+                    h.toLowerCase().includes('wp') && (h.toLowerCase().includes('url') || h.toLowerCase().includes('post'))
                 );
                 const wpUrlColumn = wpUrlHeader ? (sheetData.columns[wpUrlHeader] || wpUrlHeader) : null;
                 if (wpUrlColumn) {
@@ -527,7 +527,7 @@ class SpreadsheetAgent {
                     sheets: testResult.data.sheets,
                     spreadsheetId: targetSpreadsheetId,
                     headers: sheetData.headers,
-                    preview: sheetData.data.slice(0, 5),
+                    preview: sheetData.data,
                     totalRows: sheetData.totalRows,
                     columns: sheetData.columns,
                     stats: { pending, processing, done, error }

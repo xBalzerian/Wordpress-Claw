@@ -725,9 +725,18 @@
 
             // Update stats from backend (or calculate from preview as fallback)
             const stats = data.stats || {};
-            const pending = stats.pending ?? data.preview.filter(r => !r.status || r.status.toLowerCase() === 'pending').length;
-            const processing = stats.processing ?? data.preview.filter(r => r.status?.toLowerCase() === 'processing').length;
-            const done = stats.done ?? data.preview.filter(r => r.status?.toLowerCase() === 'done').length;
+            const pending = stats.pending ?? data.preview.filter(r => {
+                const s = (r.status || 'PENDING').toLowerCase();
+                return s === 'pending' || s === '' || s === 'todo' || s === 'new';
+            }).length;
+            const processing = stats.processing ?? data.preview.filter(r => {
+                const s = (r.status || 'PENDING').toLowerCase();
+                return s === 'processing' || s === 'generating' || s === 'working';
+            }).length;
+            const done = stats.done ?? data.preview.filter(r => {
+                const s = (r.status || 'PENDING').toLowerCase();
+                return s.includes('complete') || s === 'done' || s === 'published' || s === 'success' || s === 'live';
+            }).length;
 
             document.getElementById('totalTopics').textContent = data.totalRows;
             document.getElementById('pendingCount').textContent = pending;
@@ -744,17 +753,25 @@
 
             const body = document.getElementById('tableBody');
             body.innerHTML = data.preview.map((row, index) => {
-                const status = (row.status || 'PENDING').toLowerCase();
-                const statusClass = status === 'done' ? 'status-done' : 
-                                   status === 'processing' ? 'status-processing' :
-                                   status === 'error' ? 'status-error' : 'status-pending';
+                // Get the actual status value from the row
+                const statusValue = row.status || 'PENDING';
+                const statusLower = statusValue.toLowerCase();
+                
+                // Determine status class and display
+                const isDone = statusLower.includes('complete') || statusLower === 'done' || statusLower === 'published' || statusLower === 'success' || statusLower === 'live';
+                const isProcessing = statusLower === 'processing' || statusLower === 'generating' || statusLower === 'working';
+                const isError = statusLower === 'error' || statusLower === 'failed' || statusLower === 'fail';
+                
+                const statusClass = isDone ? 'status-done' : 
+                                   isProcessing ? 'status-processing' :
+                                   isError ? 'status-error' : 'status-pending';
                 
                 const cells = headers.map(h => {
                     const key = h.toLowerCase().replace(/[^a-z0-9]/g, '_');
                     const value = row[key] || row[h] || '';
                     
                     if (h.toLowerCase().includes('status')) {
-                        return `<td><span class="status-badge ${statusClass}">${escapeHtml(value || 'PENDING')}</span></td>`;
+                        return `<td><span class="status-badge ${statusClass}">${escapeHtml(statusValue)}</span></td>`;
                     }
                     if (h.toLowerCase().includes('url') && value) {
                         return `<td class="url-cell"><a href="${escapeHtml(value)}" target="_blank">View →</a></td>`;
@@ -765,7 +782,7 @@
                     return `<td>${escapeHtml(value)}</td>`;
                 }).join('');
 
-                const canProcess = status === 'pending' || status === '' || status === 'error';
+                const canProcess = !isDone && !isProcessing;
                 
                 return `<tr>
                     ${cells}
