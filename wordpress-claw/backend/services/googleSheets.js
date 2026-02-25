@@ -1,12 +1,10 @@
 /**
  * Google Sheets Service
- * Uses Google Sheets API v4 for reliable access to public sheets
+ * Uses Google's public CSV export for simple, API-key-free reading
+ * Sheets must be shared with "Anyone with the link can view"
  */
 
 const axios = require('axios');
-
-// API key for Google Sheets API v4 (public sheets only)
-const API_KEY = process.env.GOOGLE_SHEETS_API_KEY || '';
 
 class GoogleSheetsService {
     constructor(credentials = {}) {
@@ -56,7 +54,7 @@ class GoogleSheetsService {
     }
 
     /**
-     * Test connection to a Google Sheet using Sheets API v4
+     * Test connection to a Google Sheet using CSV export
      */
     async testConnection(spreadsheetId = null) {
         const id = spreadsheetId || this.spreadsheetId;
@@ -68,96 +66,63 @@ class GoogleSheetsService {
             };
         }
 
-        if (!API_KEY) {
-            return {
-                success: false,
-                error: 'Google Sheets API key not configured. Please set GOOGLE_SHEETS_API_KEY environment variable.'
-            };
-        }
-
         try {
-            // Use Sheets API v4 to get spreadsheet metadata
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${id}?key=${API_KEY}&fields=properties.title,sheets.properties.title`;
+            // Try to read the first sheet using CSV export
+            const result = await this.readSheet(id, 'Sheet1');
             
-            const response = await axios.get(url, {
-                timeout: 10000
-            });
-
-            if (response.status === 200 && response.data) {
-                const { properties, sheets } = response.data;
-                const sheetNames = sheets ? sheets.map(s => s.properties?.title).filter(Boolean) : [];
-                
+            if (result.success) {
                 return {
                     success: true,
                     message: 'Connected successfully',
                     data: {
                         spreadsheetId: id,
-                        title: properties?.title || 'Untitled',
-                        sheets: sheetNames,
-                        sheetCount: sheetNames.length
+                        sheetFound: true,
+                        rowCount: result.data?.length || 0,
+                        headers: result.headers || []
                     }
                 };
             }
-
+            
             return {
                 success: false,
-                error: 'Could not access spreadsheet. Make sure it is shared with "Anyone with the link can view"'
+                error: result.error || 'Could not read spreadsheet'
             };
         } catch (err) {
             console.error('Google Sheets test connection error:', err.message);
             
-            if (err.response?.status === 404) {
-                return {
-                    success: false,
-                    error: 'Spreadsheet not found. Check the URL is correct.'
-                };
-            }
-            
-            if (err.response?.status === 403) {
-                return {
-                    success: false,
-                    error: 'Access denied. Make sure your sheet is shared with "Anyone with the link can view" or check your API key.'
-                };
-            }
-
-            if (err.response?.status === 400) {
-                return {
-                    success: false,
-                    error: 'Invalid request. Check your spreadsheet ID and API key.'
-                };
-            }
-
             return {
                 success: false,
-                error: 'Could not access spreadsheet: ' + (err.message || 'Unknown error')
+                error: this.getFriendlyError(err)
             };
         }
     }
 
     /**
-     * Read data from a spreadsheet using Sheets API v4
+     * Read data from a spreadsheet using CSV export (no API key needed)
      */
     async readSheet(spreadsheetId = null, sheetName = 'Sheet1') {
         const id = spreadsheetId || this.spreadsheetId;
         
         if (!id) {
-            throw new Error('No spreadsheet ID provided');
-        }
-
-        if (!API_KEY) {
-            throw new Error('Google Sheets API key not configured. Please set GOOGLE_SHEETS_API_KEY environment variable.');
+            return {
+                success: false,
+                error: 'No spreadsheet ID provided'
+            };
         }
 
         try {
-            // Use Sheets API v4 to get sheet values
-            const range = encodeURIComponent(sheetName);
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${range}?key=${API_KEY}`;
+            // Use Google's public CSV export (no auth needed)
+            // Sheet must be shared with "Anyone with the link can view"
+            const csvUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
             
-            const response = await axios.get(url, {
-                timeout: 30000
+            const response = await axios.get(csvUrl, {
+                timeout: 10000,
+                responseType: 'text'
             });
 
-            if (!response.data || !response.data.values) {
+            const csvData = response.data;
+            
+            if (!csvData || csvData.trim().length === 0) {
                 return {
                     success: true,
                     data: [],
@@ -166,9 +131,10 @@ class GoogleSheetsService {
                 };
             }
 
-            const values = response.data.values;
+            // Parse CSV
+            const parsed = this.parseCSV(csvData);
             
-            if (values.length === 0) {
+            if (parsed.length === 0) {
                 return {
                     success: true,
                     data: [],
@@ -178,13 +144,13 @@ class GoogleSheetsService {
             }
 
             // Parse headers (first row)
-            const headers = values[0].map(h => h || '');
+            const headers = parsed[0].map(h => h || '');
             const columnMap = this.detectColumns(headers);
 
             // Parse data rows
             const data = [];
-            for (let i = 1; i < values.length; i++) {
-                const rowValues = values[i] || [];
+            for (let i = 1; i < parsed.length; i++) {
+                const rowValues = parsed[i] || [];
                 const rowData = { _rowIndex: i + 1 }; // 1-based with header
                 
                 headers.forEach((header, colIndex) => {
@@ -205,16 +171,124 @@ class GoogleSheetsService {
         } catch (err) {
             console.error('Read sheet error:', err.message);
             
-            if (err.response?.status === 403) {
-                throw new Error('Access denied. Make sure your sheet is shared with "Anyone with the link can view"');
-            }
-            
-            if (err.response?.status === 404) {
-                throw new Error('Sheet not found. Check the sheet name exists.');
-            }
-            
-            throw new Error('Failed to read spreadsheet: ' + (err.message || 'Unknown error'));
+            return {
+                success: false,
+                error: this.getFriendlyError(err)
+            };
         }
+    }
+
+    /**
+     * Parse CSV text into array of arrays
+     * Handles quoted values and commas within quotes
+     */
+    parseCSV(csvText) {
+        const rows = [];
+        let currentRow = [];
+        let currentCell = '';
+        let insideQuotes = false;
+        
+        for (let i = 0; i < csvText.length; i++) {
+            const char = csvText[i];
+            const nextChar = csvText[i + 1];
+            
+            if (insideQuotes) {
+                if (char === '"') {
+                    if (nextChar === '"') {
+                        // Escaped quote
+                        currentCell += '"';
+                        i++; // Skip next quote
+                    } else {
+                        // End of quoted string
+                        insideQuotes = false;
+                    }
+                } else {
+                    currentCell += char;
+                }
+            } else {
+                if (char === '"') {
+                    // Start of quoted string
+                    insideQuotes = true;
+                } else if (char === ',') {
+                    // End of cell
+                    currentRow.push(currentCell.trim());
+                    currentCell = '';
+                } else if (char === '\n' || (char === '\r' && nextChar === '\n')) {
+                    // End of row
+                    if (char === '\r') i++; // Skip \n after \r
+                    currentRow.push(currentCell.trim());
+                    if (currentRow.length > 0 && currentRow.some(cell => cell.length > 0)) {
+                        rows.push(currentRow);
+                    }
+                    currentRow = [];
+                    currentCell = '';
+                } else if (char === '\r') {
+                    // Just \r (old Mac style)
+                    currentRow.push(currentCell.trim());
+                    if (currentRow.length > 0 && currentRow.some(cell => cell.length > 0)) {
+                        rows.push(currentRow);
+                    }
+                    currentRow = [];
+                    currentCell = '';
+                } else {
+                    currentCell += char;
+                }
+            }
+        }
+        
+        // Don't forget the last cell/row
+        if (currentCell.length > 0 || currentRow.length > 0) {
+            currentRow.push(currentCell.trim());
+            if (currentRow.length > 0 && currentRow.some(cell => cell.length > 0)) {
+                rows.push(currentRow);
+            }
+        }
+        
+        return rows;
+    }
+
+    /**
+     * Get a user-friendly error message
+     */
+    getFriendlyError(err) {
+        if (err.response) {
+            const status = err.response.status;
+            
+            if (status === 404) {
+                return 'Spreadsheet not found. Check the URL is correct and the sheet is shared with "Anyone with the link can view".';
+            }
+            
+            if (status === 403) {
+                return 'Access denied. Make sure your sheet is shared with "Anyone with the link can view".';
+            }
+            
+            if (status === 400) {
+                return 'Invalid request. Check your spreadsheet ID and sheet name.';
+            }
+            
+            if (status === 429) {
+                return 'Too many requests. Please wait a moment and try again.';
+            }
+        }
+        
+        if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT') {
+            return 'Connection timed out. Please try again.';
+        }
+        
+        if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED') {
+            return 'Could not connect to Google Sheets. Check your internet connection.';
+        }
+        
+        // Check for the specific Google error page content
+        if (err.response?.data && typeof err.response.data === 'string') {
+            if (err.response.data.includes('Moved Temporarily') || 
+                err.response.data.includes('Redirecting') ||
+                err.response.data.includes('<!DOCTYPE')) {
+                return 'Could not read sheet. Make sure it is shared with "Anyone with the link can view".';
+            }
+        }
+        
+        return 'Could not read spreadsheet: ' + (err.message || 'Unknown error');
     }
 
     /**
@@ -296,18 +370,18 @@ class GoogleSheetsService {
 
     /**
      * Update cell values in the spreadsheet
-     * Note: This requires OAuth authentication
+     * Note: This requires write access (Google Apps Script or OAuth)
      */
     async updateCells(spreadsheetId, updates, sheetName = 'Sheet1') {
-        throw new Error('Write operations require OAuth authentication. Please use the Google Sheets API with OAuth for write access.');
+        throw new Error('Write operations require Google Apps Script or OAuth. See documentation for setup instructions.');
     }
 
     /**
      * Update row status and add metadata
-     * Note: This requires OAuth authentication
+     * Note: This requires write access (Google Apps Script or OAuth)
      */
     async updateRowStatus(spreadsheetId, rowIndex, status, metadata = {}, sheetName = 'Sheet1', headers = []) {
-        throw new Error('Write operations require OAuth authentication. Please use the Google Sheets API with OAuth for write access.');
+        throw new Error('Write operations require Google Apps Script or OAuth. See documentation for setup instructions.');
     }
 
     /**
@@ -335,10 +409,10 @@ class GoogleSheetsService {
 
     /**
      * Append rows to spreadsheet
-     * Note: Requires OAuth
+     * Note: Requires write access
      */
     async appendRows(spreadsheetId, rows, sheetName = 'Sheet1') {
-        throw new Error('Write operations require OAuth authentication. Please use the Google Sheets API with OAuth for write access.');
+        throw new Error('Write operations require Google Apps Script or OAuth. See documentation for setup instructions.');
     }
 
     /**
@@ -346,7 +420,7 @@ class GoogleSheetsService {
      * Note: Requires OAuth
      */
     async createSpreadsheet(title, sheets = ['Topics']) {
-        throw new Error('Create spreadsheet requires OAuth authentication. Please create a sheet manually and share it with "Anyone with the link can edit".');
+        throw new Error('Create spreadsheet requires OAuth authentication. Please create a sheet manually and share it with "Anyone with the link can view".');
     }
 
     /**
@@ -359,10 +433,10 @@ class GoogleSheetsService {
                 'Open your Google Sheet',
                 'Click "Share" in the top right',
                 'Change "Restricted" to "Anyone with the link"',
-                'Set permission to "Viewer" (read-only) or "Editor" (read/write)',
+                'Set permission to "Viewer" (we only need to read)',
                 'Copy the link and paste it here'
             ],
-            note: 'We only need "Viewer" access to read your content. "Editor" access is only needed if you want us to update statuses automatically.'
+            note: 'No API key needed! We use Google\'s public CSV export. Your sheet just needs to be viewable by anyone with the link.'
         };
     }
 }

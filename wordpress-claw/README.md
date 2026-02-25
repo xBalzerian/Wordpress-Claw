@@ -96,7 +96,8 @@ The server will start on port 3000 (or PORT from env).
 | `LAOZHANG_BASE_URL` | AI API base URL | No |
 | `GITHUB_TOKEN` | GitHub personal access token | For image hosting |
 | `GITHUB_REPO` | Default image repo | No |
-| `GOOGLE_SHEETS_API_KEY` | Google Sheets API key | For Google Sheets integration |
+
+**Note:** Google Sheets integration requires no API key! Just share your sheet with "Anyone with the link can view".
 
 ## 💳 Pricing Tiers
 
