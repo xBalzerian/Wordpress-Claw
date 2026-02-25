@@ -457,6 +457,28 @@ class SpreadsheetAgent {
             // Read first few rows for preview
             const sheetData = await this.sheetsService.readSheet(targetSpreadsheetId, this.config.sheetName || 'Sheet1');
 
+            // Calculate stats from all rows
+            const allRows = sheetData.data;
+            let pending = 0, processing = 0, done = 0, error = 0;
+            
+            const statusColumn = sheetData.headers.find(h => 
+                h.toLowerCase().includes('status')
+            );
+            
+            if (statusColumn) {
+                allRows.forEach(row => {
+                    const status = (row[statusColumn] || 'PENDING').toString().toLowerCase().trim();
+                    if (status === 'pending' || status === '') pending++;
+                    else if (status === 'processing') processing++;
+                    else if (status === 'done' || status === 'completed') done++;
+                    else if (status === 'error') error++;
+                    else pending++; // Unknown status = pending
+                });
+            } else {
+                // No status column, assume all are pending
+                pending = allRows.length;
+            }
+
             return {
                 success: true,
                 data: {
@@ -466,7 +488,8 @@ class SpreadsheetAgent {
                     headers: sheetData.headers,
                     preview: sheetData.data.slice(0, 5),
                     totalRows: sheetData.totalRows,
-                    columns: sheetData.columns
+                    columns: sheetData.columns,
+                    stats: { pending, processing, done, error }
                 }
             };
         } catch (err) {

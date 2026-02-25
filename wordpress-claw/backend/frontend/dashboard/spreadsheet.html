@@ -633,6 +633,9 @@
                             <h2 id="sheetTitle">Spreadsheet</h2>
                             <div class="spreadsheet-info" id="sheetInfo"></div>
                         </div>
+                        <button class="btn btn-secondary" onclick="disconnectSpreadsheet()" style="font-size: 14px;">
+                            🔗 Disconnect
+                        </button>
                     </div>
                     <div style="overflow-x: auto;">
                         <table class="spreadsheet-table" id="spreadsheetTable">
@@ -720,10 +723,11 @@
             document.getElementById('sheetTitle').textContent = data.title || 'Spreadsheet';
             document.getElementById('sheetInfo').textContent = `${data.totalRows} rows • ${data.sheets?.[0] || 'Sheet1'}`;
 
-            // Update stats
-            const pending = data.preview.filter(r => !r.status || r.status.toLowerCase() === 'pending').length;
-            const processing = data.preview.filter(r => r.status?.toLowerCase() === 'processing').length;
-            const done = data.preview.filter(r => r.status?.toLowerCase() === 'done').length;
+            // Update stats from backend (or calculate from preview as fallback)
+            const stats = data.stats || {};
+            const pending = stats.pending ?? data.preview.filter(r => !r.status || r.status.toLowerCase() === 'pending').length;
+            const processing = stats.processing ?? data.preview.filter(r => r.status?.toLowerCase() === 'processing').length;
+            const done = stats.done ?? data.preview.filter(r => r.status?.toLowerCase() === 'done').length;
 
             document.getElementById('totalTopics').textContent = data.totalRows;
             document.getElementById('pendingCount').textContent = pending;
@@ -897,6 +901,50 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        async function disconnectSpreadsheet() {
+            if (!confirm('Are you sure you want to disconnect this Google Sheet? You can reconnect it or add a new one anytime.')) {
+                return;
+            }
+
+            try {
+                // Get the Google Sheets connection
+                const connectionsResponse = await fetch(`${API_URL}/api/connections`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const connectionsData = await connectionsResponse.json();
+                
+                if (!connectionsData.success) {
+                    showAlert('Failed to get connections', 'error');
+                    return;
+                }
+                
+                const gsConnection = connectionsData.data.connections.find(c => c.type === 'googlesheets');
+                
+                if (!gsConnection) {
+                    showAlert('No Google Sheets connection found', 'error');
+                    return;
+                }
+
+                // Delete the connection
+                const response = await fetch(`${API_URL}/api/connections/${gsConnection.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('✅ Google Sheets disconnected successfully', 'success');
+                    // Reload to show empty state
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showAlert(data.error || 'Failed to disconnect', 'error');
+                }
+            } catch (err) {
+                console.error('Disconnect error:', err);
+                showAlert('Failed to disconnect spreadsheet', 'error');
+            }
         }
 
         function logout() {
