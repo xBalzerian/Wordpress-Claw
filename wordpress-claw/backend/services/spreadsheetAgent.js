@@ -461,12 +461,14 @@ class SpreadsheetAgent {
             const allRows = sheetData.data;
             let pending = 0, processing = 0, done = 0, error = 0;
 
-            const statusColumn = sheetData.headers.find(h =>
+            const statusHeader = sheetData.headers.find(h =>
                 h.toLowerCase().includes('status')
             );
+            // Get the mapped key for status column
+            const statusColumn = statusHeader ? (sheetData.columns[statusHeader] || statusHeader) : null;
 
-            if (statusColumn) {
-                console.log('Found status column:', statusColumn);
+            if (statusHeader) {
+                console.log('Found status header:', statusHeader, 'mapped to:', statusColumn);
                 allRows.forEach((row, idx) => {
                     const rawStatus = (row[statusColumn] || '').toString().trim();
                     const status = rawStatus.toLowerCase();
@@ -487,9 +489,10 @@ class SpreadsheetAgent {
                         pending++;
                     } else {
                         // Custom status - check if it has a WP POST URL
-                        const wpUrlColumn = sheetData.headers.find(h =>
+                        const wpUrlHeader = sheetData.headers.find(h =>
                             h.toLowerCase().includes('wp') && h.toLowerCase().includes('url')
                         );
+                        const wpUrlColumn = wpUrlHeader ? (sheetData.columns[wpUrlHeader] || wpUrlHeader) : null;
                         if (wpUrlColumn && row[wpUrlColumn] && row[wpUrlColumn].toString().trim() !== '') {
                             done++;
                         } else {
@@ -500,9 +503,10 @@ class SpreadsheetAgent {
                 console.log(`Stats calculated: done=${done}, processing=${processing}, pending=${pending}, error=${error}`);
             } else {
                 // No status column, check for WP URL to determine done vs pending
-                const wpUrlColumn = sheetData.headers.find(h =>
+                const wpUrlHeader = sheetData.headers.find(h =>
                     h.toLowerCase().includes('wp') && h.toLowerCase().includes('url')
                 );
+                const wpUrlColumn = wpUrlHeader ? (sheetData.columns[wpUrlHeader] || wpUrlHeader) : null;
                 if (wpUrlColumn) {
                     allRows.forEach(row => {
                         if (row[wpUrlColumn] && row[wpUrlColumn].toString().trim() !== '') {
