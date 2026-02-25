@@ -110,11 +110,8 @@ router.post('/login', async (req, res) => {
         // Find user - handle both SQLite and PostgreSQL
         let user;
         try {
-            if (db.isPostgres) {
-                user = await db.prepare('SELECT * FROM users WHERE email = $1').get(email.toLowerCase());
-            } else {
-                user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase());
-            }
+            // Use ? placeholder - the db wrapper will convert to $1 for PostgreSQL
+            user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase());
         } catch (dbErr) {
             console.error('Database error during login:', dbErr);
             return res.status(500).json({
