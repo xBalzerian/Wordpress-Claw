@@ -142,6 +142,20 @@ CREATE TABLE IF NOT EXISTS content_templates (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Spreadsheet data (imported from copy-paste or CSV)
+CREATE TABLE IF NOT EXISTS spreadsheet_data (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    row_data JSONB NOT NULL,
+    status VARCHAR(50) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Indexes for spreadsheet_data
+CREATE INDEX IF NOT EXISTS idx_spreadsheet_data_user_id ON spreadsheet_data(user_id);
+CREATE INDEX IF NOT EXISTS idx_spreadsheet_data_status ON spreadsheet_data(status);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_articles_user_id ON articles(user_id);

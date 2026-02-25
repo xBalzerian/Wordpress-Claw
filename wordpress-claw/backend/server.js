@@ -16,6 +16,8 @@ const businessProfileRoutes = require('./routes/business-profile');
 const connectionsRoutes = require('./routes/connections');
 const articlesRoutes = require('./routes/articles');
 const clawbotRoutes = require('./routes/clawbot');
+const spreadsheetRoutes = require('./routes/spreadsheet');
+const spreadsheetSimpleRoutes = require('./routes/spreadsheet-simple');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -84,6 +86,8 @@ app.use('/api/business-profile', businessProfileRoutes);
 app.use('/api/connections', connectionsRoutes);
 app.use('/api/articles', articlesRoutes);
 app.use('/api/clawbot', clawbotRoutes);
+app.use('/api/spreadsheet', spreadsheetRoutes);
+app.use('/api/spreadsheet-simple', spreadsheetSimpleRoutes);
 
 // Serve static files from frontend directory
 app.use(express.static(path.join(__dirname, 'frontend')));

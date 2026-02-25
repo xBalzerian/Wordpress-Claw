@@ -142,6 +142,17 @@ CREATE TABLE IF NOT EXISTS content_templates (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Spreadsheet data (imported from copy-paste or CSV)
+CREATE TABLE IF NOT EXISTS spreadsheet_data (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    row_data TEXT NOT NULL, -- JSON
+    status TEXT DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_articles_user_id ON articles(user_id);
@@ -154,3 +165,5 @@ CREATE INDEX IF NOT EXISTS idx_clawbot_sessions_key ON clawbot_sessions(session_
 CREATE INDEX IF NOT EXISTS idx_payments_user_id ON payments(user_id);
 CREATE INDEX IF NOT EXISTS idx_activity_log_user_id ON activity_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_activity_log_created ON activity_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_spreadsheet_data_user_id ON spreadsheet_data(user_id);
+CREATE INDEX IF NOT EXISTS idx_spreadsheet_data_status ON spreadsheet_data(status);

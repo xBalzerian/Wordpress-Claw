@@ -3,51 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spreadsheet Command Center - WordPress Claw</title>
-    <meta name="description" content="Manage your content queue from Google Sheets. Add topics with PENDING status and let ClawBot process them automatically.">
-    <meta name="robots" content="noindex, nofollow">
-    <link rel="canonical" href="https://wordpress-claw.com/dashboard/spreadsheet.html">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #E53935;
-            --primary-dark: #C62828;
-            --text: #1a1a1a;
-            --text-secondary: #666;
-            --bg: #f8f9fa;
-            --bg-card: #ffffff;
-            --border: #e5e5e5;
-            --success: #4caf50;
-            --warning: #ff9800;
-            --error: #f44336;
-            --shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: var(--text);
-            line-height: 1.6;
-            background: var(--bg);
-        }
-
-        .dashboard {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 260px;
-            background: var(--bg-card);
-            border-right: 1px solid var(--border);
+    <title>Spreadsheet Editor - WordPress Claw</title>
+    <meta http-equiv="refresh" content="0; url=spreadsheet-simple.html">
+    <script>window.location.href = 'spreadsheet-simple.html';</script>
+</head>
+<body>
+    <p>Redirecting to <a href="spreadsheet-simple.html">Spreadsheet Editor</a>...</p>
+</body>
+</html>
             display: flex;
             flex-direction: column;
             position: fixed;
@@ -222,6 +185,135 @@
             font-weight: 700;
         }
 
+        /* Import Section */
+        .import-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 32px;
+        }
+
+        .import-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .import-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .import-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .import-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .import-tab:hover {
+            background: var(--border);
+        }
+
+        .import-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .import-content {
+            display: none;
+        }
+
+        .import-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .form-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        .file-upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(229, 57, 53, 0.02);
+        }
+
+        .file-upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(229, 57, 53, 0.05);
+        }
+
+        .file-upload-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .file-upload-text {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .file-upload-hint {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .file-input {
+            display: none;
+        }
+
         /* Action Bar */
         .action-bar {
             display: flex;
@@ -267,6 +359,16 @@
 
         .btn-secondary:hover {
             background: var(--border);
+        }
+
+        .btn-danger {
+            background: #ffebee;
+            color: var(--error);
+            border: 1px solid #ffcdd2;
+        }
+
+        .btn-danger:hover {
+            background: #ffcdd2;
         }
 
         /* Spreadsheet Table */
@@ -498,6 +600,7 @@
             .spreadsheet-table { font-size: 12px; }
             .spreadsheet-table th,
             .spreadsheet-table td { padding: 8px; }
+            .import-tabs { flex-wrap: wrap; }
         }
     </style>
 </head>
@@ -528,7 +631,7 @@
                         <span class="nav-icon">🤖</span>
                         ClawBot
                     </a>
-                    <a href="spreadsheet.html" class="nav-item active">
+                    <a href="spreadsheet-simple.html" class="nav-item active">
                         <span class="nav-icon">📋</span>
                         Spreadsheet
                     </a>
@@ -574,11 +677,67 @@
         <main class="main">
             <div class="page-header">
                 <h1>📋 Spreadsheet Command Center</h1>
-                <p>Manage your content queue from Google Sheets. Add topics with status PENDING and ClawBot will process them.</p>
+                <p>Import your content queue from Google Sheets, Excel, or CSV files. Process topics in bulk.</p>
             </div>
 
             <div id="alertContainer"></div>
 
+            <!-- Import Section -->
+            <div class="import-section">
+                <div class="import-header">
+                    <h2>📥 Import Data</h2>
+                </div>
+                
+                <div class="import-tabs">
+                    <button class="import-tab active" onclick="switchTab('paste')">📋 Copy & Paste</button>
+                    <button class="import-tab" onclick="switchTab('file')">📁 Upload CSV</button>
+                </div>
+
+                <!-- Paste Tab -->
+                <div class="import-content active" id="pasteTab">
+                    <div class="form-group">
+                        <label class="form-label">Paste your spreadsheet data</label>
+                        <textarea 
+                            class="form-textarea" 
+                            id="pasteData"
+                            placeholder="Copy and paste from Google Sheets, Excel, or any spreadsheet...&#10;&#10;Topic | Status | Notes&#10;How to grow tomatoes | pending | &#10;Best SEO tips 2024 | pending | &#10;Content marketing guide | done | &#10;&#10;Or paste CSV format:&#10;Topic,Status,Notes&#10;How to grow tomatoes,pending,&#10;Best SEO tips 2024,pending,"></textarea>
+                        <div class="form-hint">
+                            💡 Tip: Copy directly from Google Sheets or Excel. We'll automatically detect tabs or commas.
+                        </div>
+                    </div>
+                    <div class="action-bar" style="margin-bottom: 0;">
+                        <button class="btn btn-primary" onclick="importPastedData()">
+                            📥 Import Data
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearImport()">
+                            🗑️ Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- File Upload Tab -->
+                <div class="import-content" id="fileTab">
+                    <div class="form-group">
+                        <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('csvFile').click()">
+                            <div class="file-upload-icon">📁</div>
+                            <div class="file-upload-text">Click to upload or drag and drop</div>
+                            <div class="file-upload-hint">CSV files only (max 5MB)</div>
+                        </div>
+                        <input type="file" id="csvFile" class="file-input" accept=".csv,.txt" onchange="handleFileSelect(event)">
+                        <div id="fileName" style="margin-top: 12px; font-size: 14px; color: var(--text-secondary);"></div>
+                    </div>
+                    <div class="action-bar" style="margin-bottom: 0;">
+                        <button class="btn btn-primary" id="uploadBtn" onclick="importFileData()" disabled>
+                            📥 Upload & Import
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearFileImport()">
+                            🗑️ Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
             <div class="stats-grid" id="statsGrid" style="display: none;">
                 <div class="stat-card">
                     <div class="stat-label">Total Topics</div>
@@ -598,47 +757,41 @@
                 </div>
             </div>
 
+            <!-- Action Bar -->
             <div class="action-bar" id="actionBar" style="display: none;">
-                <button class="btn btn-primary" id="checkBtn" onclick="checkSpreadsheet()">
-                    🔄 Check for New Topics
-                </button>
                 <button class="btn btn-primary" id="processAllBtn" onclick="processAllPending()" disabled>
                     ⚡ Process All Pending
                 </button>
-                <button class="btn btn-secondary" onclick="createTemplate()">
-                    📄 Create Template
+                <button class="btn btn-secondary" onclick="refreshData()">
+                    🔄 Refresh
                 </button>
-                <a href="connections.html" class="btn btn-secondary">
-                    ⚙️ Configure
-                </a>
+                <button class="btn btn-danger" onclick="clearAllData()">
+                    🗑️ Clear All
+                </button>
             </div>
 
-            <div class="spreadsheet-container" id="spreadsheetContainer">
+            <!-- Data Table -->
+            <div class="spreadsheet-container" id="dataContainer">
                 <div class="loading" id="loadingState">
                     <div class="spinner"></div>
-                    Loading spreadsheet data...
+                    Loading data...
                 </div>
 
-                <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-state" id="emptyState">
                     <div class="empty-state-icon">📋</div>
-                    <h3>No Google Sheets Connection</h3>
-                    <p>Connect your Google Sheets to use it as a command center for bulk content creation.</p>
-                    <br>
-                    <a href="connections.html" class="btn btn-primary">Connect Google Sheets</a>
+                    <h3>No Data Yet</h3>
+                    <p>Import your content topics above to get started. You can paste from Google Sheets, Excel, or upload a CSV file.</p>
                 </div>
 
-                <div id="spreadsheetContent" style="display: none;">
+                <div id="dataContent" style="display: none;">
                     <div class="spreadsheet-header">
                         <div>
-                            <h2 id="sheetTitle">Spreadsheet</h2>
-                            <div class="spreadsheet-info" id="sheetInfo"></div>
+                            <h2>Your Content Queue</h2>
+                            <div class="spreadsheet-info" id="dataInfo"></div>
                         </div>
-                        <button class="btn btn-secondary" onclick="disconnectSpreadsheet()" style="font-size: 14px;">
-                            🔗 Disconnect
-                        </button>
                     </div>
                     <div style="overflow-x: auto;">
-                        <table class="spreadsheet-table" id="spreadsheetTable">
+                        <table class="spreadsheet-table" id="dataTable">
                             <thead id="tableHead"></thead>
                             <tbody id="tableBody"></tbody>
                         </table>
@@ -658,8 +811,24 @@
         document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
         document.getElementById('userAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
 
-        let currentData = null;
+        let currentData = [];
+        let currentHeaders = [];
         let isProcessing = false;
+        let selectedFileContent = null;
+
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.import-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.import-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'paste') {
+                document.querySelector('.import-tab:nth-child(1)').classList.add('active');
+                document.getElementById('pasteTab').classList.add('active');
+            } else {
+                document.querySelector('.import-tab:nth-child(2)').classList.add('active');
+                document.getElementById('fileTab').classList.add('active');
+            }
+        }
 
         function showAlert(message, type = 'info') {
             const container = document.getElementById('alertContainer');
@@ -667,116 +836,94 @@
             setTimeout(() => container.innerHTML = '', 5000);
         }
 
-        async function loadSpreadsheetInfo() {
+        // Load data on page load
+        async function loadData() {
             try {
-                // First, get the user's connections to find the spreadsheet ID
-                const connectionsResponse = await fetch(`${API_URL}/api/connections`, {
+                document.getElementById('loadingState').style.display = 'block';
+                document.getElementById('emptyState').style.display = 'none';
+                document.getElementById('dataContent').style.display = 'none';
+
+                const response = await fetch(`${API_URL}/api/spreadsheet/data`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                const connectionsData = await connectionsResponse.json();
-                
-                if (!connectionsData.success) {
-                    document.getElementById('loadingState').style.display = 'none';
-                    document.getElementById('emptyState').style.display = 'block';
-                    return;
-                }
-                
-                const gsConnection = connectionsData.data.connections.find(c => c.type === 'googlesheets');
-                
-                if (!gsConnection) {
-                    document.getElementById('loadingState').style.display = 'none';
-                    document.getElementById('emptyState').style.display = 'block';
-                    return;
-                }
-                
-                // Now call spreadsheet info with the connection ID
-                const response = await fetch(`${API_URL}/api/clawbot/spreadsheet/info`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
+                const result = await response.json();
 
                 document.getElementById('loadingState').style.display = 'none';
 
-                if (!data.success) {
-                    if (data.error.includes('No Google Sheets connection') || data.error.includes('No spreadsheet ID')) {
-                        document.getElementById('emptyState').style.display = 'block';
-                    } else {
-                        showAlert(data.error, 'error');
-                    }
+                if (!result.success) {
+                    showAlert(result.error, 'error');
                     return;
                 }
 
-                currentData = data.data;
-                displaySpreadsheet(data.data);
+                const data = result.data;
+                
+                if (data.rows.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    document.getElementById('statsGrid').style.display = 'none';
+                    document.getElementById('actionBar').style.display = 'none';
+                    return;
+                }
+
+                currentData = data.rows;
+                displayData(data);
+
             } catch (err) {
-                console.error('Failed to load spreadsheet:', err);
+                console.error('Failed to load data:', err);
                 document.getElementById('loadingState').style.display = 'none';
-                showAlert('Failed to load spreadsheet data', 'error');
+                showAlert('Failed to load data', 'error');
             }
         }
 
-        function displaySpreadsheet(data) {
+        function displayData(data) {
+            const rows = data.rows;
+            const stats = data.stats;
+
+            // Show stats
             document.getElementById('statsGrid').style.display = 'grid';
             document.getElementById('actionBar').style.display = 'flex';
-            document.getElementById('spreadsheetContent').style.display = 'block';
+            document.getElementById('dataContent').style.display = 'block';
 
-            document.getElementById('sheetTitle').textContent = data.title || 'Spreadsheet';
-            document.getElementById('sheetInfo').textContent = `${data.totalRows} rows • ${data.sheets?.[0] || 'Sheet1'}`;
+            document.getElementById('totalTopics').textContent = stats.total;
+            document.getElementById('pendingCount').textContent = stats.pending;
+            document.getElementById('processingCount').textContent = stats.processing;
+            document.getElementById('completedCount').textContent = stats.done;
 
-            // Update stats from backend (or calculate from preview as fallback)
-            const stats = data.stats || {};
-            const pending = stats.pending ?? data.preview.filter(r => {
-                const s = (r.status || 'PENDING').toLowerCase();
-                return s === 'pending' || s === '' || s === 'todo' || s === 'new';
-            }).length;
-            const processing = stats.processing ?? data.preview.filter(r => {
-                const s = (r.status || 'PENDING').toLowerCase();
-                return s === 'processing' || s === 'generating' || s === 'working';
-            }).length;
-            const done = stats.done ?? data.preview.filter(r => {
-                const s = (r.status || 'PENDING').toLowerCase();
-                return s.includes('complete') || s === 'done' || s === 'published' || s === 'success' || s === 'live';
-            }).length;
+            document.getElementById('dataInfo').textContent = `${stats.total} rows • Last updated: ${new Date().toLocaleString()}`;
 
-            document.getElementById('totalTopics').textContent = data.totalRows;
-            document.getElementById('pendingCount').textContent = pending;
-            document.getElementById('processingCount').textContent = processing;
-            document.getElementById('completedCount').textContent = done;
+            // Enable/disable process all button
+            document.getElementById('processAllBtn').disabled = stats.pending === 0 || isProcessing;
 
-            // Enable process all button if there are pending items
-            document.getElementById('processAllBtn').disabled = pending === 0 || isProcessing;
+            // Get headers from first row (excluding internal fields)
+            if (rows.length > 0) {
+                currentHeaders = Object.keys(rows[0]).filter(k => 
+                    !k.startsWith('_') && k !== 'id' && k !== 'created_at' && k !== 'updated_at' && k !== 'status'
+                );
+            }
 
-            // Build table
-            const headers = data.headers || [];
+            // Build table header
             const headRow = document.getElementById('tableHead');
-            headRow.innerHTML = '<tr>' + headers.map(h => `<th>${escapeHtml(h)}</th>`).join('') + '<th>Actions</th></tr>';
+            headRow.innerHTML = '<tr>' + 
+                currentHeaders.map(h => `<th>${escapeHtml(formatHeader(h))}</th>`).join('') + 
+                '<th>Status</th><th>Actions</th></tr>';
 
+            // Build table body
             const body = document.getElementById('tableBody');
-            body.innerHTML = data.preview.map((row, index) => {
-                // Get the actual status value from the row
-                const statusValue = row.status || 'PENDING';
-                const statusLower = statusValue.toLowerCase();
-                
-                // Determine status class and display
-                const isDone = statusLower.includes('complete') || statusLower === 'done' || statusLower === 'published' || statusLower === 'success' || statusLower === 'live';
-                const isProcessing = statusLower === 'processing' || statusLower === 'generating' || statusLower === 'working';
-                const isError = statusLower === 'error' || statusLower === 'failed' || statusLower === 'fail';
+            body.innerHTML = rows.map(row => {
+                const statusLower = (row.status || 'pending').toLowerCase();
+                const isDone = ['done', 'completed', 'success', 'published'].includes(statusLower);
+                const isProcessing = statusLower === 'processing';
+                const isError = ['error', 'failed'].includes(statusLower);
                 
                 const statusClass = isDone ? 'status-done' : 
                                    isProcessing ? 'status-processing' :
                                    isError ? 'status-error' : 'status-pending';
-                
-                const cells = headers.map(h => {
-                    const key = h.toLowerCase().replace(/[^a-z0-9]/g, '_');
-                    const value = row[key] || row[h] || '';
-                    
-                    if (h.toLowerCase().includes('status')) {
-                        return `<td><span class="status-badge ${statusClass}">${escapeHtml(statusValue)}</span></td>`;
-                    }
+
+                const cells = currentHeaders.map(h => {
+                    const value = row[h] || '';
                     if (h.toLowerCase().includes('url') && value) {
                         return `<td class="url-cell"><a href="${escapeHtml(value)}" target="_blank">View →</a></td>`;
                     }
-                    if (h.toLowerCase().includes('topic') || h.toLowerCase().includes('keyword')) {
+                    if (h.toLowerCase().includes('topic') || h.toLowerCase().includes('keyword') || h.toLowerCase().includes('title')) {
                         return `<td class="topic-cell" title="${escapeHtml(value)}">${escapeHtml(value)}</td>`;
                     }
                     return `<td>${escapeHtml(value)}</td>`;
@@ -786,60 +933,167 @@
                 
                 return `<tr>
                     ${cells}
+                    <td><span class="status-badge ${statusClass}">${escapeHtml(row.status || 'pending')}</span></td>
                     <td class="action-cell">
-                        ${canProcess ? `<button class="btn btn-primary btn-small" onclick="processRow(${row._rowIndex})" ${isProcessing ? 'disabled' : ''}>Process</button>` : ''}
+                        ${canProcess ? 
+                            `<button class="btn btn-primary btn-small" onclick="processRow(${row.id})">Process</button>` : 
+                            ''}
                     </td>
                 </tr>`;
             }).join('');
         }
 
-        async function checkSpreadsheet() {
-            const btn = document.getElementById('checkBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></span> Checking...';
-
-            try {
-                const response = await fetch(`${API_URL}/api/clawbot/spreadsheet/check`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    showAlert(data.message, 'success');
-                    // Reload to get fresh data
-                    loadSpreadsheetInfo();
-                } else {
-                    showAlert(data.error, 'error');
-                }
-            } catch (err) {
-                showAlert('Failed to check spreadsheet', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '🔄 Check for New Topics';
-            }
+        function formatHeader(header) {
+            return header.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         }
 
-        async function processRow(rowIndex) {
-            if (isProcessing) return;
-            isProcessing = true;
-            showAlert(`Processing row ${rowIndex}...`, 'info');
+        // Import pasted data
+        async function importPastedData() {
+            const data = document.getElementById('pasteData').value.trim();
+            
+            if (!data) {
+                showAlert('Please paste some data first', 'error');
+                return;
+            }
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></span> Importing...';
 
             try {
-                const response = await fetch(`${API_URL}/api/clawbot/spreadsheet/process-row`, {
+                const response = await fetch(`${API_URL}/api/spreadsheet/import`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ rowIndex })
+                    body: JSON.stringify({ data, format: 'auto' })
                 });
-                const data = await response.json();
+                const result = await response.json();
 
-                if (data.success) {
-                    showAlert(`✅ ${data.message}`, 'success');
-                    loadSpreadsheetInfo();
+                if (result.success) {
+                    showAlert(`✅ ${result.message}`, 'success');
+                    document.getElementById('pasteData').value = '';
+                    loadData();
                 } else {
-                    showAlert(data.error, 'error');
+                    showAlert(result.error, 'error');
+                }
+            } catch (err) {
+                showAlert('Failed to import data', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '📥 Import Data';
+            }
+        }
+
+        // File upload handling
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('fileName').textContent = `Selected: ${file.name}`;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                selectedFileContent = e.target.result;
+                document.getElementById('uploadBtn').disabled = false;
+            };
+            reader.readAsText(file);
+        }
+
+        // Drag and drop
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+        });
+        
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.classList.remove('dragover');
+        });
+        
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && (file.name.endsWith('.csv') || file.name.endsWith('.txt'))) {
+                document.getElementById('csvFile').files = e.dataTransfer.files;
+                handleFileSelect({ target: { files: [file] } });
+            } else {
+                showAlert('Please upload a CSV or TXT file', 'error');
+            }
+        });
+
+        async function importFileData() {
+            if (!selectedFileContent) {
+                showAlert('Please select a file first', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('uploadBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></span> Uploading...';
+
+            try {
+                const response = await fetch(`${API_URL}/api/spreadsheet/import`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ data: selectedFileContent, format: 'csv' })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert(`✅ ${result.message}`, 'success');
+                    clearFileImport();
+                    loadData();
+                } else {
+                    showAlert(result.error, 'error');
+                }
+            } catch (err) {
+                showAlert('Failed to import file', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '📥 Upload & Import';
+            }
+        }
+
+        function clearImport() {
+            document.getElementById('pasteData').value = '';
+        }
+
+        function clearFileImport() {
+            document.getElementById('csvFile').value = '';
+            document.getElementById('fileName').textContent = '';
+            selectedFileContent = null;
+            document.getElementById('uploadBtn').disabled = true;
+        }
+
+        // Process row
+        async function processRow(id) {
+            if (isProcessing) return;
+            isProcessing = true;
+            showAlert('Processing...', 'info');
+
+            try {
+                const response = await fetch(`${API_URL}/api/spreadsheet/process/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert(`✅ ${result.message}`, 'success');
+                    loadData();
+                } else {
+                    showAlert(result.error, 'error');
                 }
             } catch (err) {
                 showAlert('Failed to process row', 'error');
@@ -848,6 +1102,7 @@
             }
         }
 
+        // Process all pending
         async function processAllPending() {
             if (isProcessing) return;
             isProcessing = true;
@@ -856,23 +1111,23 @@
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></span> Processing...';
 
-            showAlert('Processing all pending topics... This may take a while.', 'info');
+            showAlert('Processing all pending topics...', 'info');
 
             try {
-                const response = await fetch(`${API_URL}/api/clawbot/spreadsheet/process-all`, {
+                const response = await fetch(`${API_URL}/api/spreadsheet/process-all`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 });
-                const data = await response.json();
+                const result = await response.json();
 
-                if (data.success) {
-                    showAlert(`✅ ${data.message}`, 'success');
-                    loadSpreadsheetInfo();
+                if (result.success) {
+                    showAlert(`✅ ${result.message}`, 'success');
+                    loadData();
                 } else {
-                    showAlert(data.error, 'error');
+                    showAlert(result.error, 'error');
                 }
             } catch (err) {
                 showAlert('Failed to process pending topics', 'error');
@@ -883,33 +1138,33 @@
             }
         }
 
-        async function createTemplate() {
-            const btn = event.target;
-            btn.disabled = true;
-            btn.textContent = 'Creating...';
+        // Refresh data
+        async function refreshData() {
+            await loadData();
+            showAlert('Data refreshed', 'success');
+        }
+
+        // Clear all data
+        async function clearAllData() {
+            if (!confirm('Are you sure you want to clear all imported data? This cannot be undone.')) {
+                return;
+            }
 
             try {
-                const response = await fetch(`${API_URL}/api/clawbot/spreadsheet/create-template`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ title: 'WordPress Claw - Content Calendar' })
+                const response = await fetch(`${API_URL}/api/spreadsheet/data`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-                const data = await response.json();
+                const result = await response.json();
 
-                if (data.success) {
-                    showAlert(`✅ Template created! <a href="${data.data.spreadsheetUrl}" target="_blank" style="color: inherit; text-decoration: underline;">Open in Google Sheets</a>`, 'success');
-                    setTimeout(loadSpreadsheetInfo, 1000);
+                if (result.success) {
+                    showAlert('✅ All data cleared', 'success');
+                    loadData();
                 } else {
-                    showAlert(data.error, 'error');
+                    showAlert(result.error, 'error');
                 }
             } catch (err) {
-                showAlert('Failed to create template', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '📄 Create Template';
+                showAlert('Failed to clear data', 'error');
             }
         }
 
@@ -920,64 +1175,19 @@
             return div.innerHTML;
         }
 
-        async function disconnectSpreadsheet() {
-            if (!confirm('Are you sure you want to disconnect this Google Sheet? You can reconnect it or add a new one anytime.')) {
-                return;
-            }
-
-            try {
-                // Get the Google Sheets connection
-                const connectionsResponse = await fetch(`${API_URL}/api/connections`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const connectionsData = await connectionsResponse.json();
-                
-                if (!connectionsData.success) {
-                    showAlert('Failed to get connections', 'error');
-                    return;
-                }
-                
-                const gsConnection = connectionsData.data.connections.find(c => c.type === 'googlesheets');
-                
-                if (!gsConnection) {
-                    showAlert('No Google Sheets connection found', 'error');
-                    return;
-                }
-
-                // Delete the connection
-                const response = await fetch(`${API_URL}/api/connections/${gsConnection.id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    showAlert('✅ Google Sheets disconnected successfully', 'success');
-                    // Reload to show empty state
-                    setTimeout(() => window.location.reload(), 1000);
-                } else {
-                    showAlert(data.error || 'Failed to disconnect', 'error');
-                }
-            } catch (err) {
-                console.error('Disconnect error:', err);
-                showAlert('Failed to disconnect spreadsheet', 'error');
-            }
-        }
-
         function logout() {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = '/login.html';
         }
 
-        // Mobile menu toggle
         function toggleMobileMenu() {
             document.querySelector('.sidebar').classList.toggle('show');
             document.querySelector('.sidebar-overlay').classList.toggle('show');
         }
 
         // Load on page load
-        loadSpreadsheetInfo();
+        loadData();
     </script>
 </body>
 </html>

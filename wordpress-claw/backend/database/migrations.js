@@ -35,6 +35,32 @@ function runSQLiteMigrations(db) {
         console.log('Adding auto_publish column...');
         db.exec(`ALTER TABLE business_profiles ADD COLUMN auto_publish INTEGER DEFAULT 0`);
     }
+
+    // Check for spreadsheet_rows table
+    const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='spreadsheet_rows'").all();
+    if (tables.length === 0) {
+        console.log('Creating spreadsheet_rows table...');
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS spreadsheet_rows (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                service_url TEXT,
+                main_keyword TEXT,
+                cluster_keywords TEXT,
+                gdocs_link TEXT,
+                wp_post_url TEXT,
+                status VARCHAR(50) DEFAULT 'PENDING',
+                feature_image TEXT,
+                row_order INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_spreadsheet_rows_user_id ON spreadsheet_rows(user_id)`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_spreadsheet_rows_status ON spreadsheet_rows(status)`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_spreadsheet_rows_row_order ON spreadsheet_rows(row_order)`);
+        console.log('spreadsheet_rows table created');
+    }
     
     console.log('SQLite migrations completed successfully');
 }
@@ -68,6 +94,36 @@ async function runPostgresMigrations(db) {
         if (!hasAutoPublish) {
             console.log('Adding auto_publish column to PostgreSQL...');
             await db.exec(`ALTER TABLE business_profiles ADD COLUMN auto_publish BOOLEAN DEFAULT FALSE`);
+        }
+
+        // Check for spreadsheet_rows table
+        const tableResult = await db.get(
+            `SELECT table_name FROM information_schema.tables 
+             WHERE table_name = 'spreadsheet_rows'`
+        );
+        
+        if (!tableResult) {
+            console.log('Creating spreadsheet_rows table in PostgreSQL...');
+            await db.exec(`
+                CREATE TABLE IF NOT EXISTS spreadsheet_rows (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    service_url TEXT,
+                    main_keyword TEXT,
+                    cluster_keywords TEXT,
+                    gdocs_link TEXT,
+                    wp_post_url TEXT,
+                    status VARCHAR(50) DEFAULT 'PENDING',
+                    feature_image TEXT,
+                    row_order INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW()
+                )
+            `);
+            await db.exec(`CREATE INDEX IF NOT EXISTS idx_spreadsheet_rows_user_id ON spreadsheet_rows(user_id)`);
+            await db.exec(`CREATE INDEX IF NOT EXISTS idx_spreadsheet_rows_status ON spreadsheet_rows(status)`);
+            await db.exec(`CREATE INDEX IF NOT EXISTS idx_spreadsheet_rows_row_order ON spreadsheet_rows(row_order)`);
+            console.log('spreadsheet_rows table created in PostgreSQL');
         }
         
         console.log('PostgreSQL migrations completed successfully');
