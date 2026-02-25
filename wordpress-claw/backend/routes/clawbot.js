@@ -608,10 +608,10 @@ router.get('/spreadsheet/check', authenticateToken, async (req, res) => {
 
         // If no spreadsheetId provided, get from user's connection
         if (!spreadsheetId) {
-            const connection = await db.prepare('
+            const connection = await db.prepare(`
                 SELECT * FROM connections 
                 WHERE user_id = ? AND type = ? AND status = ?
-            ').get(req.user.id, 'googlesheets', 'active');
+            `).get(req.user.id, 'googlesheets', 'active');
 
             if (!connection) {
                 return res.json({
@@ -668,10 +668,10 @@ router.post('/spreadsheet/process-row', authenticateToken, async (req, res) => {
 
         // If no spreadsheetId provided, get from user's connection
         if (!spreadsheetId) {
-            const connection = await db.prepare('
+            const connection = await db.prepare(`
                 SELECT * FROM connections 
                 WHERE user_id = ? AND type = ? AND status = ?
-            ').get(req.user.id, 'googlesheets', 'active');
+            `).get(req.user.id, 'googlesheets', 'active');
 
             if (!connection) {
                 return res.json({
