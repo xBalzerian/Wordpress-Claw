@@ -466,9 +466,14 @@ class SpreadsheetAgent {
             );
 
             if (statusColumn) {
-                allRows.forEach(row => {
+                console.log('Found status column:', statusColumn);
+                allRows.forEach((row, idx) => {
                     const rawStatus = (row[statusColumn] || '').toString().trim();
                     const status = rawStatus.toLowerCase();
+                    
+                    if (idx < 3) {
+                        console.log(`Row ${idx}: status="${rawStatus}" (lowercase: "${status}")`);
+                    }
 
                     // Smart status detection
                     if (status === 'done' || status === 'completed' || status === 'published' ||
@@ -481,19 +486,18 @@ class SpreadsheetAgent {
                     } else if (status === 'pending' || status === '' || status === 'todo' || status === 'new') {
                         pending++;
                     } else {
-                        // Custom status like "COMPANY INFO ADDED" - check if it has a WP POST URL
-                        // If it has a WordPress URL, it's done
+                        // Custom status - check if it has a WP POST URL
                         const wpUrlColumn = sheetData.headers.find(h =>
                             h.toLowerCase().includes('wp') && h.toLowerCase().includes('url')
                         );
                         if (wpUrlColumn && row[wpUrlColumn] && row[wpUrlColumn].toString().trim() !== '') {
                             done++;
                         } else {
-                            // Has custom status but no WP URL - treat as in-progress
                             processing++;
                         }
                     }
                 });
+                console.log(`Stats calculated: done=${done}, processing=${processing}, pending=${pending}, error=${error}`);
             } else {
                 // No status column, check for WP URL to determine done vs pending
                 const wpUrlColumn = sheetData.headers.find(h =>
