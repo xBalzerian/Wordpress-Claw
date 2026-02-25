@@ -666,6 +666,27 @@
 
         async function loadSpreadsheetInfo() {
             try {
+                // First, get the user's connections to find the spreadsheet ID
+                const connectionsResponse = await fetch(`${API_URL}/api/connections`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const connectionsData = await connectionsResponse.json();
+                
+                if (!connectionsData.success) {
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+                
+                const gsConnection = connectionsData.data.connections.find(c => c.type === 'googlesheets');
+                
+                if (!gsConnection) {
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+                
+                // Now call spreadsheet info with the connection ID
                 const response = await fetch(`${API_URL}/api/clawbot/spreadsheet/info`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
