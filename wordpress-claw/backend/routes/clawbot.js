@@ -721,10 +721,29 @@ router.get('/spreadsheet/info', authenticateToken, async (req, res) => {
 
         // If no spreadsheetId provided, get from user's connection
         if (!spreadsheetId) {
-            const connection = await db.prepare(`
-                SELECT * FROM connections 
-                WHERE user_id = ? AND type = ? AND status = ?
-            `).get(req.user.id, 'googlesheets', 'active');
+            console.log('Looking for Google Sheets connection for user:', req.user.id);
+            
+            let connection;
+            try {
+                // Handle both SQLite (sync) and PostgreSQL (async)
+                if (db.isPostgres) {
+                    connection = await db.prepare(`
+                        SELECT * FROM connections 
+                        WHERE user_id = $1 AND type = $2 AND status = $3
+                    `).get(req.user.id, 'googlesheets', 'active');
+                } else {
+                    connection = db.prepare(`
+                        SELECT * FROM connections 
+                        WHERE user_id = ? AND type = ? AND status = ?
+                    `).get(req.user.id, 'googlesheets', 'active');
+                }
+            } catch (dbErr) {
+                console.error('Database query error:', dbErr);
+                return res.json({
+                    success: false,
+                    error: 'Database error: ' + dbErr.message
+                });
+            }
 
             if (!connection) {
                 return res.json({
@@ -733,7 +752,19 @@ router.get('/spreadsheet/info', authenticateToken, async (req, res) => {
                 });
             }
 
-            const credentials = JSON.parse(connection.credentials);
+            console.log('Found connection:', connection.id);
+            
+            let credentials;
+            try {
+                credentials = JSON.parse(connection.credentials);
+            } catch (parseErr) {
+                console.error('Failed to parse credentials:', parseErr);
+                return res.json({
+                    success: false,
+                    error: 'Invalid credentials format.'
+                });
+            }
+            
             const GoogleSheetsService = require('../services/googleSheets');
             spreadsheetId = GoogleSheetsService.extractSpreadsheetId(credentials.spreadsheetUrl);
 
@@ -743,6 +774,8 @@ router.get('/spreadsheet/info', authenticateToken, async (req, res) => {
                     error: 'Invalid spreadsheet URL in connection.'
                 });
             }
+            
+            console.log('Extracted spreadsheet ID:', spreadsheetId);
         }
 
         const spreadsheetAgent = new SpreadsheetAgent(req.user.id);
