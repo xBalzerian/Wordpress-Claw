@@ -460,23 +460,56 @@ class SpreadsheetAgent {
             // Calculate stats from all rows
             const allRows = sheetData.data;
             let pending = 0, processing = 0, done = 0, error = 0;
-            
-            const statusColumn = sheetData.headers.find(h => 
+
+            const statusColumn = sheetData.headers.find(h =>
                 h.toLowerCase().includes('status')
             );
-            
+
             if (statusColumn) {
                 allRows.forEach(row => {
-                    const status = (row[statusColumn] || 'PENDING').toString().toLowerCase().trim();
-                    if (status === 'pending' || status === '') pending++;
-                    else if (status === 'processing') processing++;
-                    else if (status === 'done' || status === 'completed') done++;
-                    else if (status === 'error') error++;
-                    else pending++; // Unknown status = pending
+                    const rawStatus = (row[statusColumn] || '').toString().trim();
+                    const status = rawStatus.toLowerCase();
+
+                    // Smart status detection
+                    if (status === 'done' || status === 'completed' || status === 'published' ||
+                        status === 'success' || status === 'live') {
+                        done++;
+                    } else if (status === 'processing' || status === 'generating' || status === 'working') {
+                        processing++;
+                    } else if (status === 'error' || status === 'failed' || status === 'fail') {
+                        error++;
+                    } else if (status === 'pending' || status === '' || status === 'todo' || status === 'new') {
+                        pending++;
+                    } else {
+                        // Custom status like "COMPANY INFO ADDED" - check if it has a WP POST URL
+                        // If it has a WordPress URL, it's done
+                        const wpUrlColumn = sheetData.headers.find(h =>
+                            h.toLowerCase().includes('wp') && h.toLowerCase().includes('url')
+                        );
+                        if (wpUrlColumn && row[wpUrlColumn] && row[wpUrlColumn].toString().trim() !== '') {
+                            done++;
+                        } else {
+                            // Has custom status but no WP URL - treat as in-progress
+                            processing++;
+                        }
+                    }
                 });
             } else {
-                // No status column, assume all are pending
-                pending = allRows.length;
+                // No status column, check for WP URL to determine done vs pending
+                const wpUrlColumn = sheetData.headers.find(h =>
+                    h.toLowerCase().includes('wp') && h.toLowerCase().includes('url')
+                );
+                if (wpUrlColumn) {
+                    allRows.forEach(row => {
+                        if (row[wpUrlColumn] && row[wpUrlColumn].toString().trim() !== '') {
+                            done++;
+                        } else {
+                            pending++;
+                        }
+                    });
+                } else {
+                    pending = allRows.length;
+                }
             }
 
             return {

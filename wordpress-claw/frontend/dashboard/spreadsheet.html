@@ -699,18 +699,16 @@
             document.getElementById('sheetTitle').textContent = data.title || 'Spreadsheet';
             document.getElementById('sheetInfo').textContent = `${data.totalRows} rows • ${data.sheets?.[0] || 'Sheet1'}`;
 
-            // Update stats
-            const pending = data.preview.filter(r => !r.status || r.status.toLowerCase() === 'pending').length;
-            const processing = data.preview.filter(r => r.status?.toLowerCase() === 'processing').length;
-            const done = data.preview.filter(r => r.status?.toLowerCase() === 'done').length;
-
+            // Update stats - use backend stats if available
+            const stats = data.stats || {};
             document.getElementById('totalTopics').textContent = data.totalRows;
-            document.getElementById('pendingCount').textContent = pending;
-            document.getElementById('processingCount').textContent = processing;
-            document.getElementById('completedCount').textContent = done;
+            document.getElementById('pendingCount').textContent = stats.pending || 0;
+            document.getElementById('processingCount').textContent = stats.processing || 0;
+            document.getElementById('completedCount').textContent = stats.done || 0;
 
             // Enable process all button if there are pending items
-            document.getElementById('processAllBtn').disabled = pending === 0 || isProcessing;
+            const pendingCount = stats.pending || 0;
+            document.getElementById('processAllBtn').disabled = pendingCount === 0 || isProcessing;
 
             // Build table
             const headers = data.headers || [];
@@ -719,10 +717,11 @@
 
             const body = document.getElementById('tableBody');
             body.innerHTML = data.preview.map((row, index) => {
-                const status = (row.status || 'PENDING').toLowerCase();
-                const statusClass = status === 'done' ? 'status-done' : 
-                                   status === 'processing' ? 'status-processing' :
-                                   status === 'error' ? 'status-error' : 'status-pending';
+                const status = (row.status || 'PENDING').toString().trim();
+                const statusLower = status.toLowerCase();
+                const statusClass = statusLower === 'done' || statusLower === 'completed' ? 'status-done' :
+                                   statusLower === 'processing' || statusLower === 'generating' ? 'status-processing' :
+                                   statusLower === 'error' || statusLower === 'failed' ? 'status-error' : 'status-pending';
                 
                 const cells = headers.map(h => {
                     const key = h.toLowerCase().replace(/[^a-z0-9]/g, '_');
@@ -740,7 +739,7 @@
                     return `<td>${escapeHtml(value)}</td>`;
                 }).join('');
 
-                const canProcess = status === 'pending' || status === '' || status === 'error';
+                const canProcess = statusLower === 'pending' || statusLower === '' || statusLower === 'error' || statusLower === 'todo' || statusLower === 'new' || (!statusLower && !row.wp_post_url);
                 
                 return `<tr>
                     ${cells}

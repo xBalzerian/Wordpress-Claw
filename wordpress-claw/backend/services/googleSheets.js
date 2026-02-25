@@ -359,12 +359,23 @@ class GoogleSheetsService {
      */
     findPendingRows(data, statusColumn = 'status') {
         return data.filter(row => {
-            const status = (row[statusColumn] || '').toString().toLowerCase();
-            return !status || 
-                   status === 'pending' || 
-                   status === 'todo' ||
-                   status === 'new' ||
-                   status === '';
+            const rawStatus = (row[statusColumn] || 'PENDING').toString().trim();
+            const status = rawStatus.toLowerCase();
+
+            // Only truly "pending" if explicitly marked or empty
+            if (status === 'pending' || status === '' || status === 'todo' || status === 'new') {
+                return true;
+            }
+
+            // Check WP URL column - if empty, it's pending
+            const wpUrlColumn = Object.keys(row).find(k =>
+                k.toLowerCase().includes('wp') && k.toLowerCase().includes('url')
+            );
+            if (wpUrlColumn && (!row[wpUrlColumn] || row[wpUrlColumn].toString().trim() === '')) {
+                return true;
+            }
+
+            return false;
         });
     }
 
