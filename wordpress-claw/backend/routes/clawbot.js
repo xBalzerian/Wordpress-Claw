@@ -604,7 +604,39 @@ router.get('/ideas', authenticateToken, async (req, res) => {
  */
 router.get('/spreadsheet/check', authenticateToken, async (req, res) => {
     try {
-        const { spreadsheetId, sheetName } = req.query;
+        let { spreadsheetId, sheetName } = req.query;
+
+        // If no spreadsheetId provided, get from user's connection
+        if (!spreadsheetId) {
+            const connection = await db.prepare('
+                SELECT * FROM connections 
+                WHERE user_id = ? AND type = ? AND status = ?
+            ').get(req.user.id, 'googlesheets', 'active');
+
+            if (!connection) {
+                return res.json({
+                    success: false,
+                    error: 'No Google Sheets connection found. Please connect your Google Sheets first.'
+                });
+            }
+
+            const credentials = JSON.parse(connection.credentials);
+            const GoogleSheetsService = require('../services/googleSheets');
+            spreadsheetId = GoogleSheetsService.extractSpreadsheetId(credentials.spreadsheetUrl);
+
+            if (!spreadsheetId) {
+                return res.json({
+                    success: false,
+                    error: 'Invalid spreadsheet URL in connection.'
+                });
+            }
+            
+            // Use sheet name from connection config if not provided
+            if (!sheetName && connection.config) {
+                const config = JSON.parse(connection.config);
+                sheetName = config.sheetName;
+            }
+        }
 
         const spreadsheetAgent = new SpreadsheetAgent(req.user.id);
         const result = await spreadsheetAgent.checkForNewTopics(spreadsheetId, sheetName);
@@ -625,13 +657,37 @@ router.get('/spreadsheet/check', authenticateToken, async (req, res) => {
  */
 router.post('/spreadsheet/process-row', authenticateToken, async (req, res) => {
     try {
-        const { spreadsheetId, sheetName, rowIndex, options } = req.body;
+        let { spreadsheetId, sheetName, rowIndex, options } = req.body;
 
         if (!rowIndex) {
             return res.status(400).json({
                 success: false,
                 error: 'Row index is required'
             });
+        }
+
+        // If no spreadsheetId provided, get from user's connection
+        if (!spreadsheetId) {
+            const connection = await db.prepare('
+                SELECT * FROM connections 
+                WHERE user_id = ? AND type = ? AND status = ?
+            ').get(req.user.id, 'googlesheets', 'active');
+
+            if (!connection) {
+                return res.json({
+                    success: false,
+                    error: 'No Google Sheets connection found.'
+                });
+            }
+
+            const credentials = JSON.parse(connection.credentials);
+            const GoogleSheetsService = require('../services/googleSheets');
+            spreadsheetId = GoogleSheetsService.extractSpreadsheetId(credentials.spreadsheetUrl);
+            
+            if (!sheetName && connection.config) {
+                const config = JSON.parse(connection.config);
+                sheetName = config.sheetName;
+            }
         }
 
         const spreadsheetAgent = new SpreadsheetAgent(req.user.id);
