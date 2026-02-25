@@ -717,7 +717,33 @@ router.post('/spreadsheet/update-status', authenticateToken, async (req, res) =>
  */
 router.get('/spreadsheet/info', authenticateToken, async (req, res) => {
     try {
-        const { spreadsheetId } = req.query;
+        let { spreadsheetId } = req.query;
+
+        // If no spreadsheetId provided, get from user's connection
+        if (!spreadsheetId) {
+            const connection = await db.prepare(`
+                SELECT * FROM connections 
+                WHERE user_id = ? AND type = ? AND status = ?
+            `).get(req.user.id, 'googlesheets', 'active');
+
+            if (!connection) {
+                return res.json({
+                    success: false,
+                    error: 'No Google Sheets connection found. Please connect your Google Sheets first.'
+                });
+            }
+
+            const credentials = JSON.parse(connection.credentials);
+            const GoogleSheetsService = require('../services/googleSheets');
+            spreadsheetId = GoogleSheetsService.extractSpreadsheetId(credentials.spreadsheetUrl);
+
+            if (!spreadsheetId) {
+                return res.json({
+                    success: false,
+                    error: 'Invalid spreadsheet URL in connection.'
+                });
+            }
+        }
 
         const spreadsheetAgent = new SpreadsheetAgent(req.user.id);
         const result = await spreadsheetAgent.getSpreadsheetInfo(spreadsheetId);
