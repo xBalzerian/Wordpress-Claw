@@ -84,7 +84,7 @@ app.get('/health', (req, res) => {
     res.json({ 
         status: 'ok', 
         timestamp: new Date().toISOString(),
-        version: '3.0.0-clean-rebuild'
+        version: '4.0.0-no-javascript'
     });
 });
 
@@ -98,10 +98,13 @@ app.use('/api/clawbot', clawbotRoutes);
 app.use('/api/spreadsheet', spreadsheetRoutes);
 app.use('/api/spreadsheet-simple', spreadsheetSimpleRoutes);
 
+// Serve spreadsheet-simple.html from the API route (server-rendered, no JS)
+app.use('/dashboard/spreadsheet-simple.html', spreadsheetSimpleRoutes);
+
 // Serve static files from frontend directory
 app.use(express.static(path.join(__dirname, 'frontend')));
 
-// Serve dashboard routes
+// Serve dashboard routes (catch-all for other dashboard pages)
 app.get('/dashboard/*', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/dashboard/index.html'));
 });
