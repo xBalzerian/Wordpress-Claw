@@ -99,7 +99,8 @@ app.use('/api/spreadsheet', spreadsheetRoutes);
 app.use('/api/spreadsheet-simple', spreadsheetSimpleRoutes);
 
 // Serve spreadsheet-simple.html from the API route (server-rendered, no JS)
-app.use('/dashboard/spreadsheet-simple.html', spreadsheetSimpleRoutes);
+// The router handles the full path
+app.use('/dashboard', spreadsheetSimpleRoutes);
 
 // Serve static files from frontend directory
 app.use(express.static(path.join(__dirname, 'frontend')));
