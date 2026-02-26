@@ -96,13 +96,7 @@ app.use('/api/business-profile', businessProfileRoutes);
 app.use('/api/connections', connectionsRoutes);
 app.use('/api/articles', articlesRoutes);
 app.use('/api/clawbot', clawbotRoutes);
-app.use('/api/spreadsheet', spreadsheetRoutes);
-app.use('/api/spreadsheet-simple', spreadsheetSimpleRoutes);
 app.use('/api/content-queue', contentQueueRoutes);
-
-// Serve spreadsheet-simple.html from the API route (server-rendered, no JS)
-// The router handles the full path
-app.use('/dashboard', spreadsheetSimpleRoutes);
 
 // Serve static files from frontend directory
 app.use(express.static(path.join(__dirname, 'frontend')));
