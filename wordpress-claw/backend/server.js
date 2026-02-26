@@ -22,10 +22,17 @@ const spreadsheetSimpleRoutes = require('./routes/spreadsheet-simple');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security middleware
+// Security middleware - completely disable CSP
 app.use(helmet({
-    contentSecurityPolicy: false  // Disable CSP to allow inline scripts and event handlers
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
 }));
+
+// Explicitly set permissive CSP headers
+app.use((req, res, next) => {
+    res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline';");
+    next();
+});
 
 // CORS configuration
 app.use(cors({
