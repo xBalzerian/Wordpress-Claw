@@ -22,13 +22,13 @@ const spreadsheetSimpleRoutes = require('./routes/spreadsheet-simple');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security middleware - completely disable CSP
-app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
-}));
+// Disable helmet completely to avoid CSP issues
+// app.use(helmet({
+//     contentSecurityPolicy: false,
+//     crossOriginEmbedderPolicy: false
+// }));
 
-// Explicitly set permissive CSP headers - MUST be after helmet but before routes
+// Set permissive CSP headers
 app.use((req, res, next) => {
     res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval' data: blob:; style-src * 'unsafe-inline'; img-src * data: blob:; connect-src *;");
     res.setHeader('X-Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval';");

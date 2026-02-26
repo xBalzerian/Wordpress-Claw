@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: Wordpress-Claw
+    runtime: node
+    buildCommand: cd wordpress-claw/backend && npm install
+    startCommand: cd wordpress-claw/backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    headers:
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval' data: blob:; style-src * 'unsafe-inline'; img-src * data: blob:; connect-src *;"
+      - path: /*
+        name: X-Content-Security-Policy
+        value: "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval';"
+      - path: /*
+        name: X-WebKit-CSP
+        value: "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval';"
