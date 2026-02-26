@@ -75,7 +75,7 @@ app.get('/health', (req, res) => {
     res.json({ 
         status: 'ok', 
         timestamp: new Date().toISOString(),
-        version: '2.0.0-new-spreadsheet-editor'
+        version: '3.0.0-clean-rebuild'
     });
 });
 
