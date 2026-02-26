@@ -15,22 +15,35 @@
             --primary: #E53935;
             --primary-dark: #C62828;
             --primary-light: #FFEBEE;
+            --primary-subtle: rgba(229, 57, 53, 0.08);
             --text: #1a1a1a;
             --text-secondary: #666;
+            --text-muted: #999;
             --bg: #f8f9fa;
             --bg-card: #ffffff;
+            --bg-hover: #f5f5f5;
             --border: #e5e5e5;
+            --border-light: #f0f0f0;
             --border-focus: #E53935;
             --success: #4caf50;
             --success-light: #E8F5E9;
+            --success-bg: rgba(76, 175, 80, 0.1);
             --warning: #ff9800;
             --warning-light: #FFF3E0;
+            --warning-bg: rgba(255, 152, 0, 0.1);
             --error: #f44336;
             --error-light: #FFEBEE;
+            --error-bg: rgba(244, 67, 54, 0.1);
             --info: #2196F3;
             --info-light: #E3F2FD;
-            --shadow: 0 2px 8px rgba(0,0,0,0.08);
-            --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+            --info-bg: rgba(33, 150, 243, 0.1);
+            --shadow: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --transition: all 0.2s ease;
         }
 
         * {
@@ -104,12 +117,12 @@
             align-items: center;
             gap: 12px;
             padding: 10px 12px;
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             text-decoration: none;
             color: var(--text-secondary);
             font-size: 14px;
             font-weight: 500;
-            transition: all 0.2s;
+            transition: var(--transition);
         }
 
         .nav-item:hover {
@@ -118,7 +131,7 @@
         }
 
         .nav-item.active {
-            background: rgba(229, 57, 53, 0.1);
+            background: var(--primary-subtle);
             color: var(--primary);
         }
 
@@ -140,7 +153,7 @@
             align-items: center;
             gap: 12px;
             padding: 8px;
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             cursor: pointer;
             transition: background 0.2s;
         }
@@ -188,53 +201,160 @@
         }
 
         .page-header {
-            margin-bottom: 32px;
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 24px;
         }
 
-        .page-header h1 {
+        .page-header-content h1 {
             font-size: 28px;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .page-header p {
+        .page-header-content p {
             color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .page-header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* ClawBot Assistant Card */
+        .clawbot-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius-lg);
+            padding: 20px 24px;
+            color: white;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .clawbot-avatar {
+            width: 56px;
+            height: 56px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .clawbot-content {
+            flex: 1;
+        }
+
+        .clawbot-content h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .clawbot-content p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 12px;
+        }
+
+        .clawbot-suggestions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .clawbot-suggestion {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .clawbot-suggestion:hover {
+            background: rgba(255,255,255,0.25);
         }
 
         /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 24px;
-            margin-bottom: 32px;
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
         .stat-card {
             background: var(--bg-card);
-            border-radius: 12px;
-            padding: 24px;
+            border-radius: var(--radius-md);
+            padding: 20px;
             box-shadow: var(--shadow);
+            border: 1px solid var(--border-light);
+            transition: var(--transition);
         }
 
-        .stat-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 8px;
         }
 
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .stat-icon.total { background: var(--primary-subtle); }
+        .stat-icon.pending { background: var(--warning-bg); }
+        .stat-icon.processing { background: var(--info-bg); }
+        .stat-icon.completed { background: var(--success-bg); }
+
         .stat-value {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
+            color: var(--text);
         }
 
         /* Action Bar */
         .action-bar {
             display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 10px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .btn {
@@ -242,42 +362,58 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 10px 16px;
-            border-radius: 8px;
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
             font-weight: 600;
             font-size: 14px;
             text-decoration: none;
-            transition: all 0.2s;
+            transition: var(--transition);
             cursor: pointer;
             border: none;
+            white-space: nowrap;
         }
 
         .btn-primary {
             background: var(--primary);
             color: white;
+            box-shadow: 0 2px 4px rgba(229, 57, 53, 0.2);
         }
 
         .btn-primary:hover {
             background: var(--primary-dark);
+            box-shadow: 0 4px 8px rgba(229, 57, 53, 0.3);
+            transform: translateY(-1px);
         }
 
         .btn-primary:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .btn-secondary {
-            background: var(--bg);
+            background: var(--bg-card);
             color: var(--text);
             border: 1px solid var(--border);
         }
 
         .btn-secondary:hover {
-            background: var(--border);
+            background: var(--bg-hover);
+            border-color: var(--text-secondary);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #43a047;
         }
 
         .btn-danger {
-            background: var(--error-light);
+            background: var(--bg-card);
             color: var(--error);
             border: 1px solid var(--error);
         }
@@ -287,30 +423,85 @@
             color: white;
         }
 
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 12px;
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid transparent;
         }
 
-        /* Spreadsheet Table */
+        .btn-ghost:hover {
+            background: var(--bg-hover);
+            color: var(--text);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-right: 4px;
+        }
+
+        .filter-btn {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-secondary);
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Spreadsheet Container */
         .spreadsheet-container {
             background: var(--bg-card);
-            border-radius: 12px;
+            border-radius: var(--radius-lg);
             box-shadow: var(--shadow);
             overflow: hidden;
+            border: 1px solid var(--border-light);
         }
 
         .spreadsheet-header {
             padding: 20px 24px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--border-light);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: var(--bg);
         }
 
         .spreadsheet-header h2 {
             font-size: 16px;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .spreadsheet-info {
@@ -318,55 +509,82 @@
             color: var(--text-secondary);
         }
 
+        .spreadsheet-table-wrapper {
+            overflow-x: auto;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
         .spreadsheet-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             font-size: 14px;
+        }
+
+        .spreadsheet-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .spreadsheet-table th {
             background: var(--bg);
-            padding: 12px 16px;
+            padding: 14px 16px;
             text-align: left;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--text-secondary);
             border-bottom: 1px solid var(--border);
             white-space: nowrap;
+            position: relative;
+        }
+
+        .spreadsheet-table th:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1px;
+            height: 20px;
+            background: var(--border);
         }
 
         .spreadsheet-table td {
-            padding: 8px 12px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: top;
+            transition: background 0.15s;
         }
 
-        .spreadsheet-table tr:hover {
-            background: var(--bg);
+        .spreadsheet-table tbody tr:hover td {
+            background: var(--primary-subtle);
         }
 
-        .spreadsheet-table tr:hover td {
-            background: rgba(229, 57, 53, 0.02);
+        .spreadsheet-table tbody tr:hover .row-actions {
+            opacity: 1;
         }
 
-        /* Editable Cells */
+        /* Cell Inputs */
         .cell-input {
             width: 100%;
             padding: 8px 10px;
             border: 2px solid transparent;
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
             font-size: 14px;
             font-family: inherit;
             background: transparent;
-            transition: all 0.2s;
+            transition: var(--transition);
             resize: none;
             min-height: 36px;
+            line-height: 1.5;
         }
 
         .cell-input:hover {
-            background: var(--bg);
+            background: var(--bg-card);
             border-color: var(--border);
         }
 
@@ -377,19 +595,143 @@
             box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.1);
         }
 
-        .cell-input.keyword-cell {
-            font-weight: 500;
-            min-width: 150px;
-        }
-
         .cell-input.url-cell {
-            font-size: 12px;
+            font-size: 13px;
             color: var(--primary);
-            min-width: 120px;
+            font-family: 'Monaco', 'Menlo', monospace;
         }
 
-        .cell-input.cluster-cell {
+        .cell-input.url-cell::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Keyword Tags */
+        .keyword-cell-wrapper {
             min-width: 200px;
+        }
+
+        .keyword-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 4px;
+            min-height: 36px;
+            align-items: center;
+        }
+
+        .keyword-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: var(--primary-subtle);
+            color: var(--primary);
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid rgba(229, 57, 53, 0.15);
+            animation: tagIn 0.2s ease;
+        }
+
+        @keyframes tagIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .keyword-tag .remove-tag {
+            width: 14px;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 11px;
+            opacity: 0.6;
+            transition: var(--transition);
+        }
+
+        .keyword-tag .remove-tag:hover {
+            opacity: 1;
+            background: rgba(229, 57, 53, 0.2);
+        }
+
+        .keyword-input {
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            padding: 4px 6px;
+            min-width: 80px;
+            flex: 1;
+            outline: none;
+        }
+
+        .keyword-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .keyword-dropdown-trigger {
+            padding: 4px 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: var(--transition);
+        }
+
+        .keyword-dropdown-trigger:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Keyword Dropdown */
+        .keyword-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            margin-top: 4px;
+        }
+
+        .keyword-dropdown.show {
+            display: block;
+        }
+
+        .keyword-dropdown-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .keyword-dropdown-item:hover {
+            background: var(--primary-subtle);
+        }
+
+        .keyword-dropdown-item .add-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
         }
 
         /* Status Badge */
@@ -403,36 +745,67 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            cursor: pointer;
             border: none;
-            transition: all 0.2s;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
         }
 
         .status-pending {
-            background: var(--warning-light);
+            background: var(--warning-bg);
             color: #E65100;
         }
 
+        .status-pending::before {
+            background: #E65100;
+        }
+
         .status-processing {
-            background: var(--info-light);
+            background: var(--info-bg);
             color: #0D47A1;
         }
 
+        .status-processing::before {
+            background: #0D47A1;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
         .status-done {
-            background: var(--success-light);
+            background: var(--success-bg);
             color: #1B5E20;
         }
 
+        .status-done::before {
+            background: #1B5E20;
+        }
+
         .status-error {
-            background: var(--error-light);
+            background: var(--error-bg);
             color: #B71C1C;
         }
 
-        /* Action Buttons in Table */
+        .status-error::before {
+            background: #B71C1C;
+        }
+
+        /* Row Actions */
         .row-actions {
             display: flex;
             gap: 6px;
-            white-space: nowrap;
+            opacity: 0.6;
+            transition: opacity 0.2s;
         }
 
         .btn-icon {
@@ -441,17 +814,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
             border: 1px solid var(--border);
             background: var(--bg-card);
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.2s;
+            transition: var(--transition);
         }
 
         .btn-icon:hover {
-            background: var(--bg);
+            background: var(--bg-hover);
             border-color: var(--primary);
+            transform: translateY(-1px);
         }
 
         .btn-icon.process {
@@ -470,6 +844,17 @@
             border-color: var(--error);
         }
 
+        .btn-icon.clawbot {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn-icon.clawbot:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
         /* Empty State */
         .empty-state {
             text-align: center;
@@ -478,9 +863,15 @@
         }
 
         .empty-state-icon {
-            font-size: 64px;
-            margin-bottom: 24px;
-            opacity: 0.5;
+            width: 80px;
+            height: 80px;
+            background: var(--primary-subtle);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 24px;
         }
 
         .empty-state h3 {
@@ -498,28 +889,38 @@
 
         /* Alert */
         .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
+            padding: 14px 18px;
+            border-radius: var(--radius-md);
             font-size: 14px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 12px;
+            border: 1px solid transparent;
         }
 
         .alert.error {
             background: var(--error-light);
             color: var(--error);
+            border-color: rgba(244, 67, 54, 0.2);
         }
 
         .alert.success {
             background: var(--success-light);
             color: var(--success);
+            border-color: rgba(76, 175, 80, 0.2);
         }
 
         .alert.info {
             background: var(--info-light);
             color: var(--info);
+            border-color: rgba(33, 150, 243, 0.2);
+        }
+
+        .alert.warning {
+            background: var(--warning-light);
+            color: var(--warning);
+            border-color: rgba(255, 152, 0, 0.2);
         }
 
         /* Loading */
@@ -557,6 +958,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            backdrop-filter: blur(4px);
         }
 
         .modal-overlay.show {
@@ -565,12 +967,18 @@
 
         .modal {
             background: var(--bg-card);
-            border-radius: 16px;
+            border-radius: var(--radius-lg);
             width: 100%;
             max-width: 700px;
             max-height: 90vh;
             overflow: hidden;
             box-shadow: var(--shadow-lg);
+            animation: modalIn 0.2s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .modal-header {
@@ -581,6 +989,9 @@
             font-size: 20px;
             font-weight: 600;
             margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .modal-header p {
@@ -599,7 +1010,7 @@
             display: flex;
             justify-content: flex-end;
             gap: 12px;
-            border-top: 1px solid var(--border);
+            border-top: 1px solid var(--border-light);
         }
 
         .import-textarea {
@@ -607,11 +1018,12 @@
             min-height: 200px;
             padding: 16px;
             border: 2px solid var(--border);
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             font-family: 'Monaco', 'Menlo', monospace;
             font-size: 13px;
             line-height: 1.5;
             resize: vertical;
+            transition: var(--transition);
         }
 
         .import-textarea:focus {
@@ -623,26 +1035,27 @@
             margin-top: 16px;
             padding: 16px;
             background: var(--bg);
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             font-size: 13px;
+            border: 1px solid var(--border-light);
         }
 
         .import-help h4 {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--text-secondary);
         }
 
         .import-help ul {
-            margin-left: 16px;
+            margin-left: 18px;
             color: var(--text-secondary);
         }
 
         .import-help li {
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
 
         .import-help code {
@@ -650,13 +1063,14 @@
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 12px;
+            border: 1px solid var(--border);
         }
 
         /* Export Modal */
         .export-content {
             background: var(--bg);
             padding: 16px;
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             font-family: 'Monaco', 'Menlo', monospace;
             font-size: 12px;
             line-height: 1.5;
@@ -664,36 +1078,23 @@
             overflow-x: auto;
             max-height: 300px;
             overflow-y: auto;
-        }
-
-        /* Filter Bar */
-        .filter-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
             border: 1px solid var(--border);
-            background: var(--bg-card);
-            cursor: pointer;
-            transition: all 0.2s;
         }
 
-        .filter-btn:hover {
-            border-color: var(--primary);
+        /* Bulk Actions Bar */
+        .bulk-actions {
+            display: flex;
+            gap: 10px;
+            padding: 12px 24px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border-light);
+            align-items: center;
         }
 
-        .filter-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
+        .bulk-actions-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
         /* Mobile Menu Toggle */
@@ -707,7 +1108,7 @@
             height: 44px;
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             align-items: center;
             justify-content: center;
             font-size: 20px;
@@ -730,6 +1131,7 @@
             display: block;
         }
 
+        /* Responsive */
         @media (max-width: 1100px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -747,10 +1149,14 @@
             .stats-grid { grid-template-columns: 1fr; }
             .spreadsheet-table { font-size: 12px; }
             .spreadsheet-table th,
-            .spreadsheet-table td { padding: 8px; }
+            .spreadsheet-table td { padding: 10px 12px; }
             .cell-input { font-size: 13px; }
             .action-bar { flex-direction: column; }
             .action-bar .btn { width: 100%; }
+            .page-header { flex-direction: column; }
+            .page-header-actions { width: 100%; }
+            .page-header-actions .btn { flex: 1; }
+            .clawbot-card { flex-direction: column; text-align: center; }
         }
     </style>
 </head>
@@ -826,63 +1232,105 @@
 
         <main class="main">
             <div class="page-header">
-                <h1>📋 Spreadsheet Editor</h1>
-                <p>Import from Google Sheets, work locally, export back. Manage your content workflow in one place.</p>
+                <div class="page-header-content">
+                    <h1>📋 Content Spreadsheet</h1>
+                    <p>Manage your content workflow. Import topics, track progress, and publish articles.</p>
+                </div>
+                <div class="page-header-actions">
+                    <button class="btn btn-secondary" onclick="showImportModal()">
+                        📥 Import
+                    </button>
+                    <button class="btn btn-primary" onclick="addNewRow()">
+                        ➕ Add Row
+                    </button>
+                </div>
+            </div>
+
+            <!-- ClawBot Assistant Card -->
+            <div class="clawbot-card" id="clawbotCard" style="display: none;">
+                <div class="clawbot-avatar">🤖</div>
+                <div class="clawbot-content">
+                    <h3>ClawBot Assistant</h3>
+                    <p id="clawbotMessage">Loading your spreadsheet data...</p>
+                    <div class="clawbot-suggestions" id="clawbotSuggestions">
+                        <!-- Dynamic suggestions -->
+                    </div>
+                </div>
             </div>
 
             <div id="alertContainer"></div>
 
+            <!-- Stats Grid -->
             <div class="stats-grid" id="statsGrid">
                 <div class="stat-card">
-                    <div class="stat-label">Total Rows</div>
+                    <div class="stat-header">
+                        <span class="stat-label">Total Topics</span>
+                        <div class="stat-icon total">📊</div>
+                    </div>
                     <div class="stat-value" id="totalCount">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Pending</div>
+                    <div class="stat-header">
+                        <span class="stat-label">Pending</span>
+                        <div class="stat-icon pending">⏳</div>
+                    </div>
                     <div class="stat-value" id="pendingCount">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Processing</div>
+                    <div class="stat-header">
+                        <span class="stat-label">Processing</span>
+                        <div class="stat-icon processing">⚡</div>
+                    </div>
                     <div class="stat-value" id="processingCount">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Completed</div>
+                    <div class="stat-header">
+                        <span class="stat-label">Completed</span>
+                        <div class="stat-icon completed">✅</div>
+                    </div>
                     <div class="stat-value" id="completedCount">0</div>
                 </div>
             </div>
 
-            <div class="action-bar">
-                <button class="btn btn-primary" onclick="showImportModal()">
-                    📥 Import from Sheets
-                </button>
-                <button class="btn btn-secondary" onclick="showExportModal()">
-                    📤 Export to Sheets
-                </button>
-                <button class="btn btn-secondary" onclick="addNewRow()">
-                    ➕ Add Row
-                </button>
-                <button class="btn btn-danger" onclick="clearAllData()">
-                    🗑️ Clear All
-                </button>
-            </div>
-
+            <!-- Filter Bar -->
             <div class="filter-bar" id="filterBar">
-                <span style="font-size: 13px; color: var(--text-secondary);">Filter:</span>
+                <span class="filter-label">Filter:</span>
                 <button class="filter-btn active" onclick="setFilter('all')" data-filter="all">All</button>
                 <button class="filter-btn" onclick="setFilter('pending')" data-filter="pending">Pending</button>
                 <button class="filter-btn" onclick="setFilter('processing')" data-filter="processing">Processing</button>
                 <button class="filter-btn" onclick="setFilter('done')" data-filter="done">Done</button>
+                <button class="filter-btn" onclick="setFilter('error')" data-filter="error">Error</button>
             </div>
 
+            <!-- Spreadsheet Container -->
             <div class="spreadsheet-container">
                 <div class="spreadsheet-header">
                     <div>
-                        <h2>Content Queue</h2>
+                        <h2>📑 Content Queue</h2>
                         <div class="spreadsheet-info" id="spreadsheetInfo">Click any cell to edit. Changes save automatically.</div>
                     </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary btn-small" onclick="showExportModal()">
+                            📤 Export
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="clearAllData()">
+                            🗑️ Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bulk Actions -->
+                <div class="bulk-actions" id="bulkActions" style="display: none;">
+                    <span class="bulk-actions-label">Bulk Actions:</span>
+                    <button class="btn btn-success btn-small" onclick="processAllPending()">
+                        ⚡ Process All Pending
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="askClawBotBulk()">
+                        🤖 Ask ClawBot
+                    </button>
                 </div>
                 
-                <div id="tableContainer" style="overflow-x: auto;">
+                <div class="spreadsheet-table-wrapper" id="tableContainer">
                     <div class="loading" id="loadingState">
                         <div class="spinner"></div>
                         Loading spreadsheet data...
@@ -891,22 +1339,23 @@
                     <div class="empty-state" id="emptyState" style="display: none;">
                         <div class="empty-state-icon">📋</div>
                         <h3>No Data Yet</h3>
-                        <p>Import data from Google Sheets or add rows manually to get started.</p>
+                        <p>Import data from Google Sheets or add rows manually to get started with your content workflow.</p>
                         <br>
                         <button class="btn btn-primary" onclick="showImportModal()">Import from Google Sheets</button>
+                        <button class="btn btn-secondary" onclick="addNewRow()" style="margin-left: 10px;">Add First Row</button>
                     </div>
 
                     <table class="spreadsheet-table" id="spreadsheetTable" style="display: none;">
                         <thead>
                             <tr>
-                                <th>Service URL</th>
-                                <th>Main Keyword</th>
-                                <th>Cluster Keywords</th>
-                                <th>GDocs Link</th>
-                                <th>WP Post URL</th>
-                                <th>Status</th>
-                                <th>Feature Image</th>
-                                <th>Actions</th>
+                                <th style="width: 180px;">Service URL</th>
+                                <th style="width: 200px;">Main Keyword</th>
+                                <th style="width: 250px;">Cluster Keywords</th>
+                                <th style="width: 150px;">GDocs Link</th>
+                                <th style="width: 150px;">WP Post URL</th>
+                                <th style="width: 120px;">Status</th>
+                                <th style="width: 150px;">Feature Image</th>
+                                <th style="width: 140px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">
@@ -971,6 +1420,35 @@
         </div>
     </div>
 
+    <!-- Ask ClawBot Modal -->
+    <div class="modal-overlay" id="clawbotModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>🤖 Ask ClawBot</h3>
+                <p id="clawbotModalSubtitle">Get AI assistance with this row</p>
+            </div>
+            <div class="modal-body">
+                <div id="clawbotModalContent" style="padding: 16px; background: var(--bg); border-radius: var(--radius-md); margin-bottom: 16px;">
+                    <p style="color: var(--text-secondary);">Select an action:</p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn btn-primary" onclick="clawbotAction('process')" id="btnProcessRow">
+                        ⚡ Process This Topic
+                    </button>
+                    <button class="btn btn-secondary" onclick="clawbotAction('suggest')" id="btnSuggestKeywords">
+                        💡 Suggest Keywords
+                    </button>
+                    <button class="btn btn-secondary" onclick="clawbotAction('analyze')" id="btnAnalyze">
+                        🔍 Analyze Competitors
+                    </button>
+                    <button class="btn btn-ghost" onclick="hideClawbotModal()">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = '';
         const token = localStorage.getItem('token');
@@ -984,6 +1462,14 @@
         let currentData = [];
         let currentFilter = 'all';
         let isProcessing = false;
+        let currentClawbotRowId = null;
+
+        // Predefined keyword suggestions
+        const keywordSuggestions = [
+            'SEO', 'Content Marketing', 'Digital Marketing', 'Social Media', 
+            'Blogging', 'Email Marketing', 'PPC', 'Analytics',
+            'E-commerce', 'Lead Generation', 'Brand Awareness', 'Conversion'
+        ];
 
         // Initialize
         loadData();
@@ -1015,6 +1501,7 @@
                 currentData = result.data.rows;
                 updateStats(result.data.stats);
                 renderTable();
+                updateClawbotCard(result.data.stats);
 
             } catch (err) {
                 console.error('Failed to load data:', err);
@@ -1028,6 +1515,52 @@
             document.getElementById('pendingCount').textContent = stats.pending;
             document.getElementById('processingCount').textContent = stats.processing;
             document.getElementById('completedCount').textContent = stats.done;
+            
+            // Show/hide bulk actions
+            const bulkActions = document.getElementById('bulkActions');
+            if (stats.total > 0) {
+                bulkActions.style.display = 'flex';
+            } else {
+                bulkActions.style.display = 'none';
+            }
+        }
+
+        function updateClawbotCard(stats) {
+            const card = document.getElementById('clawbotCard');
+            const message = document.getElementById('clawbotMessage');
+            const suggestions = document.getElementById('clawbotSuggestions');
+            
+            card.style.display = 'flex';
+            
+            if (stats.total === 0) {
+                message.textContent = "Welcome! I'm your personal ClawBot assistant. Let's get started with your content workflow.";
+                suggestions.innerHTML = `
+                    <span class="clawbot-suggestion" onclick="showImportModal()">📥 Import Data</span>
+                    <span class="clawbot-suggestion" onclick="addNewRow()">➕ Add First Row</span>
+                `;
+            } else if (stats.pending > 0) {
+                message.textContent = `I see you have ${stats.pending} pending topic${stats.pending > 1 ? 's' : ''} ready to process. Want me to help?`;
+                suggestions.innerHTML = `
+                    <span class="clawbot-suggestion" onclick="processAllPending()">⚡ Process All Pending</span>
+                    <span class="clawbot-suggestion" onclick="window.location.href='clawbot.html'">💬 Chat with ClawBot</span>
+                `;
+            } else if (stats.processing > 0) {
+                message.textContent = `I'm working on ${stats.processing} topic${stats.processing > 1 ? 's' : ''} right now. Check back soon!`;
+                suggestions.innerHTML = `
+                    <span class="clawbot-suggestion" onclick="window.location.href='articles.html'">📝 View Articles</span>
+                `;
+            } else if (stats.done === stats.total) {
+                message.textContent = "Great job! All your topics have been processed. Ready for more content?";
+                suggestions.innerHTML = `
+                    <span class="clawbot-suggestion" onclick="addNewRow()">➕ Add New Topic</span>
+                    <span class="clawbot-suggestion" onclick="showImportModal()">📥 Import More</span>
+                `;
+            } else {
+                message.textContent = "I'm here to help you manage your content workflow. What would you like to do?";
+                suggestions.innerHTML = `
+                    <span class="clawbot-suggestion" onclick="window.location.href='clawbot.html'">💬 Chat with ClawBot</span>
+                `;
+            }
         }
 
         function renderTable() {
@@ -1057,33 +1590,43 @@
                             data-field="service_url" 
                             data-id="${row.id}"
                             rows="1"
+                            placeholder="https://..."
                             onblur="saveCell(this)"
                             onkeydown="handleCellKeydown(event, this)"
                         >${escapeHtml(row.service_url || '')}</textarea>
                     </td>
                     <td>
-                        <textarea class="cell-input keyword-cell" 
+                        <select class="cell-input" 
                             data-field="main_keyword" 
                             data-id="${row.id}"
-                            rows="1"
-                            onblur="saveCell(this)"
-                            onkeydown="handleCellKeydown(event, this)"
-                        >${escapeHtml(row.main_keyword || '')}</textarea>
+                            onchange="saveCell(this)"
+                            style="font-family: inherit; min-width: 140px;">
+                            <option value="" ${!row.main_keyword ? 'selected' : ''}>Select keyword...</option>
+                            ${keywordSuggestions.map(kw => `
+                                <option value="${kw}" ${row.main_keyword === kw ? 'selected' : ''}>${kw}</option>
+                            `).join('')}
+                            <option value="custom">+ Add Custom...</option>
+                        </select>
                     </td>
                     <td>
-                        <textarea class="cell-input cluster-cell" 
+                        <select class="cell-input" 
                             data-field="cluster_keywords" 
                             data-id="${row.id}"
-                            rows="1"
-                            onblur="saveCell(this)"
-                            onkeydown="handleCellKeydown(event, this)"
-                        >${escapeHtml(row.cluster_keywords || '')}</textarea>
+                            onchange="saveCell(this)"
+                            style="font-family: inherit; min-width: 180px;"
+                        >
+                            <option value="" ${!row.cluster_keywords ? 'selected' : ''}>Select clusters...</option>
+                            ${keywordSuggestions.map(kw => `
+                                <option value="${kw}" ${(row.cluster_keywords || '').includes(kw) ? 'selected' : ''}>${kw}</option>
+                            `).join('')}
+                        </select>
                     </td>
                     <td>
                         <textarea class="cell-input url-cell" 
                             data-field="gdocs_link" 
                             data-id="${row.id}"
                             rows="1"
+                            placeholder="Google Doc link..."
                             onblur="saveCell(this)"
                             onkeydown="handleCellKeydown(event, this)"
                         >${escapeHtml(row.gdocs_link || '')}</textarea>
@@ -1093,6 +1636,7 @@
                             data-field="wp_post_url" 
                             data-id="${row.id}"
                             rows="1"
+                            placeholder="WordPress URL..."
                             onblur="saveCell(this)"
                             onkeydown="handleCellKeydown(event, this)"
                         >${escapeHtml(row.wp_post_url || '')}</textarea>
@@ -1100,11 +1644,11 @@
                     <td>
                         <select class="status-badge status-${(row.status || 'PENDING').toLowerCase()}" 
                             onchange="updateStatus(${row.id}, this.value)"
-                            style="font-family: inherit; cursor: pointer;">
-                            <option value="PENDING" ${row.status === 'PENDING' ? 'selected' : ''} class="status-pending">PENDING</option>
-                            <option value="PROCESSING" ${row.status === 'PROCESSING' ? 'selected' : ''} class="status-processing">PROCESSING</option>
-                            <option value="DONE" ${row.status === 'DONE' ? 'selected' : ''} class="status-done">DONE</option>
-                            <option value="ERROR" ${row.status === 'ERROR' ? 'selected' : ''} class="status-error">ERROR</option>
+                            style="font-family: inherit;">
+                            <option value="PENDING" ${row.status === 'PENDING' ? 'selected' : ''} class="status-pending">Pending</option>
+                            <option value="PROCESSING" ${row.status === 'PROCESSING' ? 'selected' : ''} class="status-processing">Processing</option>
+                            <option value="DONE" ${row.status === 'DONE' ? 'selected' : ''} class="status-done">Done</option>
+                            <option value="ERROR" ${row.status === 'ERROR' ? 'selected' : ''} class="status-error">Error</option>
                         </select>
                     </td>
                     <td>
@@ -1112,12 +1656,14 @@
                             data-field="feature_image" 
                             data-id="${row.id}"
                             rows="1"
+                            placeholder="Image URL..."
                             onblur="saveCell(this)"
                             onkeydown="handleCellKeydown(event, this)"
                         >${escapeHtml(row.feature_image || '')}</textarea>
                     </td>
                     <td>
                         <div class="row-actions">
+                            <button class="btn-icon clawbot" onclick="askClawBot(${row.id})" title="Ask ClawBot">🤖</button>
                             <button class="btn-icon process" onclick="processRow(${row.id})" title="Process this row">⚡</button>
                             <button class="btn-icon delete" onclick="deleteRow(${row.id})" title="Delete row">🗑️</button>
                         </div>
@@ -1130,6 +1676,139 @@
                 autoResize(textarea);
                 textarea.addEventListener('input', () => autoResize(textarea));
             });
+        }
+
+        function renderKeywordTags(keywordsStr, rowId, field) {
+            if (!keywordsStr) return '';
+            const keywords = keywordsStr.split(',').map(k => k.trim()).filter(k => k);
+            return keywords.map((kw, idx) => `
+                <span class="keyword-tag">
+                    ${escapeHtml(kw)}
+                    <span class="remove-tag" onclick="removeKeyword(${rowId}, '${field}', ${idx}, event)">×</span>
+                </span>
+            `).join('');
+        }
+
+        function handleKeywordInput(event, rowId, field) {
+            if (event.key === 'Enter' || event.key === ',') {
+                event.preventDefault();
+                const input = event.target;
+                const value = input.value.trim();
+                if (value) {
+                    addKeyword(rowId, field, value);
+                    input.value = '';
+                }
+            } else if (event.key === 'Backspace' && !event.target.value) {
+                // Remove last keyword on backspace if input is empty
+                const container = document.getElementById(`${field === 'main_keyword' ? 'mainKeywords' : 'clusterKeywords'}-${rowId}`);
+                const tags = container.querySelectorAll('.keyword-tag');
+                if (tags.length > 0) {
+                    const lastTag = tags[tags.length - 1];
+                    const keyword = lastTag.textContent.replace('×', '').trim();
+                    removeKeywordByValue(rowId, field, keyword);
+                }
+            }
+        }
+
+        function handleClusterKeywordInput(event, rowId) {
+            handleKeywordInput(event, rowId, 'cluster_keywords');
+        }
+
+        function addKeyword(rowId, field, keyword) {
+            const row = currentData.find(r => r.id == rowId);
+            if (!row) return;
+
+            const currentKeywords = (row[field] || '').split(',').map(k => k.trim()).filter(k => k);
+            if (!currentKeywords.includes(keyword)) {
+                currentKeywords.push(keyword);
+                row[field] = currentKeywords.join(', ');
+                
+                // Update UI
+                const container = document.getElementById(`${field === 'main_keyword' ? 'mainKeywords' : 'clusterKeywords'}-${rowId}`);
+                const input = container.querySelector('.keyword-input');
+                const tagsHtml = renderKeywordTags(row[field], rowId, field);
+                
+                // Insert tags before input
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = tagsHtml;
+                Array.from(tempDiv.children).forEach(tag => {
+                    container.insertBefore(tag, input);
+                });
+                
+                // Save to server
+                saveKeywords(rowId, field);
+            }
+            
+            // Hide dropdown
+            const dropdown = document.getElementById(`keywordDropdown-${rowId}`);
+            if (dropdown) dropdown.classList.remove('show');
+        }
+
+        function removeKeyword(rowId, field, index, event) {
+            event.stopPropagation();
+            const row = currentData.find(r => r.id == rowId);
+            if (!row) return;
+
+            const keywords = (row[field] || '').split(',').map(k => k.trim()).filter(k => k);
+            keywords.splice(index, 1);
+            row[field] = keywords.join(', ');
+            
+            // Re-render this row's keywords
+            renderTable();
+            
+            // Save to server
+            saveKeywords(rowId, field);
+        }
+
+        function removeKeywordByValue(rowId, field, keyword) {
+            const row = currentData.find(r => r.id == rowId);
+            if (!row) return;
+
+            const keywords = (row[field] || '').split(',').map(k => k.trim()).filter(k => k && k !== keyword);
+            row[field] = keywords.join(', ');
+            
+            // Re-render this row's keywords
+            renderTable();
+            
+            // Save to server
+            saveKeywords(rowId, field);
+        }
+
+        function toggleKeywordDropdown(rowId) {
+            const dropdown = document.getElementById(`keywordDropdown-${rowId}`);
+            dropdown.classList.toggle('show');
+            
+            // Close dropdown when clicking outside
+            const closeDropdown = (e) => {
+                if (!e.target.closest(`#keywordDropdown-${rowId}`) && !e.target.closest(`#clusterKeywords-${rowId}`)) {
+                    dropdown.classList.remove('show');
+                    document.removeEventListener('click', closeDropdown);
+                }
+            };
+            setTimeout(() => document.addEventListener('click', closeDropdown), 0);
+        }
+
+        async function saveKeywords(rowId, field) {
+            const row = currentData.find(r => r.id == rowId);
+            if (!row) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/spreadsheet-simple/row/${rowId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ [field]: row[field] })
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    showAlert('Failed to save: ' + result.error, 'error');
+                }
+            } catch (err) {
+                showAlert('Failed to save changes', 'error');
+            }
         }
 
         function autoResize(textarea) {
@@ -1210,7 +1889,6 @@
                 if (!result.success) {
                     showAlert('Failed to update status: ' + result.error, 'error');
                 } else {
-                    // Refresh stats
                     loadData();
                 }
             } catch (err) {
@@ -1274,7 +1952,7 @@
                     currentData = currentData.filter(r => r.id != id);
                     renderTable();
                     showAlert('Row deleted', 'success');
-                    loadData(); // Refresh stats
+                    loadData();
                 } else {
                     showAlert(result.error, 'error');
                 }
@@ -1301,7 +1979,6 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    // Add to local data and re-render
                     currentData.push({
                         id: result.data.id,
                         service_url: '',
@@ -1316,9 +1993,8 @@
                     renderTable();
                     showAlert('New row added', 'success');
                     
-                    // Scroll to bottom and focus on the new row's keyword cell
                     setTimeout(() => {
-                        const inputs = document.querySelectorAll('[data-field="main_keyword"]');
+                        const inputs = document.querySelectorAll(`[id^="mainKeywords-"] .keyword-input`);
                         if (inputs.length > 0) {
                             inputs[inputs.length - 1].focus();
                         }
@@ -1357,7 +2033,6 @@
         function setFilter(filter) {
             currentFilter = filter;
             
-            // Update button states
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.filter === filter);
             });
@@ -1365,7 +2040,71 @@
             renderTable();
         }
 
-        // Import Modal
+        // ClawBot Integration
+        function askClawBot(rowId) {
+            currentClawbotRowId = rowId;
+            const row = currentData.find(r => r.id == rowId);
+            if (!row) return;
+
+            const subtitle = document.getElementById('clawbotModalSubtitle');
+            subtitle.textContent = `Row: ${row.main_keyword || 'Untitled'} (${row.status})`;
+
+            document.getElementById('clawbotModal').classList.add('show');
+        }
+
+        function askClawBotBulk() {
+            const pendingCount = currentData.filter(r => r.status === 'PENDING').length;
+            if (pendingCount === 0) {
+                showAlert('No pending rows to process', 'info');
+                return;
+            }
+            
+            if (confirm(`Ask ClawBot to process all ${pendingCount} pending rows?`)) {
+                processAllPending();
+            }
+        }
+
+        async function clawbotAction(action) {
+            if (!currentClawbotRowId) return;
+
+            hideClawbotModal();
+
+            switch (action) {
+                case 'process':
+                    await processRow(currentClawbotRowId);
+                    break;
+                case 'suggest':
+                    showAlert('💡 Keyword suggestions feature coming soon! Chat with ClawBot for now.', 'info');
+                    window.location.href = 'clawbot.html';
+                    break;
+                case 'analyze':
+                    showAlert('🔍 Competitor analysis feature coming soon! Chat with ClawBot for now.', 'info');
+                    window.location.href = 'clawbot.html';
+                    break;
+            }
+        }
+
+        function hideClawbotModal() {
+            document.getElementById('clawbotModal').classList.remove('show');
+            currentClawbotRowId = null;
+        }
+
+        async function processAllPending() {
+            const pendingRows = currentData.filter(r => r.status === 'PENDING' && r.main_keyword);
+            if (pendingRows.length === 0) {
+                showAlert('No pending rows with keywords to process', 'info');
+                return;
+            }
+
+            showAlert(`Starting to process ${pendingRows.length} pending rows...`, 'info');
+
+            for (const row of pendingRows) {
+                await processRow(row.id);
+                await new Promise(r => setTimeout(r, 500)); // Small delay between rows
+            }
+        }
+
+        // Import/Export Modals
         function showImportModal() {
             document.getElementById('importModal').classList.add('show');
             document.getElementById('importTextarea').focus();
@@ -1407,7 +2146,6 @@
             }
         }
 
-        // Export Modal
         async function showExportModal() {
             try {
                 const response = await fetch(`${API_URL}/api/spreadsheet-simple/export`, {

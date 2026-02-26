@@ -869,6 +869,168 @@ router.post('/spreadsheet/create-template', authenticateToken, async (req, res) 
 });
 
 /**
+ * SPREADSHEET-SIMPLE ROUTES
+ * Integration with the built-in spreadsheet system
+ */
+
+/**
+ * Get spreadsheet data for ClawBot
+ * GET /api/clawbot/spreadsheet/read
+ */
+router.get('/spreadsheet/read', authenticateToken, async (req, res) => {
+    try {
+        const agent = new SummonAgent(req.user.id);
+        await agent.initialize();
+        
+        const result = await agent.getUserSpreadsheet();
+        res.json(result);
+    } catch (err) {
+        console.error('Spreadsheet read error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to read spreadsheet data'
+        });
+    }
+});
+
+/**
+ * Get spreadsheet summary for user context
+ * GET /api/clawbot/spreadsheet/summary
+ */
+router.get('/spreadsheet/summary', authenticateToken, async (req, res) => {
+    try {
+        const agent = new SummonAgent(req.user.id);
+        await agent.initialize();
+        
+        const result = await agent.getSpreadsheetSummary();
+        res.json(result);
+    } catch (err) {
+        console.error('Spreadsheet summary error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get spreadsheet summary'
+        });
+    }
+});
+
+/**
+ * Update a spreadsheet row
+ * POST /api/clawbot/spreadsheet/update
+ */
+router.post('/spreadsheet/update', authenticateToken, async (req, res) => {
+    try {
+        const { rowId, updates } = req.body;
+        
+        if (!rowId || !updates) {
+            return res.status(400).json({
+                success: false,
+                error: 'Row ID and updates are required'
+            });
+        }
+
+        const agent = new SummonAgent(req.user.id);
+        await agent.initialize();
+        
+        const result = await agent.updateSpreadsheetRow(rowId, updates);
+        res.json(result);
+    } catch (err) {
+        console.error('Spreadsheet update error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update spreadsheet row'
+        });
+    }
+});
+
+/**
+ * Process a spreadsheet row with AI
+ * POST /api/clawbot/spreadsheet/process
+ */
+router.post('/spreadsheet/process', authenticateToken, async (req, res) => {
+    try {
+        const { rowId } = req.body;
+        
+        if (!rowId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Row ID is required'
+            });
+        }
+
+        const agent = new SummonAgent(req.user.id);
+        await agent.initialize();
+        
+        const result = await agent.processSpreadsheetRow(rowId);
+        res.json(result);
+    } catch (err) {
+        console.error('Spreadsheet process error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to process spreadsheet row'
+        });
+    }
+});
+
+/**
+ * Process all pending rows
+ * POST /api/clawbot/spreadsheet/process-all-pending
+ */
+router.post('/spreadsheet/process-all-pending', authenticateToken, async (req, res) => {
+    try {
+        const agent = new SummonAgent(req.user.id);
+        await agent.initialize();
+        
+        // Get all pending rows
+        const spreadsheetData = await agent.getUserSpreadsheet();
+        if (!spreadsheetData.success) {
+            return res.json(spreadsheetData);
+        }
+
+        const pendingRows = spreadsheetData.data.rows.filter(r => 
+            r.status === 'PENDING' && r.main_keyword
+        );
+
+        if (pendingRows.length === 0) {
+            return res.json({
+                success: true,
+                message: 'No pending rows to process',
+                data: { processed: 0, total: 0 }
+            });
+        }
+
+        // Process each row
+        const results = [];
+        for (const row of pendingRows) {
+            const result = await agent.processSpreadsheetRow(row.id);
+            results.push({ rowId: row.id, keyword: row.main_keyword, ...result });
+            
+            // Small delay between rows to avoid rate limiting
+            if (pendingRows.length > 1) {
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        }
+
+        const successful = results.filter(r => r.success).length;
+        
+        res.json({
+            success: true,
+            message: `Processed ${successful} of ${pendingRows.length} rows`,
+            data: {
+                processed: successful,
+                total: pendingRows.length,
+                results
+            }
+        });
+    } catch (err) {
+        console.error('Process all pending error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to process pending rows'
+        });
+    }
+});
+
+/**
  * Clear chat history
  */
 router.delete('/session/:sessionKey', authenticateToken, async (req, res) => {

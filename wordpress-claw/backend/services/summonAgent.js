@@ -642,8 +642,9 @@ class SummonAgent {
 
         // Spreadsheet commands
         if (lowerMessage.includes('spreadsheet') || lowerMessage.includes('my sheet') || 
-            lowerMessage.includes('google sheet') || lowerMessage.includes('check sheet')) {
-            return this.handleSpreadsheetIntent(message, lowerMessage);
+            lowerMessage.includes('my topics') || lowerMessage.includes('check my') ||
+            lowerMessage.includes('process row') || lowerMessage.includes('row')) {
+            return await this.handleSpreadsheetIntent(message, lowerMessage);
         }
 
         // Content creation intent
@@ -693,7 +694,32 @@ class SummonAgent {
             return this.handleHelpIntent();
         }
 
-        // Default response
+        // Default response - check if user has spreadsheet data
+        const spreadsheetSummary = await this.getSpreadsheetSummary();
+        if (spreadsheetSummary.success && spreadsheetSummary.data.hasData) {
+            const { stats, pendingRows } = spreadsheetSummary.data;
+            
+            if (stats.pending > 0) {
+                return {
+                    type: 'spreadsheet_suggestion',
+                    message: `I see you have **${stats.pending} pending topic${stats.pending > 1 ? 's' : ''}** in your spreadsheet. Would you like me to process them?\n\n${pendingRows.slice(0, 3).map(r => `• ${r.main_keyword}`).join('\n')}`,
+                    actions: [
+                        {
+                            type: 'process_spreadsheet_pending',
+                            label: `⚡ Process All ${stats.pending} Pending`,
+                            params: {}
+                        },
+                        {
+                            type: 'get_spreadsheet_summary',
+                            label: '📋 View Spreadsheet',
+                            params: {}
+                        }
+                    ],
+                    suggestions: ['Show me my spreadsheet', 'Process one by one', 'Add new topic']
+                };
+            }
+        }
+
         return {
             type: 'general',
             message: `I'm here to help you create SEO-optimized content that ranks! I can:\n\n📝 Research keywords and competitors\n✍️ Generate comprehensive articles\n🎨 Create featured images\n🚀 Publish directly to WordPress\n📊 Check your spreadsheet for topics\n\nWhat would you like to do today?`,
@@ -720,65 +746,148 @@ class SummonAgent {
     }
 
     /**
-     * Handle spreadsheet-related intents
+     * Handle spreadsheet-related intents with enhanced context
      */
-    handleSpreadsheetIntent(message, lowerMessage) {
-        const hasGoogleSheets = this.context.connections.some(c => c.type === 'googlesheets' && c.status === 'active');
-
-        if (!hasGoogleSheets) {
+    async handleSpreadsheetIntent(message, lowerMessage) {
+        const summary = await this.getSpreadsheetSummary();
+        
+        if (!summary.success) {
             return {
-                type: 'spreadsheet_not_connected',
-                message: `📊 You don't have a Google Sheets connection yet.\n\nConnect your spreadsheet to use it as a command center for bulk content creation. I can:\n\n• Read topics from your sheet\n• Process them automatically\n• Update status as I work\n• Write article URLs back`,
-                actions: [{
-                    type: 'navigate',
-                    label: 'Connect Google Sheets',
-                    params: { path: '/dashboard/connections.html' }
-                }],
-                suggestions: ['How does it work?', 'What columns do I need?', 'Show me an example']
+                type: 'error',
+                message: 'I had trouble accessing your spreadsheet data. Please try again.',
+                suggestions: ['Try again', 'Help']
+            };
+        }
+
+        const { stats, pendingRows, hasData, hasPending } = summary.data;
+
+        // New user - no data yet
+        if (!hasData) {
+            return {
+                type: 'spreadsheet_empty',
+                message: `📊 **Your Spreadsheet is Empty**\n\nI don't see any topics in your spreadsheet yet. You can:\n\n1. **Import from Google Sheets** - Copy/paste your existing data\n2. **Add rows manually** - Type topics directly in the spreadsheet\n3. **Ask me for ideas** - I can suggest content topics for your industry`,
+                actions: [
+                    {
+                        type: 'navigate',
+                        label: '📥 Go to Spreadsheet',
+                        params: { path: '/dashboard/spreadsheet-simple.html' }
+                    },
+                    {
+                        type: 'get_content_ideas',
+                        label: '💡 Get Content Ideas',
+                        params: {}
+                    }
+                ],
+                suggestions: ['How do I import?', 'Give me topic ideas', 'Show me an example']
             };
         }
 
         // Check for specific row processing
         const rowMatch = message.match(/(?:row|#)\s*(\d+)/i);
-        if (rowMatch) {
-            const rowIndex = parseInt(rowMatch[1]);
-            return {
-                type: 'spreadsheet_process_row',
-                message: `I'll process row ${rowIndex} from your spreadsheet. This will:\n1. Read the topic/keyword\n2. Generate an article\n3. Update the status to DONE\n4. Add the article URL`,
-                actions: [{
+        if (rowMatch || lowerMessage.includes('process row') || lowerMessage.includes('this row')) {
+            // If specific row mentioned, try to find it
+            let targetRow = null;
+            
+            if (rowMatch) {
+                const rowIndex = parseInt(rowMatch[1]);
+                targetRow = pendingRows[rowIndex - 1] || pendingRows[0];
+            } else if (pendingRows.length > 0) {
+                targetRow = pendingRows[0];
+            }
+
+            if (targetRow) {
+                return {
                     type: 'spreadsheet_process_row',
-                    label: `Process Row ${rowIndex}`,
-                    params: { rowIndex }
-                }],
-                suggestions: ['Process all pending', 'Check spreadsheet first', 'Cancel']
-            };
+                    message: `I'll process "${targetRow.main_keyword}" from your spreadsheet. This will:\n\n1. Research competitors\n2. Generate an SEO-optimized article\n3. Save it to your articles\n4. Update the status to DONE`,
+                    actions: [
+                        {
+                            type: 'process_spreadsheet_row',
+                            label: `⚡ Process "${targetRow.main_keyword.substring(0, 30)}..."`,
+                            params: { rowId: targetRow.id }
+                        }
+                    ],
+                    suggestions: ['Process all pending', 'Show me the spreadsheet', 'Skip this one']
+                };
+            }
         }
 
         // Check for "process all" or "process pending"
         if (lowerMessage.includes('process all') || lowerMessage.includes('process pending') || 
             lowerMessage.includes('do all') || lowerMessage.includes('run all')) {
+            
+            if (!hasPending) {
+                return {
+                    type: 'spreadsheet_no_pending',
+                    message: `📊 **No Pending Topics**\n\nYou don't have any pending topics to process right now.\n\n**Current Status:**\n• Total: ${stats.total}\n• Done: ${stats.done}\n• Processing: ${stats.processing}\n• Pending: ${stats.pending}`,
+                    actions: [
+                        {
+                            type: 'navigate',
+                            label: '📋 View Spreadsheet',
+                            params: { path: '/dashboard/spreadsheet-simple.html' }
+                        }
+                    ],
+                    suggestions: ['Add new topics', 'Import more data', 'Show me completed']
+                };
+            }
+
             return {
                 type: 'spreadsheet_process_all',
-                message: `I'll process all pending topics from your spreadsheet. I'll work through each row with status PENDING or empty.`,
-                actions: [{
-                    type: 'spreadsheet_process_all',
-                    label: 'Process All Pending',
-                    params: {}
-                }],
-                suggestions: ['Check first', 'Cancel']
+                message: `I'll process all **${stats.pending} pending topic${stats.pending > 1 ? 's' : ''}** from your spreadsheet.\n\n${pendingRows.slice(0, 5).map(r => `• ${r.main_keyword}`).join('\n')}${stats.pending > 5 ? '\n• ...and ' + (stats.pending - 5) + ' more' : ''}`,
+                actions: [
+                    {
+                        type: 'process_spreadsheet_pending',
+                        label: `⚡ Process All ${stats.pending} Topics`,
+                        params: {}
+                    }
+                ],
+                suggestions: ['Process one by one', 'Cancel', 'Show me my spreadsheet']
             };
         }
 
-        // Default: check spreadsheet
+        // Default: show spreadsheet summary
+        let summaryMessage = `📊 **Your Spreadsheet Summary**\n\n`;
+        summaryMessage += `**Status Overview:**\n`;
+        summaryMessage += `• Total Topics: ${stats.total}\n`;
+        summaryMessage += `• Pending: ${stats.pending} ⏳\n`;
+        summaryMessage += `• Processing: ${stats.processing} ⚡\n`;
+        summaryMessage += `• Done: ${stats.done} ✅\n`;
+        
+        if (stats.error > 0) {
+            summaryMessage += `• Errors: ${stats.error} ❌\n`;
+        }
+
+        if (hasPending && pendingRows.length > 0) {
+            summaryMessage += `\n**Next Up:**\n`;
+            summaryMessage += pendingRows.slice(0, 3).map(r => `• ${r.main_keyword}`).join('\n');
+            if (stats.pending > 3) {
+                summaryMessage += `\n• ...and ${stats.pending - 3} more`;
+            }
+        }
+
         return {
-            type: 'spreadsheet_check',
-            message: `I'll check your spreadsheet for new topics to process.`,
-            actions: [{
-                type: 'spreadsheet_check',
-                label: 'Check Spreadsheet',
-                params: {}
-            }],
-            suggestions: ['Process all pending', 'How does this work?', 'Show me my sheet']
+            type: 'spreadsheet_summary',
+            message: summaryMessage,
+            actions: hasPending ? [
+                {
+                    type: 'process_spreadsheet_pending',
+                    label: `⚡ Process All ${stats.pending} Pending`,
+                    params: {}
+                },
+                {
+                    type: 'navigate',
+                    label: '📋 Open Spreadsheet',
+                    params: { path: '/dashboard/spreadsheet-simple.html' }
+                }
+            ] : [
+                {
+                    type: 'navigate',
+                    label: '📋 Open Spreadsheet',
+                    params: { path: '/dashboard/spreadsheet-simple.html' }
+                }
+            ],
+            suggestions: hasPending ? 
+                ['Process all pending', 'Add new topic', 'Show me completed'] :
+                ['Add new topic', 'Import data', 'Get content ideas']
         };
     }
 
@@ -843,12 +952,230 @@ class SummonAgent {
     }
 
     /**
+     * Get user's spreadsheet data
+     */
+    async getUserSpreadsheet() {
+        try {
+            const rows = await db.prepare(`
+                SELECT * FROM spreadsheet_rows 
+                WHERE user_id = ? 
+                ORDER BY row_order ASC
+            `).all(this.userId);
+
+            const stats = {
+                total: rows.length,
+                pending: 0,
+                processing: 0,
+                done: 0,
+                error: 0
+            };
+
+            rows.forEach(row => {
+                const status = (row.status || 'PENDING').toLowerCase();
+                if (status === 'pending') stats.pending++;
+                else if (status === 'processing') stats.processing++;
+                else if (['done', 'completed', 'success', 'published'].includes(status)) stats.done++;
+                else if (['error', 'failed'].includes(status)) stats.error++;
+            });
+
+            return {
+                success: true,
+                data: { rows, stats }
+            };
+        } catch (err) {
+            console.error('GetUserSpreadsheet error:', err);
+            return {
+                success: false,
+                error: 'Failed to load spreadsheet data'
+            };
+        }
+    }
+
+    /**
+     * Get spreadsheet summary for user context
+     */
+    async getSpreadsheetSummary() {
+        const result = await this.getUserSpreadsheet();
+        if (!result.success) return result;
+
+        const { rows, stats } = result.data;
+        
+        // Get pending rows with keywords
+        const pendingRows = rows.filter(r => 
+            r.status === 'PENDING' && r.main_keyword
+        ).slice(0, 5);
+
+        // Get recent completed rows
+        const recentDone = rows.filter(r => 
+            ['DONE', 'COMPLETED', 'PUBLISHED'].includes(r.status)
+        ).slice(0, 3);
+
+        return {
+            success: true,
+            data: {
+                stats,
+                pendingRows: pendingRows.map(r => ({
+                    id: r.id,
+                    main_keyword: r.main_keyword,
+                    cluster_keywords: r.cluster_keywords,
+                    service_url: r.service_url
+                })),
+                recentDone: recentDone.map(r => ({
+                    id: r.id,
+                    main_keyword: r.main_keyword,
+                    wp_post_url: r.wp_post_url
+                })),
+                hasData: rows.length > 0,
+                hasPending: stats.pending > 0,
+                hasProcessing: stats.processing > 0
+            }
+        };
+    }
+
+    /**
+     * Update a spreadsheet row
+     */
+    async updateSpreadsheetRow(rowId, updates) {
+        try {
+            const allowedFields = ['service_url', 'main_keyword', 'cluster_keywords', 
+                                  'gdocs_link', 'wp_post_url', 'status', 'feature_image'];
+            
+            const setClauses = [];
+            const params = [];
+            
+            for (const [key, value] of Object.entries(updates)) {
+                if (allowedFields.includes(key)) {
+                    setClauses.push(`${key} = ?`);
+                    params.push(key === 'status' ? value.toUpperCase() : value);
+                }
+            }
+
+            if (setClauses.length === 0) {
+                return { success: false, error: 'No valid fields to update' };
+            }
+
+            params.push(rowId, this.userId);
+
+            await db.prepare(`
+                UPDATE spreadsheet_rows 
+                SET ${setClauses.join(', ')}, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ? AND user_id = ?
+            `).run(...params);
+
+            return { success: true, message: 'Row updated successfully' };
+        } catch (err) {
+            console.error('UpdateSpreadsheetRow error:', err);
+            return { success: false, error: err.message };
+        }
+    }
+
+    /**
+     * Process a spreadsheet row with AI
+     */
+    async processSpreadsheetRow(rowId) {
+        try {
+            // Get the row
+            const row = await db.prepare(`
+                SELECT * FROM spreadsheet_rows 
+                WHERE id = ? AND user_id = ?
+            `).get(rowId, this.userId);
+
+            if (!row) {
+                return { success: false, error: 'Row not found' };
+            }
+
+            if (!row.main_keyword) {
+                return { success: false, error: 'No main keyword found in this row' };
+            }
+
+            // Update status to PROCESSING
+            await this.updateSpreadsheetRow(rowId, { status: 'PROCESSING' });
+
+            // Generate article using existing workflow
+            const workflowResult = await this.startContentWorkflow(row.main_keyword);
+            
+            if (!workflowResult.success) {
+                await this.updateSpreadsheetRow(rowId, { status: 'ERROR' });
+                return {
+                    success: false,
+                    error: workflowResult.error || 'Failed to start content workflow'
+                };
+            }
+
+            // Generate the article
+            const generateResult = await this.generateArticle(row.main_keyword);
+            
+            if (!generateResult.success) {
+                await this.updateSpreadsheetRow(rowId, { status: 'ERROR' });
+                return {
+                    success: false,
+                    error: generateResult.error || 'Failed to generate article'
+                };
+            }
+
+            // Save the article
+            const articleData = generateResult.data;
+            const saveResult = await this.saveArticle(articleData);
+            
+            if (!saveResult.success) {
+                await this.updateSpreadsheetRow(rowId, { status: 'ERROR' });
+                return {
+                    success: false,
+                    error: saveResult.error || 'Failed to save article'
+                };
+            }
+
+            // Update row with success status and article info
+            await this.updateSpreadsheetRow(rowId, { 
+                status: 'DONE',
+                wp_post_url: saveResult.wpUrl || ''
+            });
+
+            return {
+                success: true,
+                message: `✅ Successfully processed "${row.main_keyword}"`,
+                data: {
+                    rowId,
+                    articleId: saveResult.articleId,
+                    title: articleData.title,
+                    keyword: row.main_keyword
+                }
+            };
+        } catch (err) {
+            console.error('ProcessSpreadsheetRow error:', err);
+            await this.updateSpreadsheetRow(rowId, { status: 'ERROR' });
+            return {
+                success: false,
+                error: err.message || 'Failed to process row'
+            };
+        }
+    }
+
+    /**
      * Execute action from user
      */
     async executeAction(action, params) {
         const SpreadsheetAgent = require('./spreadsheetAgent');
 
         switch (action) {
+            case 'get_user_spreadsheet':
+                return await this.getUserSpreadsheet();
+
+            case 'update_spreadsheet_row':
+                if (params.rowId && params.updates) {
+                    return await this.updateSpreadsheetRow(params.rowId, params.updates);
+                }
+                return { success: false, error: 'Row ID and updates required' };
+
+            case 'process_spreadsheet_row':
+                if (params.rowId) {
+                    return await this.processSpreadsheetRow(params.rowId);
+                }
+                return { success: false, error: 'Row ID required' };
+
+            case 'get_spreadsheet_summary':
+                return await this.getSpreadsheetSummary();
+
             case 'start_content_workflow':
                 if (params.keyword) {
                     return await this.startContentWorkflow(params.keyword, params);
