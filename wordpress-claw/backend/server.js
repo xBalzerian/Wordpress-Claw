@@ -18,6 +18,7 @@ const articlesRoutes = require('./routes/articles');
 const clawbotRoutes = require('./routes/clawbot');
 const spreadsheetRoutes = require('./routes/spreadsheet');
 const spreadsheetSimpleRoutes = require('./routes/spreadsheet-simple');
+const contentQueueRoutes = require('./routes/content-queue');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -97,6 +98,7 @@ app.use('/api/articles', articlesRoutes);
 app.use('/api/clawbot', clawbotRoutes);
 app.use('/api/spreadsheet', spreadsheetRoutes);
 app.use('/api/spreadsheet-simple', spreadsheetSimpleRoutes);
+app.use('/api/content-queue', contentQueueRoutes);
 
 // Serve spreadsheet-simple.html from the API route (server-rendered, no JS)
 // The router handles the full path

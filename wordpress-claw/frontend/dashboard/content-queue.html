@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Queue - WordPress Claw</title>
+    <meta name="description" content="Manage your content queue - add topics, track status, and process with AI.">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E53935;
+            --primary-dark: #C62828;
+            --text: #1a1a1a;
+            --text-secondary: #666;
+            --bg: #f8f9fa;
+            --bg-card: #ffffff;
+            --border: #e5e5e5;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            --info: #2196f3;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--bg);
+        }
+
+        /* Layout */
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-logo img {
+            height: 72px;
+            width: auto;
+            max-width: 220px;
+            object-fit: contain;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: rgba(229, 57, 53, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .user-menu:hover {
+            background: var(--bg);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-tier {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: capitalize;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Add Form Card */
+        .add-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .add-card h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #388e3c;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Queue List */
+        .queue-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .queue-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .queue-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .queue-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .queue-list {
+            padding: 0;
+        }
+
+        .queue-item {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: background 0.2s;
+        }
+
+        .queue-item:last-child {
+            border-bottom: none;
+        }
+
+        .queue-item:hover {
+            background: var(--bg);
+        }
+
+        .queue-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .queue-item-keyword {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .queue-item-meta {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .queue-item-meta span {
+            margin-right: 12px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .status-processing {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .status-done {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .queue-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 60px 24px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        /* Loading State */
+        .loading {
+            padding: 40px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 16px 20px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error);
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--info);
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 101;
+            width: 44px;
+            height: 44px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: flex;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+                padding: 80px 16px 16px;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .queue-item {
+                flex-wrap: wrap;
+            }
+            .queue-item-actions {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+    <div class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+    
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <img src="../assets/logo.png" alt="WordPress Claw">
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="index.html" class="nav-item">
+                        <span class="nav-icon">📊</span>
+                        Dashboard
+                    </a>
+                    <a href="articles.html" class="nav-item">
+                        <span class="nav-icon">📝</span>
+                        Articles
+                    </a>
+                    <a href="clawbot.html" class="nav-item">
+                        <span class="nav-icon">🤖</span>
+                        ClawBot
+                    </a>
+                    <a href="content-queue.html" class="nav-item active">
+                        <span class="nav-icon">📋</span>
+                        Content Queue
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a href="business-profile.html" class="nav-item">
+                        <span class="nav-icon">🏢</span>
+                        Business Profile
+                    </a>
+                    <a href="connections.html" class="nav-item">
+                        <span class="nav-icon">🔗</span>
+                        Connections
+                    </a>
+                    <a href="billing.html" class="nav-item">
+                        <span class="nav-icon">💳</span>
+                        Billing
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-menu" onclick="logout()">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">User</div>
+                        <div class="user-tier" id="userTier">Free</div>
+                    </div>
+                    <span>🚪</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="page-header">
+                <h1>Content Queue</h1>
+                <p>Add topics, track status, and process with AI.</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statTotal">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statPending" style="color: var(--warning);">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statProcessing" style="color: var(--info);">0</div>
+                    <div class="stat-label">Processing</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statDone" style="color: var(--success);">0</div>
+                    <div class="stat-label">Done</div>
+                </div>
+            </div>
+
+            <!-- Add New Form -->
+            <div class="add-card">
+                <h2>Add New Topic</h2>
+                <form id="addForm" onsubmit="addItem(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mainKeyword">Main Keyword *</label>
+                            <input type="text" id="mainKeyword" placeholder="e.g., best wordpress plugins" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="serviceUrl">Service URL</label>
+                            <input type="url" id="serviceUrl" placeholder="https://example.com/service">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="clusterKeywords">Cluster Keywords</label>
+                            <textarea id="clusterKeywords" placeholder="Enter related keywords, separated by commas..."></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <span>➕</span> Add to Queue
+                    </button>
+                </form>
+            </div>
+
+            <!-- Queue List -->
+            <div class="queue-card">
+                <div class="queue-header">
+                    <h2>Queue Items</h2>
+                    <div class="queue-actions">
+                        <button class="btn btn-success btn-sm" onclick="processAllPending()">
+                            <span>⚡</span> Process All Pending
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="loadQueue()">
+                            <span>🔄</span> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="queue-list" id="queueList">
+                    <div class="loading">
+                        <span class="spinner"></span> Loading...
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = '';
+        let queueData = [];
+
+        // Check auth
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        // Load user data
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'User';
+        document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
+        document.getElementById('userAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
+
+        // Load queue data
+        async function loadQueue() {
+            try {
+                const response = await fetch(`${API_URL}/api/content-queue`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    queueData = data.data.items;
+                    renderQueue(queueData);
+                    renderStats(data.data.counts);
+                } else {
+                    showToast('Failed to load queue', 'error');
+                }
+            } catch (err) {
+                console.error('Load queue error:', err);
+                showToast('Failed to load queue', 'error');
+            }
+        }
+
+        // Render stats
+        function renderStats(counts) {
+            document.getElementById('statTotal').textContent = counts.total || 0;
+            document.getElementById('statPending').textContent = counts.pending || 0;
+            document.getElementById('statProcessing').textContent = counts.processing || 0;
+            document.getElementById('statDone').textContent = counts.done || 0;
+        }
+
+        // Render queue list
+        function renderQueue(items) {
+            const container = document.getElementById('queueList');
+            
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <h3>Your queue is empty</h3>
+                        <p>Add your first topic above to get started.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = items.map(item => `
+                <div class="queue-item" data-id="${item.id}">
+                    <div class="queue-item-info">
+                        <div class="queue-item-keyword">${escapeHtml(item.main_keyword)}</div>
+                        <div class="queue-item-meta">
+                            ${item.service_url ? `<span>🔗 ${escapeHtml(item.service_url)}</span>` : ''}
+                            ${item.cluster_keywords ? `<span>🏷️ ${escapeHtml(item.cluster_keywords.substring(0, 50))}${item.cluster_keywords.length > 50 ? '...' : ''}</span>` : ''}
+                            <span>📅 ${new Date(item.created_at).toLocaleDateString()}</span>
+                        </div>
+                        ${item.wp_post_url ? `<div class="queue-item-meta" style="margin-top: 4px;"><a href="${item.wp_post_url}" target="_blank" style="color: var(--success);">🔗 View Published Post</a></div>` : ''}
+                    </div>
+                    <span class="status-badge status-${item.status}">${item.status}</span>
+                    <div class="queue-item-actions">
+                        ${item.status === 'pending' ? `
+                            <button class="btn btn-primary btn-sm" onclick="processItem(${item.id})">
+                                <span>⚡</span> Process
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-secondary btn-sm" onclick="deleteItem(${item.id})">
+                            <span>🗑️</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Add new item
+        async function addItem(event) {
+            event.preventDefault();
+            
+            const mainKeyword = document.getElementById('mainKeyword').value.trim();
+            const serviceUrl = document.getElementById('serviceUrl').value.trim();
+            const clusterKeywords = document.getElementById('clusterKeywords').value.trim();
+
+            if (!mainKeyword) {
+                showToast('Main keyword is required', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/content-queue`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        main_keyword: mainKeyword,
+                        service_url: serviceUrl || null,
+                        cluster_keywords: clusterKeywords || null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Item added to queue', 'success');
+                    document.getElementById('addForm').reset();
+                    loadQueue();
+                } else {
+                    showToast(data.error || 'Failed to add item', 'error');
+                }
+            } catch (err) {
+                console.error('Add item error:', err);
+                showToast('Failed to add item', 'error');
+            }
+        }
+
+        // Process single item
+        async function processItem(id) {
+            if (!confirm('Process this item with AI? This will use 1 credit.')) {
+                return;
+            }
+
+            // Update UI to show processing
+            const itemEl = document.querySelector(`[data-id="${id}"]`);
+            if (itemEl) {
+                const statusBadge = itemEl.querySelector('.status-badge');
+                statusBadge.className = 'status-badge status-processing';
+                statusBadge.textContent = 'processing';
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/content-queue/${id}/process`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Processing started', 'info');
+                    // Poll for updates
+                    setTimeout(loadQueue, 3000);
+                } else {
+                    showToast(data.error || 'Failed to start processing', 'error');
+                    loadQueue();
+                }
+            } catch (err) {
+                console.error('Process item error:', err);
+                showToast('Failed to process item', 'error');
+                loadQueue();
+            }
+        }
+
+        // Process all pending items
+        async function processAllPending() {
+            const pendingCount = parseInt(document.getElementById('statPending').textContent);
+            
+            if (pendingCount === 0) {
+                showToast('No pending items to process', 'info');
+                return;
+            }
+
+            if (!confirm(`Process all ${pendingCount} pending items? This will use ${pendingCount} credits.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/content-queue/process-all`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    loadQueue();
+                    // Poll for updates
+                    setInterval(loadQueue, 5000);
+                } else {
+                    showToast(data.error || 'Failed to process items', 'error');
+                }
+            } catch (err) {
+                console.error('Process all error:', err);
+                showToast('Failed to process items', 'error');
+            }
+        }
+
+        // Delete item
+        async function deleteItem(id) {
+            if (!confirm('Delete this item?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/content-queue/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Item deleted', 'success');
+                    loadQueue();
+                } else {
+                    showToast(data.error || 'Failed to delete item', 'error');
+                }
+            } catch (err) {
+                console.error('Delete item error:', err);
+                showToast('Failed to delete item', 'error');
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+                <span>${escapeHtml(message)}</span>
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
+
+        function toggleMobileMenu() {
+            document.querySelector('.sidebar').classList.toggle('show');
+            document.querySelector('.sidebar-overlay').classList.toggle('show');
+        }
+
+        // Load on page load
+        loadQueue();
+    </script>
+</body>
+</html>
