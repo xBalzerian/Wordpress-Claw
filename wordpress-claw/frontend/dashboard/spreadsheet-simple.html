@@ -3,1172 +3,454 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spreadsheet Editor - WordPress Claw</title>
-    <meta name="description" content="Built-in spreadsheet editor for managing content workflow. Import from Google Sheets, work locally, export back.">
+    <title>Simple Spreadsheet - WordPress Claw</title>
     <meta name="robots" content="noindex, nofollow">
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #E53935;
-            --primary-dark: #C62828;
-            --primary-light: #FFEBEE;
-            --primary-subtle: rgba(229, 57, 53, 0.08);
-            --text: #1a1a1a;
-            --text-secondary: #666;
-            --text-muted: #999;
-            --bg: #f8f9fa;
-            --bg-card: #ffffff;
-            --bg-hover: #f5f5f5;
-            --border: #e5e5e5;
-            --border-light: #f0f0f0;
-            --border-focus: #E53935;
-            --success: #4caf50;
-            --success-light: #E8F5E9;
-            --success-bg: rgba(76, 175, 80, 0.1);
-            --warning: #ff9800;
-            --warning-light: #FFF3E0;
-            --warning-bg: rgba(255, 152, 0, 0.1);
-            --error: #f44336;
-            --error-light: #FFEBEE;
-            --error-bg: rgba(244, 67, 54, 0.1);
-            --info: #2196F3;
-            --info-light: #E3F2FD;
-            --info-bg: rgba(33, 150, 243, 0.1);
-            --shadow: 0 2px 8px rgba(0,0,0,0.06);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
-            --radius-sm: 6px;
-            --radius-md: 10px;
-            --radius-lg: 16px;
-            --transition: all 0.2s ease;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: var(--text);
-            line-height: 1.6;
-            background: var(--bg);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
         }
-
-        .dashboard {
-            display: flex;
-            min-height: 100vh;
-        }
-
+        
+        /* Layout */
+        .dashboard { display: flex; min-height: 100vh; }
+        
         .sidebar {
-            width: 260px;
-            background: var(--bg-card);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
+            width: 240px;
+            background: #fff;
+            border-right: 1px solid #ddd;
             position: fixed;
             height: 100vh;
-            z-index: 100;
+            overflow-y: auto;
         }
-
+        
         .sidebar-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border);
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
         }
-
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
+        
         .sidebar-logo img {
-            height: 72px;
-            width: auto;
-            max-width: 220px;
-            object-fit: contain;
+            max-width: 180px;
+            height: auto;
         }
-
-        .sidebar-nav {
-            flex: 1;
-            padding: 16px 12px;
-        }
-
-        .nav-section {
-            margin-bottom: 24px;
-        }
-
+        
+        .sidebar-nav { padding: 16px; }
+        
+        .nav-section { margin-bottom: 20px; }
+        
         .nav-section-title {
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-            padding: 0 12px;
+            color: #666;
+            padding: 0 8px;
             margin-bottom: 8px;
         }
-
+        
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             padding: 10px 12px;
-            border-radius: var(--radius-md);
+            border-radius: 6px;
             text-decoration: none;
-            color: var(--text-secondary);
+            color: #666;
             font-size: 14px;
-            font-weight: 500;
-            transition: var(--transition);
+            margin-bottom: 4px;
         }
-
-        .nav-item:hover {
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .nav-item.active {
-            background: var(--primary-subtle);
-            color: var(--primary);
-        }
-
-        .nav-icon {
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
+        
+        .nav-item:hover { background: #f5f5f5; color: #333; }
+        .nav-item.active { background: #ffebee; color: #c62828; }
+        
         .sidebar-footer {
             padding: 16px;
-            border-top: 1px solid var(--border);
+            border-top: 1px solid #ddd;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
         }
-
+        
         .user-menu {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 8px;
-            border-radius: var(--radius-md);
             cursor: pointer;
-            transition: background 0.2s;
+            padding: 8px;
+            border-radius: 6px;
         }
-
-        .user-menu:hover {
-            background: var(--bg);
-        }
-
+        
+        .user-menu:hover { background: #f5f5f5; }
+        
         .user-avatar {
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            background: var(--primary);
+            background: #c62828;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 14px;
         }
-
-        .user-info {
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .user-name {
-            font-size: 14px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .user-tier {
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-transform: capitalize;
-        }
-
+        
+        .user-name { font-size: 14px; font-weight: 600; }
+        .user-tier { font-size: 12px; color: #666; }
+        
         .main {
             flex: 1;
-            margin-left: 260px;
-            padding: 32px;
+            margin-left: 240px;
+            padding: 24px;
         }
-
+        
+        /* Header */
         .page-header {
-            margin-bottom: 28px;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 24px;
-        }
-
-        .page-header-content h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .page-header-content p {
-            color: var(--text-secondary);
-            font-size: 15px;
-        }
-
-        .page-header-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        /* ClawBot Assistant Card */
-        .clawbot-card {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border-radius: var(--radius-lg);
-            padding: 20px 24px;
-            color: white;
             margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            box-shadow: var(--shadow-md);
         }
-
-        .clawbot-avatar {
-            width: 56px;
-            height: 56px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            flex-shrink: 0;
-        }
-
-        .clawbot-content {
-            flex: 1;
-        }
-
-        .clawbot-content h3 {
-            font-size: 16px;
-            font-weight: 600;
+        
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 700;
             margin-bottom: 4px;
         }
-
-        .clawbot-content p {
+        
+        .page-header p { color: #666; font-size: 14px; }
+        
+        .page-actions { display: flex; gap: 10px; }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 16px;
+            border-radius: 6px;
             font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: 12px;
-        }
-
-        .clawbot-suggestions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .clawbot-suggestion {
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
-            transition: var(--transition);
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-
-        .clawbot-suggestion:hover {
-            background: rgba(255,255,255,0.25);
+        
+        .btn-primary {
+            background: #c62828;
+            color: white;
         }
-
-        /* Stats Grid */
+        
+        .btn-primary:hover { background: #b71c1c; }
+        
+        .btn-secondary {
+            background: #fff;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-secondary:hover { background: #f5f5f5; }
+        
+        .btn-danger {
+            background: #fff;
+            color: #c62828;
+            border: 1px solid #c62828;
+        }
+        
+        .btn-danger:hover { background: #ffebee; }
+        
+        .btn-small { padding: 6px 12px; font-size: 13px; }
+        
+        /* Stats */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 16px;
             margin-bottom: 24px;
         }
-
+        
         .stat-card {
-            background: var(--bg-card);
-            border-radius: var(--radius-md);
-            padding: 20px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-light);
-            transition: var(--transition);
+            background: #fff;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
         }
-
-        .stat-card:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateY(-2px);
-        }
-
-        .stat-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
+        
         .stat-label {
             font-size: 12px;
-            color: var(--text-secondary);
-            font-weight: 500;
+            color: #666;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: 600;
         }
-
-        .stat-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-
-        .stat-icon.total { background: var(--primary-subtle); }
-        .stat-icon.pending { background: var(--warning-bg); }
-        .stat-icon.processing { background: var(--info-bg); }
-        .stat-icon.completed { background: var(--success-bg); }
-
+        
         .stat-value {
             font-size: 28px;
             font-weight: 700;
-            color: var(--text);
+            margin-top: 4px;
         }
-
-        /* Action Bar */
-        .action-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px 18px;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            font-size: 14px;
-            text-decoration: none;
-            transition: var(--transition);
-            cursor: pointer;
-            border: none;
-            white-space: nowrap;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 2px 4px rgba(229, 57, 53, 0.2);
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            box-shadow: 0 4px 8px rgba(229, 57, 53, 0.3);
-            transform: translateY(-1px);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .btn-secondary {
-            background: var(--bg-card);
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            background: var(--bg-hover);
-            border-color: var(--text-secondary);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #43a047;
-        }
-
-        .btn-danger {
-            background: var(--bg-card);
-            color: var(--error);
-            border: 1px solid var(--error);
-        }
-
-        .btn-danger:hover {
-            background: var(--error);
-            color: white;
-        }
-
-        .btn-ghost {
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid transparent;
-        }
-
-        .btn-ghost:hover {
-            background: var(--bg-hover);
-            color: var(--text);
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 13px;
-        }
-
-        /* Filter Bar */
+        
+        /* Filters */
         .filter-bar {
             display: flex;
             gap: 8px;
             margin-bottom: 16px;
             align-items: center;
-            flex-wrap: wrap;
         }
-
-        .filter-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-            font-weight: 500;
-            margin-right: 4px;
-        }
-
+        
+        .filter-label { font-size: 13px; color: #666; font-weight: 500; }
+        
         .filter-btn {
             padding: 6px 14px;
             border-radius: 20px;
             font-size: 13px;
-            font-weight: 500;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
+            border: 1px solid #ddd;
+            background: #fff;
             cursor: pointer;
-            transition: var(--transition);
-            color: var(--text-secondary);
         }
-
-        .filter-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .filter-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        /* Spreadsheet Container */
+        
+        .filter-btn:hover { border-color: #c62828; color: #c62828; }
+        .filter-btn.active { background: #c62828; color: white; border-color: #c62828; }
+        
+        /* Table */
         .spreadsheet-container {
-            background: var(--bg-card);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow);
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #ddd;
             overflow: hidden;
-            border: 1px solid var(--border-light);
         }
-
+        
         .spreadsheet-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border-light);
+            padding: 16px 20px;
+            border-bottom: 1px solid #ddd;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--bg);
+            background: #f9f9f9;
         }
-
-        .spreadsheet-header h2 {
-            font-size: 16px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .spreadsheet-info {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
+        
+        .spreadsheet-header h2 { font-size: 16px; font-weight: 600; }
+        .spreadsheet-info { font-size: 13px; color: #666; }
+        
         .spreadsheet-table-wrapper {
             overflow-x: auto;
-            max-height: 70vh;
+            max-height: 65vh;
             overflow-y: auto;
         }
-
+        
         .spreadsheet-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
+            border-collapse: collapse;
             font-size: 14px;
         }
-
+        
         .spreadsheet-table thead {
             position: sticky;
             top: 0;
             z-index: 10;
         }
-
+        
         .spreadsheet-table th {
-            background: var(--bg);
-            padding: 14px 16px;
+            background: #f5f5f5;
+            padding: 12px 16px;
             text-align: left;
             font-weight: 600;
-            font-size: 11px;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-            border-bottom: 1px solid var(--border);
+            color: #666;
+            border-bottom: 1px solid #ddd;
             white-space: nowrap;
-            position: relative;
         }
-
-        .spreadsheet-table th:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 1px;
-            height: 20px;
-            background: var(--border);
-        }
-
+        
         .spreadsheet-table td {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-light);
-            vertical-align: top;
-            transition: background 0.15s;
+            padding: 8px 16px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
         }
-
-        .spreadsheet-table tbody tr:hover td {
-            background: var(--primary-subtle);
-        }
-
-        .spreadsheet-table tbody tr:hover .row-actions {
-            opacity: 1;
-        }
-
+        
+        .spreadsheet-table tbody tr:hover { background: #fafafa; }
+        
         /* Cell Inputs */
         .cell-input {
             width: 100%;
             padding: 8px 10px;
-            border: 2px solid transparent;
-            border-radius: var(--radius-sm);
+            border: 1px solid transparent;
+            border-radius: 4px;
             font-size: 14px;
             font-family: inherit;
             background: transparent;
-            transition: var(--transition);
-            resize: none;
-            min-height: 36px;
-            line-height: 1.5;
         }
-
-        .cell-input:hover {
-            background: var(--bg-card);
-            border-color: var(--border);
-        }
-
+        
+        .cell-input:hover { background: #fff; border-color: #ddd; }
         .cell-input:focus {
             outline: none;
-            background: var(--bg-card);
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.1);
+            background: #fff;
+            border-color: #c62828;
+            box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.1);
         }
-
-        .cell-input.url-cell {
-            font-size: 13px;
-            color: var(--primary);
-            font-family: 'Monaco', 'Menlo', monospace;
-        }
-
-        .cell-input.url-cell::placeholder {
-            color: var(--text-muted);
-        }
-
-        /* Keyword Tags */
-        .keyword-cell-wrapper {
-            min-width: 200px;
-        }
-
-        .keyword-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            padding: 4px;
-            min-height: 36px;
-            align-items: center;
-        }
-
-        .keyword-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 10px;
-            background: var(--primary-subtle);
-            color: var(--primary);
-            border-radius: 16px;
+        
+        .cell-input.url-cell { font-family: monospace; font-size: 12px; }
+        
+        /* Status Select */
+        .status-select {
+            padding: 6px 10px;
+            border-radius: 4px;
             font-size: 12px;
-            font-weight: 500;
-            border: 1px solid rgba(229, 57, 53, 0.15);
-            animation: tagIn 0.2s ease;
-        }
-
-        @keyframes tagIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        .keyword-tag .remove-tag {
-            width: 14px;
-            height: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 11px;
-            opacity: 0.6;
-            transition: var(--transition);
-        }
-
-        .keyword-tag .remove-tag:hover {
-            opacity: 1;
-            background: rgba(229, 57, 53, 0.2);
-        }
-
-        .keyword-input {
-            border: none;
-            background: transparent;
-            font-size: 13px;
-            padding: 4px 6px;
-            min-width: 80px;
-            flex: 1;
-            outline: none;
-        }
-
-        .keyword-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .keyword-dropdown-trigger {
-            padding: 4px 8px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 12px;
-            cursor: pointer;
-            color: var(--text-secondary);
-            transition: var(--transition);
-        }
-
-        .keyword-dropdown-trigger:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        /* Keyword Dropdown */
-        .keyword-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-lg);
-            z-index: 100;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-            margin-top: 4px;
-        }
-
-        .keyword-dropdown.show {
-            display: block;
-        }
-
-        .keyword-dropdown-item {
-            padding: 10px 14px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .keyword-dropdown-item:hover {
-            background: var(--primary-subtle);
-        }
-
-        .keyword-dropdown-item .add-icon {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        /* Status Badge */
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border: none;
+            border: 1px solid transparent;
             cursor: pointer;
-            transition: var(--transition);
             font-family: inherit;
         }
-
-        .status-badge::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-        }
-
-        .status-pending {
-            background: var(--warning-bg);
-            color: #E65100;
-        }
-
-        .status-pending::before {
-            background: #E65100;
-        }
-
-        .status-processing {
-            background: var(--info-bg);
-            color: #0D47A1;
-        }
-
-        .status-processing::before {
-            background: #0D47A1;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .status-done {
-            background: var(--success-bg);
-            color: #1B5E20;
-        }
-
-        .status-done::before {
-            background: #1B5E20;
-        }
-
-        .status-error {
-            background: var(--error-bg);
-            color: #B71C1C;
-        }
-
-        .status-error::before {
-            background: #B71C1C;
-        }
-
+        
+        .status-pending { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
+        .status-processing { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
+        .status-done { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+        .status-error { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
+        
         /* Row Actions */
-        .row-actions {
-            display: flex;
-            gap: 6px;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-
+        .row-actions { display: flex; gap: 6px; }
+        
         .btn-icon {
             width: 32px;
             height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-            background: var(--bg-card);
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background: #fff;
             cursor: pointer;
             font-size: 14px;
-            transition: var(--transition);
         }
-
-        .btn-icon:hover {
-            background: var(--bg-hover);
-            border-color: var(--primary);
-            transform: translateY(-1px);
-        }
-
-        .btn-icon.process {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .btn-icon.process:hover {
-            background: var(--primary-dark);
-        }
-
-        .btn-icon.delete:hover {
-            background: var(--error);
-            color: white;
-            border-color: var(--error);
-        }
-
-        .btn-icon.clawbot {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .btn-icon.clawbot:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
+        
+        .btn-icon:hover { background: #f5f5f5; }
+        .btn-icon.process { background: #c62828; color: white; border-color: #c62828; }
+        .btn-icon.process:hover { background: #b71c1c; }
+        .btn-icon.delete:hover { background: #ffebee; border-color: #c62828; }
+        
         /* Empty State */
         .empty-state {
             text-align: center;
-            padding: 80px 24px;
-            color: var(--text-secondary);
+            padding: 60px 20px;
+            color: #666;
         }
-
-        .empty-state-icon {
-            width: 80px;
-            height: 80px;
-            background: var(--primary-subtle);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            margin: 0 auto 24px;
-        }
-
-        .empty-state h3 {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: var(--text);
-        }
-
-        .empty-state p {
-            max-width: 400px;
-            margin: 0 auto 24px;
-            line-height: 1.6;
-        }
-
-        /* Alert */
-        .alert {
-            padding: 14px 18px;
-            border-radius: var(--radius-md);
-            font-size: 14px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border: 1px solid transparent;
-        }
-
-        .alert.error {
-            background: var(--error-light);
-            color: var(--error);
-            border-color: rgba(244, 67, 54, 0.2);
-        }
-
-        .alert.success {
-            background: var(--success-light);
-            color: var(--success);
-            border-color: rgba(76, 175, 80, 0.2);
-        }
-
-        .alert.info {
-            background: var(--info-light);
-            color: var(--info);
-            border-color: rgba(33, 150, 243, 0.2);
-        }
-
-        .alert.warning {
-            background: var(--warning-light);
-            color: var(--warning);
-            border-color: rgba(255, 152, 0, 0.2);
-        }
-
+        
+        .empty-state h3 { font-size: 20px; margin-bottom: 8px; color: #333; }
+        .empty-state p { margin-bottom: 20px; }
+        
         /* Loading */
         .loading {
             text-align: center;
-            padding: 60px;
-            color: var(--text-secondary);
+            padding: 40px;
+            color: #666;
         }
-
-        .spinner {
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
+        
+        /* Alert */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 14px;
         }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
+        
+        .alert.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .alert.error { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+        .alert.info { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+        
         /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.5);
             z-index: 1000;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            backdrop-filter: blur(4px);
         }
-
-        .modal-overlay.show {
-            display: flex;
-        }
-
+        
+        .modal-overlay.show { display: flex; }
+        
         .modal {
-            background: var(--bg-card);
-            border-radius: var(--radius-lg);
+            background: #fff;
+            border-radius: 8px;
             width: 100%;
-            max-width: 700px;
+            max-width: 600px;
             max-height: 90vh;
             overflow: hidden;
-            box-shadow: var(--shadow-lg);
-            animation: modalIn 0.2s ease;
         }
-
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
+        
         .modal-header {
-            padding: 24px 24px 0;
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
         }
-
-        .modal-header h3 {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .modal-header p {
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-
-        .modal-body {
-            padding: 24px;
-            overflow-y: auto;
-            max-height: 60vh;
-        }
-
+        
+        .modal-header h3 { font-size: 18px; margin-bottom: 4px; }
+        .modal-header p { color: #666; font-size: 14px; }
+        
+        .modal-body { padding: 20px; }
         .modal-footer {
-            padding: 16px 24px 24px;
+            padding: 16px 20px;
+            border-top: 1px solid #ddd;
             display: flex;
             justify-content: flex-end;
-            gap: 12px;
-            border-top: 1px solid var(--border-light);
+            gap: 10px;
         }
-
+        
         .import-textarea {
             width: 100%;
-            min-height: 200px;
-            padding: 16px;
-            border: 2px solid var(--border);
-            border-radius: var(--radius-md);
-            font-family: 'Monaco', 'Menlo', monospace;
+            min-height: 150px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: monospace;
             font-size: 13px;
-            line-height: 1.5;
             resize: vertical;
-            transition: var(--transition);
         }
-
+        
         .import-textarea:focus {
             outline: none;
-            border-color: var(--border-focus);
+            border-color: #c62828;
+            box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.1);
         }
-
-        .import-help {
-            margin-top: 16px;
-            padding: 16px;
-            background: var(--bg);
-            border-radius: var(--radius-md);
-            font-size: 13px;
-            border: 1px solid var(--border-light);
-        }
-
-        .import-help h4 {
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-        }
-
-        .import-help ul {
-            margin-left: 18px;
-            color: var(--text-secondary);
-        }
-
-        .import-help li {
-            margin-bottom: 6px;
-        }
-
-        .import-help code {
-            background: var(--bg-card);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 12px;
-            border: 1px solid var(--border);
-        }
-
-        /* Export Modal */
+        
         .export-content {
-            background: var(--bg);
+            background: #f5f5f5;
             padding: 16px;
-            border-radius: var(--radius-md);
-            font-family: 'Monaco', 'Menlo', monospace;
+            border-radius: 6px;
+            font-family: monospace;
             font-size: 12px;
-            line-height: 1.5;
             white-space: pre;
             overflow-x: auto;
             max-height: 300px;
             overflow-y: auto;
-            border: 1px solid var(--border);
+            border: 1px solid #ddd;
         }
-
-        /* Bulk Actions Bar */
-        .bulk-actions {
-            display: flex;
-            gap: 10px;
-            padding: 12px 24px;
-            background: var(--bg);
-            border-bottom: 1px solid var(--border-light);
-            align-items: center;
-        }
-
-        .bulk-actions-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
-            display: none;
-            position: fixed;
-            top: 16px;
-            left: 16px;
-            z-index: 101;
-            width: 44px;
-            height: 44px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: var(--shadow);
-        }
-
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 99;
-        }
-
-        .sidebar-overlay.show {
-            display: block;
-        }
-
+        
         /* Responsive */
-        @media (max-width: 1100px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
         }
-
+        
         @media (max-width: 768px) {
-            .mobile-menu-toggle { display: flex; }
-            .sidebar { 
-                transform: translateX(-100%); 
-                transition: transform 0.3s ease;
-            }
-            .sidebar.show { transform: translateX(0); }
-            .main { margin-left: 0; padding: 20px; padding-top: 80px; }
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
             .stats-grid { grid-template-columns: 1fr; }
+            .page-header { flex-direction: column; gap: 16px; }
             .spreadsheet-table { font-size: 12px; }
-            .spreadsheet-table th,
-            .spreadsheet-table td { padding: 10px 12px; }
-            .cell-input { font-size: 13px; }
-            .action-bar { flex-direction: column; }
-            .action-bar .btn { width: 100%; }
-            .page-header { flex-direction: column; }
-            .page-header-actions { width: 100%; }
-            .page-header-actions .btn { flex: 1; }
-            .clawbot-card { flex-direction: column; text-align: center; }
+            .spreadsheet-table th, .spreadsheet-table td { padding: 8px 12px; }
         }
     </style>
 </head>
 <body>
-    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
-    <div class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
-    
     <div class="dashboard">
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <a href="/" class="sidebar-logo">
-                    <img src="../assets/logo.png" alt="WordPress Claw Logo">
+                    <img src="../assets/logo.png" alt="WordPress Claw">
                 </a>
             </div>
             
@@ -1176,44 +458,29 @@
                 <div class="nav-section">
                     <div class="nav-section-title">Main</div>
                     <a href="index.html" class="nav-item">
-                        <span class="nav-icon">📊</span>
-                        Dashboard
+                        <span>📊</span> Dashboard
                     </a>
                     <a href="articles.html" class="nav-item">
-                        <span class="nav-icon">📝</span>
-                        Articles
+                        <span>📝</span> Articles
                     </a>
                     <a href="clawbot.html" class="nav-item">
-                        <span class="nav-icon">🤖</span>
-                        ClawBot
+                        <span>🤖</span> ClawBot
                     </a>
                     <a href="spreadsheet-simple.html" class="nav-item active">
-                        <span class="nav-icon">📋</span>
-                        Spreadsheet
+                        <span>📋</span> Spreadsheet
                     </a>
                 </div>
                 
                 <div class="nav-section">
                     <div class="nav-section-title">Settings</div>
                     <a href="business-profile.html" class="nav-item">
-                        <span class="nav-icon">🏢</span>
-                        Business Profile
+                        <span>🏢</span> Business Profile
                     </a>
                     <a href="connections.html" class="nav-item">
-                        <span class="nav-icon">🔗</span>
-                        Connections
+                        <span>🔗</span> Connections
                     </a>
                     <a href="billing.html" class="nav-item">
-                        <span class="nav-icon">💳</span>
-                        Billing
-                    </a>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-title">Help</div>
-                    <a href="../docs.html" class="nav-item" target="_blank">
-                        <span class="nav-icon">📚</span>
-                        Documentation
+                        <span>💳</span> Billing
                     </a>
                 </div>
             </nav>
@@ -1221,79 +488,53 @@
             <div class="sidebar-footer">
                 <div class="user-menu" onclick="logout()">
                     <div class="user-avatar" id="userAvatar">U</div>
-                    <div class="user-info">
+                    <div>
                         <div class="user-name" id="userName">User</div>
-                        <div class="user-tier" id="userTier">Free</div>
+                        <div class="user-tier" id="userTier">Free Plan</div>
                     </div>
-                    <span>🚪</span>
                 </div>
             </div>
         </aside>
 
+        <!-- Main Content -->
         <main class="main">
+            <!-- Header -->
             <div class="page-header">
-                <div class="page-header-content">
+                <div>
                     <h1>📋 Content Spreadsheet</h1>
-                    <p>Manage your content workflow. Import topics, track progress, and publish articles.</p>
+                    <p>Manage your content workflow with simple, reliable inputs.</p>
                 </div>
-                <div class="page-header-actions">
-                    <button class="btn btn-secondary" onclick="showImportModal()">
-                        📥 Import
-                    </button>
-                    <button class="btn btn-primary" onclick="addNewRow()">
-                        ➕ Add Row
-                    </button>
+                <div class="page-actions">
+                    <button class="btn btn-secondary" onclick="showImportModal()">📥 Import</button>
+                    <button class="btn btn-primary" onclick="addNewRow()">➕ Add Row</button>
                 </div>
             </div>
 
-            <!-- ClawBot Assistant Card -->
-            <div class="clawbot-card" id="clawbotCard" style="display: none;">
-                <div class="clawbot-avatar">🤖</div>
-                <div class="clawbot-content">
-                    <h3>ClawBot Assistant</h3>
-                    <p id="clawbotMessage">Loading your spreadsheet data...</p>
-                    <div class="clawbot-suggestions" id="clawbotSuggestions">
-                        <!-- Dynamic suggestions -->
-                    </div>
-                </div>
-            </div>
-
+            <!-- Alert Container -->
             <div id="alertContainer"></div>
 
-            <!-- Stats Grid -->
-            <div class="stats-grid" id="statsGrid">
+            <!-- Stats -->
+            <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-header">
-                        <span class="stat-label">Total Topics</span>
-                        <div class="stat-icon total">📊</div>
-                    </div>
+                    <div class="stat-label">Total Topics</div>
                     <div class="stat-value" id="totalCount">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-header">
-                        <span class="stat-label">Pending</span>
-                        <div class="stat-icon pending">⏳</div>
-                    </div>
+                    <div class="stat-label">Pending</div>
                     <div class="stat-value" id="pendingCount">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-header">
-                        <span class="stat-label">Processing</span>
-                        <div class="stat-icon processing">⚡</div>
-                    </div>
+                    <div class="stat-label">Processing</div>
                     <div class="stat-value" id="processingCount">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-header">
-                        <span class="stat-label">Completed</span>
-                        <div class="stat-icon completed">✅</div>
-                    </div>
+                    <div class="stat-label">Completed</div>
                     <div class="stat-value" id="completedCount">0</div>
                 </div>
             </div>
 
-            <!-- Filter Bar -->
-            <div class="filter-bar" id="filterBar">
+            <!-- Filters -->
+            <div class="filter-bar">
                 <span class="filter-label">Filter:</span>
                 <button class="filter-btn active" onclick="setFilter('all')" data-filter="all">All</button>
                 <button class="filter-btn" onclick="setFilter('pending')" data-filter="pending">Pending</button>
@@ -1302,60 +543,40 @@
                 <button class="filter-btn" onclick="setFilter('error')" data-filter="error">Error</button>
             </div>
 
-            <!-- Spreadsheet Container -->
+            <!-- Spreadsheet -->
             <div class="spreadsheet-container">
                 <div class="spreadsheet-header">
                     <div>
-                        <h2>📑 Content Queue</h2>
-                        <div class="spreadsheet-info" id="spreadsheetInfo">Click any cell to edit. Changes save automatically.</div>
+                        <h2>Content Queue</h2>
+                        <div class="spreadsheet-info">Click any cell to edit. Changes save automatically on blur.</div>
                     </div>
                     <div style="display: flex; gap: 8px;">
-                        <button class="btn btn-secondary btn-small" onclick="showExportModal()">
-                            📤 Export
-                        </button>
-                        <button class="btn btn-danger btn-small" onclick="clearAllData()">
-                            🗑️ Clear
-                        </button>
+                        <button class="btn btn-secondary btn-small" onclick="showExportModal()">📤 Export</button>
+                        <button class="btn btn-danger btn-small" onclick="clearAllData()">🗑️ Clear All</button>
                     </div>
-                </div>
-
-                <!-- Bulk Actions -->
-                <div class="bulk-actions" id="bulkActions" style="display: none;">
-                    <span class="bulk-actions-label">Bulk Actions:</span>
-                    <button class="btn btn-success btn-small" onclick="processAllPending()">
-                        ⚡ Process All Pending
-                    </button>
-                    <button class="btn btn-secondary btn-small" onclick="askClawBotBulk()">
-                        🤖 Ask ClawBot
-                    </button>
                 </div>
                 
                 <div class="spreadsheet-table-wrapper" id="tableContainer">
-                    <div class="loading" id="loadingState">
-                        <div class="spinner"></div>
-                        Loading spreadsheet data...
-                    </div>
-
+                    <div class="loading" id="loadingState">Loading spreadsheet data...</div>
+                    
                     <div class="empty-state" id="emptyState" style="display: none;">
-                        <div class="empty-state-icon">📋</div>
                         <h3>No Data Yet</h3>
-                        <p>Import data from Google Sheets or add rows manually to get started with your content workflow.</p>
-                        <br>
-                        <button class="btn btn-primary" onclick="showImportModal()">Import from Google Sheets</button>
+                        <p>Import data from Google Sheets or add rows manually.</p>
+                        <button class="btn btn-primary" onclick="showImportModal()">Import Data</button>
                         <button class="btn btn-secondary" onclick="addNewRow()" style="margin-left: 10px;">Add First Row</button>
                     </div>
-
+                    
                     <table class="spreadsheet-table" id="spreadsheetTable" style="display: none;">
                         <thead>
                             <tr>
-                                <th style="width: 180px;">Service URL</th>
-                                <th style="width: 200px;">Main Keyword</th>
-                                <th style="width: 250px;">Cluster Keywords</th>
-                                <th style="width: 150px;">GDocs Link</th>
-                                <th style="width: 150px;">WP Post URL</th>
-                                <th style="width: 120px;">Status</th>
-                                <th style="width: 150px;">Feature Image</th>
-                                <th style="width: 140px;">Actions</th>
+                                <th style="min-width: 180px;">Service URL</th>
+                                <th style="min-width: 150px;">Main Keyword</th>
+                                <th style="min-width: 200px;">Cluster Keywords</th>
+                                <th style="min-width: 150px;">GDocs Link</th>
+                                <th style="min-width: 150px;">WP Post URL</th>
+                                <th style="min-width: 120px;">Status</th>
+                                <th style="min-width: 150px;">Feature Image</th>
+                                <th style="min-width: 100px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">
@@ -1371,22 +592,11 @@
         <div class="modal">
             <div class="modal-header">
                 <h3>📥 Import from Google Sheets</h3>
-                <p>Copy and paste your data from Google Sheets below. We'll automatically detect the format.</p>
+                <p>Copy and paste your data below. Supports tab or comma separated values.</p>
             </div>
             <div class="modal-body">
-                <textarea class="import-textarea" id="importTextarea" placeholder="Service URL&#9;Main Keyword&#9;Cluster Keywords&#9;Status&#10;https://example.com&#9;keyword&#9;cluster1, cluster2&#9;PENDING"></textarea>
-                <div class="import-help">
-                    <h4>How to Import</h4>
-                    <ul>
-                        <li>Open your Google Sheets document</li>
-                        <li>Select and copy the data you want to import (including headers)</li>
-                        <li>Paste it in the box above</li>
-                        <li>We support both <code>tab-separated</code> and <code>comma-separated</code> formats</li>
-                    </ul>
-                    <p style="margin-top: 12px; color: var(--text-secondary);">
-                        <strong>Tip:</strong> Column headers are automatically mapped. We recognize variations like "Service URL", "service_url", "Main Keyword", "keyword", etc.
-                    </p>
-                </div>
+                <textarea class="import-textarea" id="importTextarea" placeholder="Service URL [tab] Main Keyword [tab] Cluster Keywords [tab] Status
+https://example.com [tab] keyword [tab] cluster1, cluster2 [tab] PENDING"></textarea>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="hideImportModal()">Cancel</button>
@@ -1400,18 +610,10 @@
         <div class="modal">
             <div class="modal-header">
                 <h3>📤 Export to Google Sheets</h3>
-                <p>Copy this data and paste it back into Google Sheets.</p>
+                <p>Copy this data and paste into Google Sheets.</p>
             </div>
             <div class="modal-body">
                 <div class="export-content" id="exportContent"></div>
-                <div class="import-help">
-                    <h4>How to Export</h4>
-                    <ul>
-                        <li>Click the "Copy to Clipboard" button below</li>
-                        <li>Open your Google Sheets document</li>
-                        <li>Click on cell A1 and paste</li>
-                    </ul>
-                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="hideExportModal()">Close</button>
@@ -1420,66 +622,33 @@
         </div>
     </div>
 
-    <!-- Ask ClawBot Modal -->
-    <div class="modal-overlay" id="clawbotModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>🤖 Ask ClawBot</h3>
-                <p id="clawbotModalSubtitle">Get AI assistance with this row</p>
-            </div>
-            <div class="modal-body">
-                <div id="clawbotModalContent" style="padding: 16px; background: var(--bg); border-radius: var(--radius-md); margin-bottom: 16px;">
-                    <p style="color: var(--text-secondary);">Select an action:</p>
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <button class="btn btn-primary" onclick="clawbotAction('process')" id="btnProcessRow">
-                        ⚡ Process This Topic
-                    </button>
-                    <button class="btn btn-secondary" onclick="clawbotAction('suggest')" id="btnSuggestKeywords">
-                        💡 Suggest Keywords
-                    </button>
-                    <button class="btn btn-secondary" onclick="clawbotAction('analyze')" id="btnAnalyze">
-                        🔍 Analyze Competitors
-                    </button>
-                    <button class="btn btn-ghost" onclick="hideClawbotModal()">
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
+        // Config
         const API_URL = '';
         const token = localStorage.getItem('token');
         if (!token) window.location.href = '/login.html';
 
+        // User info
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         document.getElementById('userName').textContent = user.name || 'User';
         document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
         document.getElementById('userAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
 
+        // State
         let currentData = [];
         let currentFilter = 'all';
-        let isProcessing = false;
-        let currentClawbotRowId = null;
-
-        // Predefined keyword suggestions
-        const keywordSuggestions = [
-            'SEO', 'Content Marketing', 'Digital Marketing', 'Social Media', 
-            'Blogging', 'Email Marketing', 'PPC', 'Analytics',
-            'E-commerce', 'Lead Generation', 'Brand Awareness', 'Conversion'
-        ];
 
         // Initialize
         loadData();
 
+        // Show alert
         function showAlert(message, type = 'info') {
             const container = document.getElementById('alertContainer');
             container.innerHTML = `<div class="alert ${type}">${message}</div>`;
-            setTimeout(() => container.innerHTML = '', 5000);
+            setTimeout(() => container.innerHTML = '', 4000);
         }
 
+        // Load data from API
         async function loadData() {
             try {
                 document.getElementById('loadingState').style.display = 'block';
@@ -1494,75 +663,30 @@
                 document.getElementById('loadingState').style.display = 'none';
 
                 if (!result.success) {
-                    showAlert(result.error, 'error');
+                    showAlert(result.error || 'Failed to load data', 'error');
                     return;
                 }
 
-                currentData = result.data.rows;
-                updateStats(result.data.stats);
+                currentData = result.data.rows || [];
+                updateStats(result.data.stats || {});
                 renderTable();
-                updateClawbotCard(result.data.stats);
 
             } catch (err) {
-                console.error('Failed to load data:', err);
+                console.error('Load error:', err);
                 document.getElementById('loadingState').style.display = 'none';
                 showAlert('Failed to load spreadsheet data', 'error');
             }
         }
 
+        // Update stats
         function updateStats(stats) {
-            document.getElementById('totalCount').textContent = stats.total;
-            document.getElementById('pendingCount').textContent = stats.pending;
-            document.getElementById('processingCount').textContent = stats.processing;
-            document.getElementById('completedCount').textContent = stats.done;
-            
-            // Show/hide bulk actions
-            const bulkActions = document.getElementById('bulkActions');
-            if (stats.total > 0) {
-                bulkActions.style.display = 'flex';
-            } else {
-                bulkActions.style.display = 'none';
-            }
+            document.getElementById('totalCount').textContent = stats.total || 0;
+            document.getElementById('pendingCount').textContent = stats.pending || 0;
+            document.getElementById('processingCount').textContent = stats.processing || 0;
+            document.getElementById('completedCount').textContent = stats.done || 0;
         }
 
-        function updateClawbotCard(stats) {
-            const card = document.getElementById('clawbotCard');
-            const message = document.getElementById('clawbotMessage');
-            const suggestions = document.getElementById('clawbotSuggestions');
-            
-            card.style.display = 'flex';
-            
-            if (stats.total === 0) {
-                message.textContent = "Welcome! I'm your personal ClawBot assistant. Let's get started with your content workflow.";
-                suggestions.innerHTML = `
-                    <span class="clawbot-suggestion" onclick="showImportModal()">📥 Import Data</span>
-                    <span class="clawbot-suggestion" onclick="addNewRow()">➕ Add First Row</span>
-                `;
-            } else if (stats.pending > 0) {
-                message.textContent = `I see you have ${stats.pending} pending topic${stats.pending > 1 ? 's' : ''} ready to process. Want me to help?`;
-                suggestions.innerHTML = `
-                    <span class="clawbot-suggestion" onclick="processAllPending()">⚡ Process All Pending</span>
-                    <span class="clawbot-suggestion" onclick="window.location.href='clawbot.html'">💬 Chat with ClawBot</span>
-                `;
-            } else if (stats.processing > 0) {
-                message.textContent = `I'm working on ${stats.processing} topic${stats.processing > 1 ? 's' : ''} right now. Check back soon!`;
-                suggestions.innerHTML = `
-                    <span class="clawbot-suggestion" onclick="window.location.href='articles.html'">📝 View Articles</span>
-                `;
-            } else if (stats.done === stats.total) {
-                message.textContent = "Great job! All your topics have been processed. Ready for more content?";
-                suggestions.innerHTML = `
-                    <span class="clawbot-suggestion" onclick="addNewRow()">➕ Add New Topic</span>
-                    <span class="clawbot-suggestion" onclick="showImportModal()">📥 Import More</span>
-                `;
-            } else {
-                message.textContent = "I'm here to help you manage your content workflow. What would you like to do?";
-                suggestions.innerHTML = `
-                    <span class="clawbot-suggestion" onclick="window.location.href='clawbot.html'">💬 Chat with ClawBot</span>
-                `;
-            }
-        }
-
+        // Render table
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             
@@ -1579,21 +703,21 @@
             let filteredData = currentData;
             if (currentFilter !== 'all') {
                 filteredData = currentData.filter(row => 
-                    row.status.toLowerCase() === currentFilter.toLowerCase()
+                    (row.status || 'PENDING').toLowerCase() === currentFilter.toLowerCase()
                 );
             }
 
             tbody.innerHTML = filteredData.map(row => `
                 <tr data-id="${row.id}">
                     <td>
-                        <textarea class="cell-input url-cell" 
+                        <input type="text" 
+                            class="cell-input url-cell" 
                             data-field="service_url" 
                             data-id="${row.id}"
-                            rows="1"
+                            value="${escapeHtml(row.service_url || '')}"
                             placeholder="https://..."
                             onblur="saveCell(this)"
-                            onkeydown="handleCellKeydown(event, this)"
-                        >${escapeHtml(row.service_url || '')}</textarea>
+                        >
                     </td>
                     <td>
                         <input type="text" 
@@ -1603,7 +727,6 @@
                             value="${escapeHtml(row.main_keyword || '')}"
                             placeholder="Enter keyword..."
                             onblur="saveCell(this)"
-                            style="font-family: inherit; min-width: 140px;"
                         >
                     </td>
                     <td>
@@ -1612,229 +735,76 @@
                             data-field="cluster_keywords" 
                             data-id="${row.id}"
                             value="${escapeHtml(row.cluster_keywords || '')}"
-                            placeholder="keyword1, keyword2, keyword3..."
+                            placeholder="keyword1, keyword2..."
                             onblur="saveCell(this)"
-                            style="font-family: inherit; min-width: 200px;"
                         >
                     </td>
                     <td>
-                        <textarea class="cell-input url-cell" 
+                        <input type="text" 
+                            class="cell-input url-cell" 
                             data-field="gdocs_link" 
                             data-id="${row.id}"
-                            rows="1"
+                            value="${escapeHtml(row.gdocs_link || '')}"
                             placeholder="Google Doc link..."
                             onblur="saveCell(this)"
-                            onkeydown="handleCellKeydown(event, this)"
-                        >${escapeHtml(row.gdocs_link || '')}</textarea>
+                        >
                     </td>
                     <td>
-                        <textarea class="cell-input url-cell" 
+                        <input type="text" 
+                            class="cell-input url-cell" 
                             data-field="wp_post_url" 
                             data-id="${row.id}"
-                            rows="1"
+                            value="${escapeHtml(row.wp_post_url || '')}"
                             placeholder="WordPress URL..."
                             onblur="saveCell(this)"
-                            onkeydown="handleCellKeydown(event, this)"
-                        >${escapeHtml(row.wp_post_url || '')}</textarea>
+                        >
                     </td>
                     <td>
-                        <select class="status-badge status-${(row.status || 'PENDING').toLowerCase()}" 
-                            onchange="updateStatus(${row.id}, this.value)"
-                            style="font-family: inherit;">
-                            <option value="PENDING" ${row.status === 'PENDING' ? 'selected' : ''} class="status-pending">Pending</option>
-                            <option value="PROCESSING" ${row.status === 'PROCESSING' ? 'selected' : ''} class="status-processing">Processing</option>
-                            <option value="DONE" ${row.status === 'DONE' ? 'selected' : ''} class="status-done">Done</option>
-                            <option value="ERROR" ${row.status === 'ERROR' ? 'selected' : ''} class="status-error">Error</option>
+                        <select class="status-select status-${(row.status || 'PENDING').toLowerCase()}" 
+                            onchange="updateStatus(${row.id}, this.value)">
+                            <option value="PENDING" ${row.status === 'PENDING' ? 'selected' : ''}>Pending</option>
+                            <option value="PROCESSING" ${row.status === 'PROCESSING' ? 'selected' : ''}>Processing</option>
+                            <option value="DONE" ${row.status === 'DONE' ? 'selected' : ''}>Done</option>
+                            <option value="ERROR" ${row.status === 'ERROR' ? 'selected' : ''}>Error</option>
                         </select>
                     </td>
                     <td>
-                        <textarea class="cell-input url-cell" 
+                        <input type="text" 
+                            class="cell-input url-cell" 
                             data-field="feature_image" 
                             data-id="${row.id}"
-                            rows="1"
+                            value="${escapeHtml(row.feature_image || '')}"
                             placeholder="Image URL..."
                             onblur="saveCell(this)"
-                            onkeydown="handleCellKeydown(event, this)"
-                        >${escapeHtml(row.feature_image || '')}</textarea>
+                        >
                     </td>
                     <td>
                         <div class="row-actions">
-                            <button class="btn-icon clawbot" onclick="askClawBot(${row.id})" title="Ask ClawBot">🤖</button>
-                            <button class="btn-icon process" onclick="processRow(${row.id})" title="Process this row">⚡</button>
-                            <button class="btn-icon delete" onclick="deleteRow(${row.id})" title="Delete row">🗑️</button>
+                            <button class="btn-icon process" onclick="processRow(${row.id})" title="Process">⚡</button>
+                            <button class="btn-icon delete" onclick="deleteRow(${row.id})" title="Delete">🗑️</button>
                         </div>
                     </td>
                 </tr>
             `).join('');
-
-            // Auto-resize textareas
-            document.querySelectorAll('.cell-input').forEach(textarea => {
-                autoResize(textarea);
-                textarea.addEventListener('input', () => autoResize(textarea));
-            });
         }
 
-        function renderKeywordTags(keywordsStr, rowId, field) {
-            if (!keywordsStr) return '';
-            const keywords = keywordsStr.split(',').map(k => k.trim()).filter(k => k);
-            return keywords.map((kw, idx) => `
-                <span class="keyword-tag">
-                    ${escapeHtml(kw)}
-                    <span class="remove-tag" onclick="removeKeyword(${rowId}, '${field}', ${idx}, event)">×</span>
-                </span>
-            `).join('');
+        // Escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
         }
 
-        function handleKeywordInput(event, rowId, field) {
-            if (event.key === 'Enter' || event.key === ',') {
-                event.preventDefault();
-                const input = event.target;
-                const value = input.value.trim();
-                if (value) {
-                    addKeyword(rowId, field, value);
-                    input.value = '';
-                }
-            } else if (event.key === 'Backspace' && !event.target.value) {
-                // Remove last keyword on backspace if input is empty
-                const container = document.getElementById(`${field === 'main_keyword' ? 'mainKeywords' : 'clusterKeywords'}-${rowId}`);
-                const tags = container.querySelectorAll('.keyword-tag');
-                if (tags.length > 0) {
-                    const lastTag = tags[tags.length - 1];
-                    const keyword = lastTag.textContent.replace('×', '').trim();
-                    removeKeywordByValue(rowId, field, keyword);
-                }
-            }
-        }
+        // Save cell on blur
+        async function saveCell(input) {
+            const id = input.dataset.id;
+            const field = input.dataset.field;
+            const value = input.value.trim();
 
-        function handleClusterKeywordInput(event, rowId) {
-            handleKeywordInput(event, rowId, 'cluster_keywords');
-        }
-
-        function addKeyword(rowId, field, keyword) {
-            const row = currentData.find(r => r.id == rowId);
-            if (!row) return;
-
-            const currentKeywords = (row[field] || '').split(',').map(k => k.trim()).filter(k => k);
-            if (!currentKeywords.includes(keyword)) {
-                currentKeywords.push(keyword);
-                row[field] = currentKeywords.join(', ');
-                
-                // Update UI
-                const container = document.getElementById(`${field === 'main_keyword' ? 'mainKeywords' : 'clusterKeywords'}-${rowId}`);
-                const input = container.querySelector('.keyword-input');
-                const tagsHtml = renderKeywordTags(row[field], rowId, field);
-                
-                // Insert tags before input
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = tagsHtml;
-                Array.from(tempDiv.children).forEach(tag => {
-                    container.insertBefore(tag, input);
-                });
-                
-                // Save to server
-                saveKeywords(rowId, field);
-            }
-            
-            // Hide dropdown
-            const dropdown = document.getElementById(`keywordDropdown-${rowId}`);
-            if (dropdown) dropdown.classList.remove('show');
-        }
-
-        function removeKeyword(rowId, field, index, event) {
-            event.stopPropagation();
-            const row = currentData.find(r => r.id == rowId);
-            if (!row) return;
-
-            const keywords = (row[field] || '').split(',').map(k => k.trim()).filter(k => k);
-            keywords.splice(index, 1);
-            row[field] = keywords.join(', ');
-            
-            // Re-render this row's keywords
-            renderTable();
-            
-            // Save to server
-            saveKeywords(rowId, field);
-        }
-
-        function removeKeywordByValue(rowId, field, keyword) {
-            const row = currentData.find(r => r.id == rowId);
-            if (!row) return;
-
-            const keywords = (row[field] || '').split(',').map(k => k.trim()).filter(k => k && k !== keyword);
-            row[field] = keywords.join(', ');
-            
-            // Re-render this row's keywords
-            renderTable();
-            
-            // Save to server
-            saveKeywords(rowId, field);
-        }
-
-        function toggleKeywordDropdown(rowId) {
-            const dropdown = document.getElementById(`keywordDropdown-${rowId}`);
-            dropdown.classList.toggle('show');
-            
-            // Close dropdown when clicking outside
-            const closeDropdown = (e) => {
-                if (!e.target.closest(`#keywordDropdown-${rowId}`) && !e.target.closest(`#clusterKeywords-${rowId}`)) {
-                    dropdown.classList.remove('show');
-                    document.removeEventListener('click', closeDropdown);
-                }
-            };
-            setTimeout(() => document.addEventListener('click', closeDropdown), 0);
-        }
-
-        async function saveKeywords(rowId, field) {
-            const row = currentData.find(r => r.id == rowId);
-            if (!row) return;
-
-            try {
-                const response = await fetch(`${API_URL}/api/spreadsheet-simple/row/${rowId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ [field]: row[field] })
-                });
-
-                const result = await response.json();
-                if (!result.success) {
-                    showAlert('Failed to save: ' + result.error, 'error');
-                }
-            } catch (err) {
-                showAlert('Failed to save changes', 'error');
-            }
-        }
-
-        function autoResize(textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = Math.max(36, textarea.scrollHeight) + 'px';
-        }
-
-        function handleCellKeydown(event, textarea) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                textarea.blur();
-                // Move to next row's same column
-                const currentRow = textarea.closest('tr');
-                const nextRow = currentRow.nextElementSibling;
-                if (nextRow) {
-                    const field = textarea.dataset.field;
-                    const nextInput = nextRow.querySelector(`[data-field="${field}"]`);
-                    if (nextInput) {
-                        nextInput.focus();
-                    }
-                }
-            }
-        }
-
-        async function saveCell(element) {
-            const id = element.dataset.id;
-            const field = element.dataset.field;
-            const value = element.value;
-
-            // Find the original value
+            // Find original value
             const row = currentData.find(r => r.id == id);
             if (!row) return;
 
@@ -1857,13 +827,14 @@
 
                 const result = await response.json();
                 if (!result.success) {
-                    showAlert('Failed to save: ' + result.error, 'error');
+                    showAlert('Failed to save: ' + (result.error || 'Unknown error'), 'error');
                 }
             } catch (err) {
                 showAlert('Failed to save changes', 'error');
             }
         }
 
+        // Update status
         async function updateStatus(id, status) {
             const row = currentData.find(r => r.id == id);
             if (row) {
@@ -1883,7 +854,7 @@
 
                 const result = await response.json();
                 if (!result.success) {
-                    showAlert('Failed to update status: ' + result.error, 'error');
+                    showAlert('Failed to update status: ' + (result.error || 'Unknown error'), 'error');
                 } else {
                     loadData();
                 }
@@ -1892,14 +863,11 @@
             }
         }
 
+        // Process row
         async function processRow(id) {
-            if (isProcessing) return;
-            isProcessing = true;
-
             const row = currentData.find(r => r.id == id);
             if (!row || !row.main_keyword) {
                 showAlert('No main keyword found for this row', 'error');
-                isProcessing = false;
                 return;
             }
 
@@ -1918,9 +886,9 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    showAlert(`✅ ${result.message}`, 'success');
+                    showAlert('✅ ' + result.message, 'success');
                 } else {
-                    showAlert(result.error, 'error');
+                    showAlert(result.error || 'Processing failed', 'error');
                     row.status = 'ERROR';
                     renderTable();
                 }
@@ -1929,11 +897,11 @@
                 row.status = 'ERROR';
                 renderTable();
             } finally {
-                isProcessing = false;
-                loadData();
+                setTimeout(loadData, 500);
             }
         }
 
+        // Delete row
         async function deleteRow(id) {
             if (!confirm('Are you sure you want to delete this row?')) return;
 
@@ -1950,13 +918,14 @@
                     showAlert('Row deleted', 'success');
                     loadData();
                 } else {
-                    showAlert(result.error, 'error');
+                    showAlert(result.error || 'Delete failed', 'error');
                 }
             } catch (err) {
                 showAlert('Failed to delete row', 'error');
             }
         }
 
+        // Add new row
         async function addNewRow() {
             try {
                 const response = await fetch(`${API_URL}/api/spreadsheet-simple/row`, {
@@ -1974,7 +943,7 @@
                 });
 
                 const result = await response.json();
-                if (result.success) {
+                if (result.success && result.data) {
                     currentData.push({
                         id: result.data.id,
                         service_url: '',
@@ -1988,23 +957,17 @@
                     });
                     renderTable();
                     showAlert('New row added', 'success');
-                    
-                    setTimeout(() => {
-                        const inputs = document.querySelectorAll(`[id^="mainKeywords-"] .keyword-input`);
-                        if (inputs.length > 0) {
-                            inputs[inputs.length - 1].focus();
-                        }
-                    }, 100);
                 } else {
-                    showAlert(result.error, 'error');
+                    showAlert(result.error || 'Failed to add row', 'error');
                 }
             } catch (err) {
                 showAlert('Failed to add row', 'error');
             }
         }
 
+        // Clear all data
         async function clearAllData() {
-            if (!confirm('Are you sure you want to clear all data? This cannot be undone.')) return;
+            if (!confirm('Are you sure you want to clear ALL data? This cannot be undone.')) return;
 
             try {
                 const response = await fetch(`${API_URL}/api/spreadsheet-simple/clear`, {
@@ -2016,16 +979,17 @@
                 if (result.success) {
                     currentData = [];
                     renderTable();
-                    updateStats({ total: 0, pending: 0, processing: 0, done: 0, error: 0 });
+                    updateStats({ total: 0, pending: 0, processing: 0, done: 0 });
                     showAlert('All data cleared', 'success');
                 } else {
-                    showAlert(result.error, 'error');
+                    showAlert(result.error || 'Clear failed', 'error');
                 }
             } catch (err) {
                 showAlert('Failed to clear data', 'error');
             }
         }
 
+        // Set filter
         function setFilter(filter) {
             currentFilter = filter;
             
@@ -2036,71 +1000,7 @@
             renderTable();
         }
 
-        // ClawBot Integration
-        function askClawBot(rowId) {
-            currentClawbotRowId = rowId;
-            const row = currentData.find(r => r.id == rowId);
-            if (!row) return;
-
-            const subtitle = document.getElementById('clawbotModalSubtitle');
-            subtitle.textContent = `Row: ${row.main_keyword || 'Untitled'} (${row.status})`;
-
-            document.getElementById('clawbotModal').classList.add('show');
-        }
-
-        function askClawBotBulk() {
-            const pendingCount = currentData.filter(r => r.status === 'PENDING').length;
-            if (pendingCount === 0) {
-                showAlert('No pending rows to process', 'info');
-                return;
-            }
-            
-            if (confirm(`Ask ClawBot to process all ${pendingCount} pending rows?`)) {
-                processAllPending();
-            }
-        }
-
-        async function clawbotAction(action) {
-            if (!currentClawbotRowId) return;
-
-            hideClawbotModal();
-
-            switch (action) {
-                case 'process':
-                    await processRow(currentClawbotRowId);
-                    break;
-                case 'suggest':
-                    showAlert('💡 Keyword suggestions feature coming soon! Chat with ClawBot for now.', 'info');
-                    window.location.href = 'clawbot.html';
-                    break;
-                case 'analyze':
-                    showAlert('🔍 Competitor analysis feature coming soon! Chat with ClawBot for now.', 'info');
-                    window.location.href = 'clawbot.html';
-                    break;
-            }
-        }
-
-        function hideClawbotModal() {
-            document.getElementById('clawbotModal').classList.remove('show');
-            currentClawbotRowId = null;
-        }
-
-        async function processAllPending() {
-            const pendingRows = currentData.filter(r => r.status === 'PENDING' && r.main_keyword);
-            if (pendingRows.length === 0) {
-                showAlert('No pending rows with keywords to process', 'info');
-                return;
-            }
-
-            showAlert(`Starting to process ${pendingRows.length} pending rows...`, 'info');
-
-            for (const row of pendingRows) {
-                await processRow(row.id);
-                await new Promise(r => setTimeout(r, 500)); // Small delay between rows
-            }
-        }
-
-        // Import/Export Modals
+        // Import Modal
         function showImportModal() {
             document.getElementById('importModal').classList.add('show');
             document.getElementById('importTextarea').focus();
@@ -2111,9 +1011,9 @@
         }
 
         async function importData() {
-            const data = document.getElementById('importTextarea').value;
+            const data = document.getElementById('importTextarea').value.trim();
             
-            if (!data.trim()) {
+            if (!data) {
                 showAlert('Please paste some data first', 'error');
                 return;
             }
@@ -2130,18 +1030,19 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    showAlert(`✅ ${result.message}`, 'success');
+                    showAlert('✅ ' + result.message, 'success');
                     hideImportModal();
                     document.getElementById('importTextarea').value = '';
                     loadData();
                 } else {
-                    showAlert(result.error, 'error');
+                    showAlert(result.error || 'Import failed', 'error');
                 }
             } catch (err) {
                 showAlert('Failed to import data', 'error');
             }
         }
 
+        // Export Modal
         async function showExportModal() {
             try {
                 const response = await fetch(`${API_URL}/api/spreadsheet-simple/export`, {
@@ -2154,10 +1055,10 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    document.getElementById('exportContent').textContent = result.data.tsv || 'No data to export';
+                    document.getElementById('exportContent').textContent = result.data.tsv || result.data || 'No data to export';
                     document.getElementById('exportModal').classList.add('show');
                 } else {
-                    showAlert(result.error, 'error');
+                    showAlert(result.error || 'Export failed', 'error');
                 }
             } catch (err) {
                 showAlert('Failed to export data', 'error');
@@ -2178,22 +1079,11 @@
             });
         }
 
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
+        // Logout
         function logout() {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = '/login.html';
-        }
-
-        function toggleMobileMenu() {
-            document.querySelector('.sidebar').classList.toggle('show');
-            document.querySelector('.sidebar-overlay').classList.toggle('show');
         }
 
         // Close modals on overlay click
