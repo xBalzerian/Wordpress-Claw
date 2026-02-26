@@ -27,11 +27,21 @@ const PORT = process.env.PORT || 3000;
 //     crossOriginEmbedderPolicy: false
 // }));
 
-// Set permissive CSP headers
+// Set permissive CSP headers with unsafe-eval for scripts
 app.use((req, res, next) => {
-    res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval' data: blob:; style-src * 'unsafe-inline'; img-src * data: blob:; connect-src *;");
-    res.setHeader('X-Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval';");
-    res.setHeader('X-WebKit-CSP', "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval';");
+    // Allow everything with unsafe-eval for JavaScript
+    const cspValue = "default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob: filesystem:; " +
+                     "script-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob: 'wasm-unsafe-eval'; " +
+                     "style-src * 'self' 'unsafe-inline'; " +
+                     "img-src * 'self' data: blob:; " +
+                     "connect-src * 'self'; " +
+                     "font-src * 'self' data:; " +
+                     "frame-src * 'self'; " +
+                     "media-src * 'self';";
+    
+    res.setHeader('Content-Security-Policy', cspValue);
+    res.removeHeader('X-Content-Security-Policy');
+    res.removeHeader('X-WebKit-CSP');
     next();
 });
 
