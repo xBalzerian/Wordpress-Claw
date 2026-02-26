@@ -2,8 +2,30 @@ const express = require('express');
 const db = require('../database/db');
 const { authenticateToken, requireCredits } = require('../middleware/auth');
 const SummonAgent = require('../services/summonAgent');
+const XlsxService = require('../services/xlsxService');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const router = express.Router();
+
+// Configure multer for file uploads
+const upload = multer({
+    dest: 'uploads/',
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    fileFilter: (req, file, cb) => {
+        if (XlsxService.isSupportedFile(file.originalname)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only .xlsx, .xls, .csv, and .ods files are allowed'));
+        }
+    }
+});
+
+// Ensure uploads directory exists
+if (!fs.existsSync('uploads')) {
+    fs.mkdirSync('uploads', { recursive: true });
+}
 
 /**
  * Get all content queue items for the user
@@ -481,3 +503,162 @@ router.post('/process-all', authenticateToken, requireCredits, async (req, res) 
 });
 
 module.exports = router;
+
+/**
+ * Import content queue items from XLSX/CSV file
+ * POST /api/content-queue/import-xlsx
+ */
+router.post('/import-xlsx', authenticateToken, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                error: 'No file uploaded'
+            });
+        }
+
+        const filePath = req.file.path;
+        const originalName = req.file.originalname;
+
+        // Read the file
+        const readResult = XlsxService.readFile(filePath);
+        
+        // Clean up uploaded file
+        fs.unlinkSync(filePath);
+
+        if (!readResult.success) {
+            return res.status(400).json({
+                success: false,
+                error: 'Failed to read file: ' + readResult.error
+            });
+        }
+
+        // Parse content queue items
+        const parseResult = XlsxService.parseContentQueueImport(readResult);
+
+        if (!parseResult.success || parseResult.items.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'No valid items found in file',
+                details: parseResult.errors
+            });
+        }
+
+        // Insert items into database
+        const insertedItems = [];
+        const insertErrors = [];
+
+        for (const item of parseResult.items) {
+            try {
+                const result = await db.prepare(`
+                    INSERT INTO content_queue (user_id, service_url, main_keyword, cluster_keywords, status)
+                    VALUES (?, ?, ?, ?, ?)
+                `).run(
+                    req.user.id,
+                    item.service_url,
+                    item.main_keyword,
+                    item.cluster_keywords,
+                    item.status
+                );
+
+                insertedItems.push({
+                    id: result.lastInsertRowid,
+                    ...item
+                });
+            } catch (err) {
+                insertErrors.push(`Failed to insert "${item.main_keyword}": ${err.message}`);
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Imported ${insertedItems.length} items successfully`,
+            data: {
+                fileName: originalName,
+                fileType: XlsxService.getFileType(originalName),
+                totalRows: parseResult.totalRows,
+                imported: insertedItems.length,
+                items: insertedItems,
+                parseErrors: parseResult.errors,
+                insertErrors: insertErrors
+            }
+        });
+
+    } catch (err) {
+        console.error('Import xlsx error:', err);
+        // Clean up file if it exists
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+        res.status(500).json({
+            success: false,
+            error: 'Failed to import file: ' + err.message
+        });
+    }
+});
+
+/**
+ * Export content queue items to XLSX file
+ * POST /api/content-queue/export-xlsx
+ */
+router.post('/export-xlsx', authenticateToken, async (req, res) => {
+    try {
+        const { status } = req.body;
+
+        // Build query
+        let query = `
+            SELECT id, service_url, main_keyword, cluster_keywords, status, 
+                   wp_post_url, feature_image, created_at, updated_at
+            FROM content_queue 
+            WHERE user_id = ?
+        `;
+        const params = [req.user.id];
+
+        if (status) {
+            query += ' AND status = ?';
+            params.push(status);
+        }
+
+        query += ' ORDER BY created_at DESC';
+
+        const items = await db.prepare(query).all(...params);
+
+        if (items.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'No items to export'
+            });
+        }
+
+        // Convert to Excel format
+        const { headers, rows } = XlsxService.convertContentQueueToExcel(items);
+
+        // Generate Excel buffer
+        const writeResult = XlsxService.writeBuffer(headers, rows, {
+            sheetName: 'Content Queue'
+        });
+
+        if (!writeResult.success) {
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to generate Excel file: ' + writeResult.error
+            });
+        }
+
+        // Set response headers for file download
+        const filename = `content-queue-${new Date().toISOString().split('T')[0]}.xlsx`;
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Length', writeResult.buffer.length);
+
+        // Send the file
+        res.send(writeResult.buffer);
+
+    } catch (err) {
+        console.error('Export xlsx error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to export file: ' + err.message
+        });
+    }
+});
