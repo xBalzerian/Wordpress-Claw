@@ -16,8 +16,6 @@ const businessProfileRoutes = require('./routes/business-profile');
 const connectionsRoutes = require('./routes/connections');
 const articlesRoutes = require('./routes/articles');
 const clawbotRoutes = require('./routes/clawbot');
-const spreadsheetRoutes = require('./routes/spreadsheet');
-const spreadsheetSimpleRoutes = require('./routes/spreadsheet-simple');
 const contentQueueRoutes = require('./routes/content-queue');
 
 const app = express();
