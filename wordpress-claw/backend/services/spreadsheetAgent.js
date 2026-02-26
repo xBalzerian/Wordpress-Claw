@@ -1,17 +1,16 @@
 /**
- * Spreadsheet Agent Service
- * Integrates Google Sheets with ClawBot for automated content workflows
+ * Spreadsheet Agent Service - Updated Version
+ * Uses Google Service Account for full read/write access
  * The spreadsheet is the COMMAND CENTER for content operations
  */
 
-const GoogleSheetsService = require('./googleSheets');
+const googleSheetsService = require('./googleSheetsService');
 const SummonAgent = require('./summonAgent');
 const db = require('../database/db');
 
 class SpreadsheetAgent {
     constructor(userId) {
         this.userId = userId;
-        this.sheetsService = null;
         this.summonAgent = null;
         this.connection = null;
     }
@@ -20,78 +19,108 @@ class SpreadsheetAgent {
      * Initialize the spreadsheet agent
      */
     async initialize() {
+        // Initialize Google Sheets service
+        await googleSheetsService.initialize();
+
+        // Initialize SummonAgent for content generation
+        this.summonAgent = new SummonAgent(this.userId);
+        await this.summonAgent.initialize();
+
         // Get user's Google Sheets connection
         this.connection = await db.prepare(`
             SELECT * FROM connections 
             WHERE user_id = ? AND type = ? AND status = ?
         `).get(this.userId, 'googlesheets', 'active');
 
-        if (!this.connection) {
-            throw new Error('No active Google Sheets connection found. Please connect your Google Sheets first.');
-        }
-
-        // Initialize Google Sheets service
-        const credentials = JSON.parse(this.connection.credentials);
-        const config = this.connection.config ? JSON.parse(this.connection.config) : {};
-        
-        this.sheetsService = new GoogleSheetsService(credentials);
-        await this.sheetsService.initialize();
-
-        // Initialize SummonAgent for content generation
-        this.summonAgent = new SummonAgent(this.userId);
-        await this.summonAgent.initialize();
-
-        this.config = config;
         return true;
     }
 
     /**
+     * Get connection info for user
+     */
+    async getConnectionInfo() {
+        const serviceAccountEmail = googleSheetsService.getServiceAccountEmail();
+        
+        return {
+            success: true,
+            data: {
+                serviceAccountEmail,
+                instructions: [
+                    'Open your Google Sheet',
+                    'Click "Share" in the top right',
+                    `Add this email: ${serviceAccountEmail}`,
+                    'Set permission to "Editor"',
+                    'Click "Send"'
+                ]
+            }
+        };
+    }
+
+    /**
      * Check spreadsheet for new topics to process
-     * Main entry point for automated workflow
      */
     async checkForNewTopics(spreadsheetId = null, sheetName = null) {
         try {
-            if (!this.sheetsService) await this.initialize();
+            await this.initialize();
 
-            const targetSpreadsheetId = spreadsheetId || this.config.spreadsheetId;
-            const targetSheetName = sheetName || this.config.sheetName || 'Sheet1';
+            // Get spreadsheet ID from connection if not provided
+            let targetSpreadsheetId = spreadsheetId;
+            if (!targetSpreadsheetId && this.connection) {
+                const credentials = JSON.parse(this.connection.credentials || '{}');
+                targetSpreadsheetId = googleSheetsService.constructor.extractSpreadsheetId(
+                    credentials.spreadsheetUrl
+                );
+            }
+
+            const targetSheetName = sheetName || 'Sheet1';
 
             if (!targetSpreadsheetId) {
                 return {
                     success: false,
-                    error: 'No spreadsheet ID configured. Please set up your spreadsheet connection.'
+                    error: 'No spreadsheet ID configured. Please connect your Google Sheet first.',
+                    needsSetup: true
+                };
+            }
+
+            // Test connection first
+            const testResult = await googleSheetsService.testConnection(targetSpreadsheetId);
+            if (!testResult.success) {
+                return {
+                    ...testResult,
+                    needsSetup: true,
+                    setupInstructions: await this.getConnectionInfo()
                 };
             }
 
             // Read the spreadsheet
-            const sheetData = await this.sheetsService.readSheet(targetSpreadsheetId, targetSheetName);
+            const sheetData = await googleSheetsService.readSheet(targetSpreadsheetId, targetSheetName);
             
             if (!sheetData.success) {
                 return sheetData;
             }
 
             // Find pending rows
-            const pendingRows = this.sheetsService.findPendingRows(sheetData.data, 'status');
+            const pendingRows = googleSheetsService.findPendingRows(sheetData.data, 'status');
 
             return {
                 success: true,
                 message: `Found ${pendingRows.length} pending topic(s) to process`,
                 data: {
+                    spreadsheetTitle: testResult.data.title,
                     totalRows: sheetData.totalRows,
                     pendingCount: pendingRows.length,
-                    pendingRows: pendingRows.slice(0, 10), // Limit to first 10
-                    columns: sheetData.columns,
+                    pendingRows: pendingRows.slice(0, 10),
                     headers: sheetData.headers
                 },
                 actions: pendingRows.length > 0 ? [
                     {
                         type: 'process_all_pending',
-                        label: `Process All ${pendingRows.length} Topics`,
+                        label: `⚡ Process All ${pendingRows.length} Topics`,
                         params: { spreadsheetId: targetSpreadsheetId, sheetName: targetSheetName }
                     },
                     ...pendingRows.slice(0, 3).map(row => ({
                         type: 'process_row',
-                        label: `Process: ${this.getTopicFromRow(row, sheetData.columns)}`,
+                        label: `Process: ${this.getTopicFromRow(row)}`,
                         params: { 
                             spreadsheetId: targetSpreadsheetId, 
                             sheetName: targetSheetName,
@@ -114,10 +143,10 @@ class SpreadsheetAgent {
      */
     async processRow(spreadsheetId, sheetName, rowIndex, options = {}) {
         try {
-            if (!this.sheetsService) await this.initialize();
+            await this.initialize();
 
             // Read current data
-            const sheetData = await this.sheetsService.readSheet(spreadsheetId, sheetName);
+            const sheetData = await googleSheetsService.readSheet(spreadsheetId, sheetName);
             
             if (!sheetData.success) {
                 return sheetData;
@@ -133,7 +162,7 @@ class SpreadsheetAgent {
             }
 
             // Extract topic/keyword from row
-            const topic = this.getTopicFromRow(row, sheetData.columns);
+            const topic = this.getTopicFromRow(row);
             if (!topic) {
                 return {
                     success: false,
@@ -142,27 +171,24 @@ class SpreadsheetAgent {
             }
 
             // Update status to PROCESSING
-            await this.sheetsService.updateRowStatus(
+            await googleSheetsService.updateRowColumns(
                 spreadsheetId,
-                rowIndex,
-                'PROCESSING',
-                { notes: 'ClawBot is working on this...' },
                 sheetName,
-                sheetData.headers
+                rowIndex,
+                sheetData.headers,
+                { status: 'PROCESSING', notes: 'ClawBot is working on this...' }
             );
 
             // Start content workflow
             const workflowResult = await this.summonAgent.startContentWorkflow(topic, options);
 
             if (!workflowResult.success) {
-                // Update status to ERROR
-                await this.sheetsService.updateRowStatus(
+                await googleSheetsService.updateRowColumns(
                     spreadsheetId,
-                    rowIndex,
-                    'ERROR',
-                    { notes: workflowResult.error || 'Failed to research topic' },
                     sheetName,
-                    sheetData.headers
+                    rowIndex,
+                    sheetData.headers,
+                    { status: 'ERROR', notes: workflowResult.error || 'Failed to research topic' }
                 );
                 return workflowResult;
             }
@@ -171,13 +197,12 @@ class SpreadsheetAgent {
             const generateResult = await this.summonAgent.generateArticle(topic, options);
 
             if (!generateResult.success) {
-                await this.sheetsService.updateRowStatus(
+                await googleSheetsService.updateRowColumns(
                     spreadsheetId,
-                    rowIndex,
-                    'ERROR',
-                    { notes: generateResult.error || 'Failed to generate article' },
                     sheetName,
-                    sheetData.headers
+                    rowIndex,
+                    sheetData.headers,
+                    { status: 'ERROR', notes: generateResult.error || 'Failed to generate article' }
                 );
                 return generateResult;
             }
@@ -187,13 +212,12 @@ class SpreadsheetAgent {
             const saveResult = await this.summonAgent.saveArticle(articleData);
 
             if (!saveResult.success) {
-                await this.sheetsService.updateRowStatus(
+                await googleSheetsService.updateRowColumns(
                     spreadsheetId,
-                    rowIndex,
-                    'ERROR',
-                    { notes: saveResult.error || 'Failed to save article' },
                     sheetName,
-                    sheetData.headers
+                    rowIndex,
+                    sheetData.headers,
+                    { status: 'ERROR', notes: saveResult.error || 'Failed to save article' }
                 );
                 return saveResult;
             }
@@ -202,21 +226,21 @@ class SpreadsheetAgent {
             const articleId = saveResult.articleId;
             const articleUrl = `${process.env.FRONTEND_URL || ''}/dashboard/articles.html?id=${articleId}`;
 
-            await this.sheetsService.updateRowStatus(
+            await googleSheetsService.updateRowColumns(
                 spreadsheetId,
-                rowIndex,
-                'DONE',
-                { 
-                    url: articleUrl,
-                    notes: `Article created: ${articleData.title}`
-                },
                 sheetName,
-                sheetData.headers
+                rowIndex,
+                sheetData.headers,
+                { 
+                    status: 'DONE',
+                    wp_post_url: articleUrl,
+                    notes: `Article created: ${articleData.title}`
+                }
             );
 
             return {
                 success: true,
-                message: `Successfully processed "${topic}"`,
+                message: `✅ Successfully processed "${topic}"`,
                 data: {
                     topic,
                     articleId,
@@ -242,14 +266,16 @@ class SpreadsheetAgent {
             
             // Try to update status to ERROR
             try {
-                await this.sheetsService.updateRowStatus(
-                    spreadsheetId,
-                    rowIndex,
-                    'ERROR',
-                    { notes: err.message },
-                    sheetName,
-                    []
-                );
+                const sheetData = await googleSheetsService.readSheet(spreadsheetId, sheetName);
+                if (sheetData.success) {
+                    await googleSheetsService.updateRowColumns(
+                        spreadsheetId,
+                        sheetName,
+                        rowIndex,
+                        sheetData.headers,
+                        { status: 'ERROR', notes: err.message }
+                    );
+                }
             } catch (updateErr) {
                 console.error('Failed to update error status:', updateErr);
             }
@@ -266,7 +292,7 @@ class SpreadsheetAgent {
      */
     async processAllPending(spreadsheetId, sheetName, options = {}) {
         try {
-            if (!this.sheetsService) await this.initialize();
+            await this.initialize();
 
             // Check for pending topics
             const checkResult = await this.checkForNewTopics(spreadsheetId, sheetName);
@@ -296,6 +322,11 @@ class SpreadsheetAgent {
                 } else {
                     errors.push({ rowIndex: row._rowIndex, error: result.error });
                 }
+                
+                // Small delay between rows to avoid rate limiting
+                if (pendingRows.length > 1) {
+                    await new Promise(r => setTimeout(r, 1000));
+                }
             }
 
             return {
@@ -318,43 +349,11 @@ class SpreadsheetAgent {
     }
 
     /**
-     * Update spreadsheet status for a row
+     * Get topic/keyword from row
      */
-    async updateSpreadsheetStatus(spreadsheetId, sheetName, rowIndex, status, metadata = {}) {
-        try {
-            if (!this.sheetsService) await this.initialize();
-
-            const sheetData = await this.sheetsService.readSheet(spreadsheetId, sheetName);
-            
-            const result = await this.sheetsService.updateRowStatus(
-                spreadsheetId,
-                rowIndex,
-                status,
-                metadata,
-                sheetName,
-                sheetData.headers
-            );
-
-            return {
-                success: true,
-                message: `Updated row ${rowIndex} status to ${status}`,
-                data: result
-            };
-        } catch (err) {
-            console.error('Update spreadsheet status error:', err);
-            return {
-                success: false,
-                error: err.message
-            };
-        }
-    }
-
-    /**
-     * Get topic/keyword from row using detected columns
-     */
-    getTopicFromRow(row, columns) {
+    getTopicFromRow(row) {
         // Try common topic column names
-        const topicKeys = ['topic', 'keyword', 'subject', 'title', 'query', 'theme', 'idea'];
+        const topicKeys = ['main_keyword', 'keyword', 'topic', 'subject', 'title', 'query', 'theme', 'idea'];
         
         for (const key of topicKeys) {
             if (row[key] && row[key].toString().trim()) {
@@ -372,73 +371,20 @@ class SpreadsheetAgent {
     }
 
     /**
-     * Create a template spreadsheet for the user
-     */
-    async createTemplateSpreadsheet(title = 'WordPress Claw - Content Calendar') {
-        try {
-            if (!this.sheetsService) await this.initialize();
-
-            const result = await this.sheetsService.createSpreadsheet(title, ['Topics', 'Published']);
-            
-            if (!result.success) {
-                return result;
-            }
-
-            // Add headers to the Topics sheet
-            const headers = [
-                ['Status', 'Topic/Keyword', 'Priority', 'Assigned To', 'Notes', 'Article URL', 'Created', 'Updated']
-            ];
-
-            await this.sheetsService.appendRows(result.spreadsheetId, headers, 'Topics');
-
-            // Add some example rows
-            const examples = [
-                ['PENDING', 'Best coffee shops in Manila', 'High', '', 'Focus on specialty cafes', '', new Date().toISOString(), ''],
-                ['PENDING', 'SEO tips for small businesses', 'Medium', '', '', '', new Date().toISOString(), ''],
-                ['PENDING', 'Digital marketing trends 2024', 'High', '', 'Include AI tools section', '', new Date().toISOString(), '']
-            ];
-
-            await this.sheetsService.appendRows(result.spreadsheetId, examples, 'Topics');
-
-            // Update connection config with new spreadsheet ID
-            if (this.connection) {
-                const config = this.connection.config ? JSON.parse(this.connection.config) : {};
-                config.spreadsheetId = result.spreadsheetId;
-                config.sheetName = 'Topics';
-                
-                await db.prepare(`
-                    UPDATE connections 
-                    SET config = ?, updated_at = CURRENT_TIMESTAMP 
-                    WHERE id = ?
-                `).run(JSON.stringify(config), this.connection.id);
-            }
-
-            return {
-                success: true,
-                message: 'Template spreadsheet created successfully',
-                data: {
-                    spreadsheetId: result.spreadsheetId,
-                    spreadsheetUrl: result.spreadsheetUrl,
-                    title
-                }
-            };
-        } catch (err) {
-            console.error('Create template spreadsheet error:', err);
-            return {
-                success: false,
-                error: err.message
-            };
-        }
-    }
-
-    /**
      * Get spreadsheet info and preview
      */
     async getSpreadsheetInfo(spreadsheetId = null) {
         try {
-            if (!this.sheetsService) await this.initialize();
+            await this.initialize();
 
-            const targetSpreadsheetId = spreadsheetId || this.config.spreadsheetId;
+            // Get spreadsheet ID from connection if not provided
+            let targetSpreadsheetId = spreadsheetId;
+            if (!targetSpreadsheetId && this.connection) {
+                const credentials = JSON.parse(this.connection.credentials || '{}');
+                targetSpreadsheetId = googleSheetsService.constructor.extractSpreadsheetId(
+                    credentials.spreadsheetUrl
+                );
+            }
 
             if (!targetSpreadsheetId) {
                 return {
@@ -447,77 +393,41 @@ class SpreadsheetAgent {
                 };
             }
 
-            // Get spreadsheet metadata
-            const testResult = await this.sheetsService.testConnection(targetSpreadsheetId);
+            // Test connection
+            const testResult = await googleSheetsService.testConnection(targetSpreadsheetId);
             
             if (!testResult.success) {
-                return testResult;
+                return {
+                    ...testResult,
+                    needsSetup: true,
+                    setupInstructions: await this.getConnectionInfo()
+                };
             }
 
-            // Read first few rows for preview
-            const sheetData = await this.sheetsService.readSheet(targetSpreadsheetId, this.config.sheetName || 'Sheet1');
+            // Read first sheet
+            const sheetData = await googleSheetsService.readSheet(
+                targetSpreadsheetId, 
+                testResult.data.sheets[0]?.title || 'Sheet1'
+            );
 
-            // Calculate stats from all rows
-            const allRows = sheetData.data;
+            // Calculate stats
             let pending = 0, processing = 0, done = 0, error = 0;
 
-            const statusHeader = sheetData.headers.find(h =>
-                h.toLowerCase().includes('status')
-            );
-            // Get the mapped key for status column
-            const statusColumn = statusHeader ? (sheetData.columns[statusHeader] || statusHeader) : null;
-
-            if (statusHeader) {
-                console.log('Found status header:', statusHeader, 'mapped to:', statusColumn);
-                allRows.forEach((row, idx) => {
-                    const rawStatus = (row[statusColumn] || '').toString().trim();
-                    const status = rawStatus.toLowerCase();
-                    
-                    if (idx < 3) {
-                        console.log(`Row ${idx}: status="${rawStatus}" (lowercase: "${status}")`);
-                    }
-
-                    // Smart status detection - check if status contains "complete" (case insensitive)
-                    if (status.includes('complete') || status === 'done' || status === 'published' ||
-                        status === 'success' || status === 'live') {
-                        done++;
-                    } else if (status === 'processing' || status === 'generating' || status === 'working') {
-                        processing++;
-                    } else if (status === 'error' || status === 'failed' || status === 'fail') {
-                        error++;
-                    } else if (status === 'pending' || status === '' || status === 'todo' || status === 'new') {
-                        pending++;
-                    } else {
-                        // Custom status - check if WP Post URL column has any content (even "Content Complete" text)
-                        const wpUrlHeader = sheetData.headers.find(h =>
-                            h.toLowerCase().includes('wp') && (h.toLowerCase().includes('url') || h.toLowerCase().includes('post'))
-                        );
-                        const wpUrlColumn = wpUrlHeader ? (sheetData.columns[wpUrlHeader] || wpUrlHeader) : null;
-                        if (wpUrlColumn && row[wpUrlColumn] && row[wpUrlColumn].toString().trim() !== '') {
-                            done++;
-                        } else {
-                            processing++;
-                        }
-                    }
-                });
-                console.log(`Stats calculated: done=${done}, processing=${processing}, pending=${pending}, error=${error}`);
-            } else {
-                // No status column, check for WP URL to determine done vs pending
-                const wpUrlHeader = sheetData.headers.find(h =>
-                    h.toLowerCase().includes('wp') && (h.toLowerCase().includes('url') || h.toLowerCase().includes('post'))
+            if (sheetData.success) {
+                const statusHeader = sheetData.headers.find(h =
+                    h.toLowerCase().includes('status')
                 );
-                const wpUrlColumn = wpUrlHeader ? (sheetData.columns[wpUrlHeader] || wpUrlHeader) : null;
-                if (wpUrlColumn) {
-                    allRows.forEach(row => {
-                        if (row[wpUrlColumn] && row[wpUrlColumn].toString().trim() !== '') {
-                            done++;
-                        } else {
-                            pending++;
-                        }
-                    });
-                } else {
-                    pending = allRows.length;
-                }
+                const statusKey = statusHeader ? 
+                    googleSheetsService.sanitizeColumnName(statusHeader) : null;
+
+                sheetData.data.forEach(row => {
+                    const status = (statusKey ? row[statusKey] : '').toString().toLowerCase();
+                    
+                    if (status.includes('done') || status.includes('complete')) done++;
+                    else if (status.includes('process')) processing++;
+                    else if (status.includes('error') || status.includes('fail')) error++;
+                    else pending++;
+                });
             }
 
             return {
@@ -527,14 +437,69 @@ class SpreadsheetAgent {
                     sheets: testResult.data.sheets,
                     spreadsheetId: targetSpreadsheetId,
                     headers: sheetData.headers,
-                    preview: sheetData.data,
+                    preview: sheetData.data?.slice(0, 5),
                     totalRows: sheetData.totalRows,
-                    columns: sheetData.columns,
                     stats: { pending, processing, done, error }
                 }
             };
         } catch (err) {
             console.error('Get spreadsheet info error:', err);
+            return {
+                success: false,
+                error: err.message
+            };
+        }
+    }
+
+    /**
+     * Create a template spreadsheet for the user
+     */
+    async createTemplateSpreadsheet(title = 'WordPress Claw - Content Calendar') {
+        try {
+            await this.initialize();
+
+            const result = await googleSheetsService.createSpreadsheet(title, ['Topics']);
+            
+            if (!result.success) {
+                return result;
+            }
+
+            // Add headers to the Topics sheet
+            const headers = [
+                ['Status', 'Main Keyword', 'Priority', 'Notes', 'WP Post URL', 'Created']
+            ];
+
+            await googleSheetsService.appendRows(
+                result.data.spreadsheetId,
+                'Topics',
+                headers
+            );
+
+            // Add example rows
+            const examples = [
+                ['PENDING', 'Best coffee shops in Manila', 'High', 'Focus on specialty cafes', '', new Date().toISOString()],
+                ['PENDING', 'SEO tips for small businesses', 'Medium', '', '', new Date().toISOString()],
+                ['PENDING', 'Digital marketing trends 2024', 'High', 'Include AI tools section', '', new Date().toISOString()]
+            ];
+
+            await googleSheetsService.appendRows(
+                result.data.spreadsheetId,
+                'Topics',
+                examples
+            );
+
+            return {
+                success: true,
+                message: 'Template spreadsheet created successfully',
+                data: {
+                    spreadsheetId: result.data.spreadsheetId,
+                    spreadsheetUrl: result.data.spreadsheetUrl,
+                    title,
+                    setupInstructions: await this.getConnectionInfo()
+                }
+            };
+        } catch (err) {
+            console.error('Create template spreadsheet error:', err);
             return {
                 success: false,
                 error: err.message

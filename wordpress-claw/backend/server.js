@@ -18,6 +18,7 @@ const articlesRoutes = require('./routes/articles');
 const clawbotRoutes = require('./routes/clawbot');
 const contentQueueRoutes = require('./routes/content-queue');
 const googleSheetsMatonRoutes = require('./routes/google-sheets-maton');
+const googleSheetsRoutes = require('./routes/google-sheets');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -105,7 +106,8 @@ app.use('/api/business-profile', businessProfileRoutes);
 app.use('/api/connections', connectionsRoutes);
 app.use('/api/articles', articlesRoutes);
 app.use('/api/clawbot', clawbotRoutes);
-app.use('/api/sheets', googleSheetsMatonRoutes);
+app.use('/api/sheets', googleSheetsRoutes);  // New working Google Sheets routes
+app.use('/api/sheets-maton', googleSheetsMatonRoutes);  // Keep old Maton routes for now
 // Content queue API routes are mounted below the form routes
 
 // Form-based content queue routes (no JavaScript, server-rendered)
