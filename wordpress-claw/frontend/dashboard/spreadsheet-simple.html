@@ -318,6 +318,78 @@
         .status-input.status-done { background: #e8f5e9; color: #2e7d32; }
         .status-input.status-error { background: #ffebee; color: #c62828; }
         
+        /* Cluster Keywords Cell - Sleek Design */
+        .cluster-keywords-cell {
+            position: relative;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid transparent;
+        }
+        
+        .cluster-keywords-cell:hover {
+            background: #fff;
+            border-color: #ddd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .cluster-first {
+            font-weight: 500;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+        
+        .cluster-count {
+            font-size: 11px;
+            color: #666;
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+        
+        .cluster-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            white-space: pre-wrap;
+            max-width: 400px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            margin-bottom: 8px;
+        }
+        
+        .cluster-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 20px;
+            border: 6px solid transparent;
+            border-top-color: #1a1a1a;
+        }
+        
+        .cluster-keywords-cell:hover .cluster-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        
         /* Row Actions */
         .row-actions { display: flex; gap: 6px; }
         
@@ -739,14 +811,7 @@ https://example.com [tab] keyword [tab] cluster1, cluster2 [tab] PENDING"></text
                         >
                     </td>
                     <td>
-                        <input type="text" 
-                            class="cell-input" 
-                            data-field="cluster_keywords" 
-                            data-id="${row.id}"
-                            value="${escapeHtml(row.cluster_keywords || '')}"
-                            placeholder="keyword1, keyword2..."
-                            onblur="saveCell(this)"
-                        >
+                        ${renderClusterKeywords(row.cluster_keywords, row.id)}
                     </td>
                     <td>
                         <input type="text" 
@@ -807,6 +872,55 @@ https://example.com [tab] keyword [tab] cluster1, cluster2 [tab] PENDING"></text
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;');
+        }
+
+        // Render cluster keywords with expandable tooltip
+        function renderClusterKeywords(keywords, rowId) {
+            if (!keywords) return '<input type="text" class="cell-input" data-field="cluster_keywords" data-id="' + rowId + '" value="" placeholder="keyword1, keyword2..." onblur="saveCell(this)">';
+            
+            const keywordsList = keywords.split(',').map(k => k.trim()).filter(k => k);
+            const firstKeyword = keywordsList[0] || '';
+            const remainingCount = keywordsList.length - 1;
+            
+            if (keywordsList.length <= 1) {
+                return `<input type="text" 
+                    class="cell-input" 
+                    data-field="cluster_keywords" 
+                    data-id="${rowId}"
+                    value="${escapeHtml(keywords)}"
+                    placeholder="keyword1, keyword2..."
+                    onblur="saveCell(this)"
+                >`;
+            }
+            
+            return `<div class="cluster-keywords-cell" onclick="editClusterKeywords(${rowId})">
+                <span class="cluster-first">${escapeHtml(firstKeyword)}</span>
+                <span class="cluster-count">+${remainingCount} more</span>
+                <div class="cluster-tooltip">${escapeHtml(keywords)}</div>
+            </div>`;
+        }
+        
+        // Edit cluster keywords inline
+        function editClusterKeywords(rowId) {
+            const row = currentData.find(r => r.id == rowId);
+            if (!row) return;
+            
+            const cell = document.querySelector(`tr[data-id="${rowId}"] td:nth-child(3)`);
+            if (!cell) return;
+            
+            cell.innerHTML = `<input type="text" 
+                class="cell-input" 
+                data-field="cluster_keywords" 
+                data-id="${rowId}"
+                value="${escapeHtml(row.cluster_keywords || '')}"
+                placeholder="keyword1, keyword2..."
+                onblur="saveCell(this)"
+                autofocus
+            >`;
+            
+            const input = cell.querySelector('input');
+            input.focus();
+            input.select();
         }
 
         // Save cell on blur
