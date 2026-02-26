@@ -17,6 +17,7 @@ const connectionsRoutes = require('./routes/connections');
 const articlesRoutes = require('./routes/articles');
 const clawbotRoutes = require('./routes/clawbot');
 const contentQueueRoutes = require('./routes/content-queue');
+const googleSheetsMatonRoutes = require('./routes/google-sheets-maton');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -104,7 +105,15 @@ app.use('/api/business-profile', businessProfileRoutes);
 app.use('/api/connections', connectionsRoutes);
 app.use('/api/articles', articlesRoutes);
 app.use('/api/clawbot', clawbotRoutes);
-app.use('/api/content-queue', contentQueueRoutes);
+app.use('/api/sheets', googleSheetsMatonRoutes);
+// Content queue API routes are mounted below the form routes
+
+// Form-based content queue routes (no JavaScript, server-rendered)
+// Mount at root so /content-queue works without /api prefix
+app.use('/content-queue', contentQueueRoutes);
+
+// API routes for content queue (JSON responses)
+app.use('/api/content-queue', contentQueueRoutes.apiRouter);
 
 // Serve static files from frontend directory
 app.use(express.static(path.join(__dirname, 'frontend')));

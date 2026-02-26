@@ -10,6 +10,7 @@
     "postinstall": "npm rebuild better-sqlite3"
   },
   "dependencies": {
+    "@maton/agent-toolkit": "^0.0.10",
     "axios": "^1.6.7",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^9.4.3",
