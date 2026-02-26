@@ -1829,10 +1829,10 @@
             }
         }
 
-        async function saveCell(textarea) {
-            const id = textarea.dataset.id;
-            const field = textarea.dataset.field;
-            const value = textarea.value;
+        async function saveCell(element) {
+            const id = element.dataset.id;
+            const field = element.dataset.field;
+            const value = element.value;
 
             // Find the original value
             const row = currentData.find(r => r.id == id);
