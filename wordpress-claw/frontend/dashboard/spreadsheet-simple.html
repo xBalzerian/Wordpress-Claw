@@ -292,22 +292,31 @@
         
         .cell-input.url-cell { font-family: monospace; font-size: 12px; }
         
-        /* Status Select */
-        .status-select {
-            padding: 6px 10px;
+        /* Status Input */
+        .status-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid transparent;
             border-radius: 4px;
             font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
-            border: 1px solid transparent;
-            cursor: pointer;
             font-family: inherit;
+            background: transparent;
         }
         
-        .status-pending { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
-        .status-processing { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
-        .status-done { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
-        .status-error { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
+        .status-input:hover { background: #fff; border-color: #ddd; }
+        .status-input:focus {
+            outline: none;
+            background: #fff;
+            border-color: #c62828;
+            box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.1);
+        }
+        
+        .status-input.status-pending { background: #fff3e0; color: #e65100; }
+        .status-input.status-processing { background: #e3f2fd; color: #1565c0; }
+        .status-input.status-done { background: #e8f5e9; color: #2e7d32; }
+        .status-input.status-error { background: #ffebee; color: #c62828; }
         
         /* Row Actions */
         .row-actions { display: flex; gap: 6px; }
@@ -760,13 +769,15 @@ https://example.com [tab] keyword [tab] cluster1, cluster2 [tab] PENDING"></text
                         >
                     </td>
                     <td>
-                        <select class="status-select status-${(row.status || 'PENDING').toLowerCase()}" 
-                            onchange="updateStatus(${row.id}, this.value)">
-                            <option value="PENDING" ${row.status === 'PENDING' ? 'selected' : ''}>Pending</option>
-                            <option value="PROCESSING" ${row.status === 'PROCESSING' ? 'selected' : ''}>Processing</option>
-                            <option value="DONE" ${row.status === 'DONE' ? 'selected' : ''}>Done</option>
-                            <option value="ERROR" ${row.status === 'ERROR' ? 'selected' : ''}>Error</option>
-                        </select>
+                        <input type="text" 
+                            class="cell-input status-input status-${(row.status || 'PENDING').toLowerCase()}" 
+                            data-field="status" 
+                            data-id="${row.id}"
+                            value="${escapeHtml(row.status || 'PENDING')}"
+                            placeholder="PENDING, PROCESSING, DONE, ERROR"
+                            onblur="saveCell(this)"
+                            onchange="updateStatusClass(this)"
+                        >
                     </td>
                     <td>
                         <input type="text" 
@@ -832,6 +843,12 @@ https://example.com [tab] keyword [tab] cluster1, cluster2 [tab] PENDING"></text
             } catch (err) {
                 showAlert('Failed to save changes', 'error');
             }
+        }
+
+        // Update status class based on input value
+        function updateStatusClass(input) {
+            const value = input.value.trim().toUpperCase();
+            input.className = `cell-input status-input status-${value.toLowerCase()}`;
         }
 
         // Update status

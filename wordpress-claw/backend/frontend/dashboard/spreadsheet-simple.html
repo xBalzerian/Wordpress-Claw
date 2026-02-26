@@ -734,29 +734,39 @@
             font-weight: bold;
         }
 
-        /* Status Badge */
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+        /* Status Input (text-based, no dropdown) */
+        .status-input {
+            width: 100%;
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            border: none;
-            cursor: pointer;
-            transition: var(--transition);
+            border: 1px solid transparent;
             font-family: inherit;
+            text-align: center;
+            transition: var(--transition);
         }
-
-        .status-badge::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
+        
+        .status-input:hover { 
+            background: var(--bg-card); 
+            border-color: var(--border);
         }
+        .status-input:focus {
+            outline: none;
+            background: var(--bg-card);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.1);
+        }
+        
+        .status-input.status-pending { background: var(--warning-bg); color: #E65100; }
+        .status-input.status-processing { background: var(--info-bg); color: #0D47A1; }
+        .status-input.status-done { background: var(--success-bg); color: #2E7D32; }
+        .status-input.status-error { background: var(--error-bg); color: #C62828; }
+        .status-input.status-completed { background: var(--success-bg); color: #2E7D32; }
+        .status-input.status-published { background: var(--success-bg); color: #2E7D32; }
+        .status-input.status-success { background: var(--success-bg); color: #2E7D32; }
 
         .status-pending {
             background: var(--warning-bg);
@@ -1596,30 +1606,24 @@
                         >${escapeHtml(row.service_url || '')}</textarea>
                     </td>
                     <td>
-                        <select class="cell-input" 
+                        <textarea class="cell-input" 
                             data-field="main_keyword" 
                             data-id="${row.id}"
-                            onchange="saveCell(this)"
-                            style="font-family: inherit; min-width: 140px;">
-                            <option value="" ${!row.main_keyword ? 'selected' : ''}>Select keyword...</option>
-                            ${keywordSuggestions.map(kw => `
-                                <option value="${kw}" ${row.main_keyword === kw ? 'selected' : ''}>${kw}</option>
-                            `).join('')}
-                            <option value="custom">+ Add Custom...</option>
-                        </select>
+                            rows="1"
+                            placeholder="Enter keyword..."
+                            onblur="saveCell(this)"
+                            onkeydown="handleCellKeydown(event, this)"
+                        >${escapeHtml(row.main_keyword || '')}</textarea>
                     </td>
                     <td>
-                        <select class="cell-input" 
+                        <textarea class="cell-input" 
                             data-field="cluster_keywords" 
                             data-id="${row.id}"
-                            onchange="saveCell(this)"
-                            style="font-family: inherit; min-width: 180px;"
-                        >
-                            <option value="" ${!row.cluster_keywords ? 'selected' : ''}>Select clusters...</option>
-                            ${keywordSuggestions.map(kw => `
-                                <option value="${kw}" ${(row.cluster_keywords || '').includes(kw) ? 'selected' : ''}>${kw}</option>
-                            `).join('')}
-                        </select>
+                            rows="1"
+                            placeholder="keyword1, keyword2, keyword3..."
+                            onblur="saveCell(this)"
+                            onkeydown="handleCellKeydown(event, this)"
+                        >${escapeHtml(row.cluster_keywords || '')}</textarea>
                     </td>
                     <td>
                         <textarea class="cell-input url-cell" 
@@ -1642,14 +1646,16 @@
                         >${escapeHtml(row.wp_post_url || '')}</textarea>
                     </td>
                     <td>
-                        <select class="status-badge status-${(row.status || 'PENDING').toLowerCase()}" 
-                            onchange="updateStatus(${row.id}, this.value)"
-                            style="font-family: inherit;">
-                            <option value="PENDING" ${row.status === 'PENDING' ? 'selected' : ''} class="status-pending">Pending</option>
-                            <option value="PROCESSING" ${row.status === 'PROCESSING' ? 'selected' : ''} class="status-processing">Processing</option>
-                            <option value="DONE" ${row.status === 'DONE' ? 'selected' : ''} class="status-done">Done</option>
-                            <option value="ERROR" ${row.status === 'ERROR' ? 'selected' : ''} class="status-error">Error</option>
-                        </select>
+                        <input type="text" 
+                            class="status-input status-${(row.status || 'PENDING').toLowerCase()}" 
+                            data-field="status" 
+                            data-id="${row.id}"
+                            value="${escapeHtml(row.status || 'PENDING')}"
+                            placeholder="PENDING"
+                            onblur="saveCell(this)"
+                            onchange="updateStatusClass(this)"
+                            style="font-family: inherit;"
+                        >
                     </td>
                     <td>
                         <textarea class="cell-input url-cell" 
@@ -1894,6 +1900,12 @@
             } catch (err) {
                 showAlert('Failed to update status', 'error');
             }
+        }
+
+        // Update status class based on input value
+        function updateStatusClass(input) {
+            const value = input.value.trim().toUpperCase();
+            input.className = `status-input status-${value.toLowerCase()}`;
         }
 
         async function processRow(id) {
