@@ -125,6 +125,11 @@ app.get('/google-sheets', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/dashboard/google-sheets.html'));
 });
 
+// Serve specific dashboard HTML files (must be BEFORE the catch-all)
+app.get('/dashboard/google-sheets.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/dashboard/google-sheets.html'));
+});
+
 // Serve dashboard routes (catch-all for other dashboard pages)
 app.get('/dashboard/*', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/dashboard/index.html'));
