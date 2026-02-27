@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - WordPress Claw Content Management</title>
+    <meta name="description" content="Manage your AI-generated content, track article status, and connect your WordPress site from the WordPress Claw dashboard.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://wordpress-claw.com/dashboard/">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E53935;
+            --primary-dark: #C62828;
+            --text: #1a1a1a;
+            --text-secondary: #666;
+            --bg: #f8f9fa;
+            --bg-card: #ffffff;
+            --border: #e5e5e5;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--bg);
+        }
+
+        /* Layout */
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-logo img {
+            height: 72px;
+            width: auto;
+            max-width: 220px;
+            object-fit: contain;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: rgba(229, 57, 53, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .user-menu:hover {
+            background: var(--bg);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-tier {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: capitalize;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-change {
+            font-size: 13px;
+            color: var(--success);
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .card-header a {
+            font-size: 14px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .card-body {
+            padding: 0;
+        }
+
+        /* Articles List */
+        .article-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            text-decoration: none;
+            color: inherit;
+            transition: background 0.2s;
+        }
+
+        .article-item:last-child {
+            border-bottom: none;
+        }
+
+        .article-item:hover {
+            background: var(--bg);
+        }
+
+        .article-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: rgba(229, 57, 53, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            font-size: 18px;
+        }
+
+        .article-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .article-title {
+            font-weight: 500;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .article-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .article-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .status-draft { background: #f5f5f5; color: #666; }
+        .status-published { background: #e8f5e9; color: #2e7d32; }
+        .status-review { background: #fff3e0; color: #ef6c00; }
+        .status-generating { background: #e3f2fd; color: #1565c0; }
+
+        .empty-state {
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* ClawBot Widget */
+        .clawbot-widget {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 400px;
+        }
+
+        .clawbot-header {
+            padding: 16px 20px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .clawbot-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .clawbot-info h3 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .clawbot-info p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .clawbot-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+
+        .clawbot-message {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .clawbot-message.assistant {
+            flex-direction: row;
+        }
+
+        .clawbot-message-content {
+            background: white;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            max-width: 85%;
+        }
+
+        .clawbot-message.assistant .clawbot-message-content {
+            border-bottom-left-radius: 4px;
+        }
+
+        .clawbot-input {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+        }
+
+        .clawbot-input input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .clawbot-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .clawbot-input button {
+            padding: 10px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .clawbot-input button:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 20px 24px;
+        }
+
+        .quick-action {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg);
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .quick-action:hover {
+            background: var(--border);
+        }
+
+        .quick-action-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .quick-action-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Setup Checklist */
+        .checklist {
+            padding: 20px 24px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+
+        .checklist-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .checklist-checkbox.checked {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .checklist-text {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .checklist-text.completed {
+            color: var(--text-secondary);
+            text-decoration: line-through;
+        }
+
+        .checklist-action {
+            font-size: 13px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 101;
+            width: 44px;
+            height: 44px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        @media (max-width: 1100px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: flex;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+                padding-top: 80px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+    <div class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+    
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <img src="../assets/logo.png" alt="WordPress Claw Logo - Your Content Command Center">
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="index.html" class="nav-item active">
+                        <span class="nav-icon">📊</span>
+                        Dashboard
+                    </a>
+                    <a href="articles.html" class="nav-item">
+                        <span class="nav-icon">📝</span>
+                        Articles
+                    </a>
+                    <a href="clawbot.html" class="nav-item">
+                        <span class="nav-icon">🤖</span>
+                        ClawBot
+                    </a>
+                    <a href="/content-queue" class="nav-item">
+                        <span class="nav-icon">📋</span>
+                        Content Queue
+                    </a>
+                    <a href="/google-sheets" class="nav-item">
+                        <span class="nav-icon">📊</span>
+                        Google Sheets
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a href="business-profile.html" class="nav-item" id="businessProfileLink">
+                        <span class="nav-icon">🏢</span>
+                        Business Profile
+                        <span class="completion-badge" id="sidebarCompletion" style="margin-left: auto; font-size: 11px; padding: 2px 6px; border-radius: 10px; background: #ff9800; color: white;">⚠️ 0%</span>
+                    </a>
+                    <a href="connections.html" class="nav-item">
+                        <span class="nav-icon">🔗</span>
+                        Connections
+                    </a>
+                    <a href="billing.html" class="nav-item">
+                        <span class="nav-icon">💳</span>
+                        Billing
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Help</div>
+                    <a href="../docs.html" class="nav-item" target="_blank">
+                        <span class="nav-icon">📚</span>
+                        Documentation
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-menu" onclick="logout()">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">User</div>
+                        <div class="user-tier" id="userTier">Free</div>
+                    </div>
+                    <span>🚪</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="page-header">
+                <h1>Dashboard</h1>
+                <p>Welcome back! Here's what's happening with your content.</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Articles</div>
+                    <div class="stat-value" id="totalArticles">0</div>
+                    <div class="stat-change">+0 this month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Published</div>
+                    <div class="stat-value" id="publishedArticles">0</div>
+                    <div class="stat-change">Live on WordPress</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Credits Available</div>
+                    <div class="stat-value" id="creditsAvailable">0</div>
+                    <div class="stat-change" id="creditsText">On Free plan</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Connections</div>
+                    <div class="stat-value" id="connectionsCount">0</div>
+                    <div class="stat-change">Active integrations</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <!-- Left Column -->
+                <div class="left-col">
+                    <!-- Recent Articles -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Recent Articles</h2>
+                            <a href="articles.html">View all →</a>
+                        </div>
+                        <div class="card-body" id="recentArticles">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📝</div>
+                                <p>No articles yet. Create your first one!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card" style="margin-top: 24px;">
+                        <div class="card-header">
+                            <h2>Quick Actions</h2>
+                        </div>
+                        <div class="quick-actions">
+                            <a href="articles.html" class="quick-action">
+                                <div class="quick-action-icon">✍️</div>
+                                <span class="quick-action-text">New Article</span>
+                            </a>
+                            <a href="clawbot.html" class="quick-action">
+                                <div class="quick-action-icon">🤖</div>
+                                <span class="quick-action-text">Ask ClawBot</span>
+                            </a>
+                            <a href="connections.html" class="quick-action">
+                                <div class="quick-action-icon">🔗</div>
+                                <span class="quick-action-text">Connect WP</span>
+                            </a>
+                            <a href="billing.html" class="quick-action">
+                                <div class="quick-action-icon">⬆️</div>
+                                <span class="quick-action-text">Upgrade Plan</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="right-col">
+                    <!-- ClawBot Widget -->
+                    <div class="clawbot-widget">
+                        <div class="clawbot-header">
+                            <div class="clawbot-avatar">🦞</div>
+                            <div class="clawbot-info">
+                                <h3>ClawBot</h3>
+                                <p>Your AI assistant</p>
+                            </div>
+                        </div>
+                        <div class="clawbot-messages" id="clawbotMessages">
+                            <div class="clawbot-message assistant">
+                                <div class="clawbot-message-content">
+                                    Hey there! I'm ClawBot. I can help you generate articles, publish to WordPress, or answer questions. What would you like to do?
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clawbot-input">
+                            <input type="text" id="clawbotInput" placeholder="Type a message...">
+                            <button onclick="sendClawBotMessage()">Send</button>
+                        </div>
+                    </div>
+
+                    <!-- Setup Checklist -->
+                    <div class="card" style="margin-top: 24px;">
+                        <div class="card-header">
+                            <h2>Setup Checklist</h2>
+                        </div>
+                        <div class="checklist" id="setupChecklist">
+                            <div class="checklist-item">
+                                <div class="checklist-checkbox" id="checkProfile"></div>
+                                <span class="checklist-text" id="textProfile">Complete business profile</span>
+                                <a href="../business-profile.html" class="checklist-action">Set up →</a>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="checklist-checkbox" id="checkConnection"></div>
+                                <span class="checklist-text" id="textConnection">Connect WordPress</span>
+                                <a href="connections.html" class="checklist-action">Connect →</a>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="checklist-checkbox" id="checkArticle"></div>
+                                <span class="checklist-text" id="textArticle">Create first article</span>
+                                <a href="articles.html" class="checklist-action">Create →</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = '';
+        let clawbotSessionKey = null;
+
+        // Check auth
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        // Load user data
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'User';
+        document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
+        document.getElementById('userAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
+
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`${API_URL}/api/user/dashboard`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const { stats, recentArticles, profileComplete } = data.data;
+
+                    // Update stats
+                    document.getElementById('totalArticles').textContent = stats.articles.total;
+                    document.getElementById('publishedArticles').textContent = stats.articles.published;
+                    document.getElementById('creditsAvailable').textContent = stats.credits.available === 'unlimited' ? '∞' : stats.credits.available;
+                    document.getElementById('creditsText').textContent = user.tier === 'pro' ? 'Unlimited' : `${stats.credits.used} used of ${stats.credits.included}`;
+                    document.getElementById('connectionsCount').textContent = stats.connections;
+
+                    // Update checklist
+                    if (profileComplete) {
+                        document.getElementById('checkProfile').classList.add('checked');
+                        document.getElementById('checkProfile').textContent = '✓';
+                        document.getElementById('textProfile').classList.add('completed');
+                    }
+
+                    if (stats.connections > 0) {
+                        document.getElementById('checkConnection').classList.add('checked');
+                        document.getElementById('checkConnection').textContent = '✓';
+                        document.getElementById('textConnection').classList.add('completed');
+                    }
+
+                    if (stats.articles.total > 0) {
+                        document.getElementById('checkArticle').classList.add('checked');
+                        document.getElementById('checkArticle').textContent = '✓';
+                        document.getElementById('textArticle').classList.add('completed');
+                    }
+
+                    // Update recent articles
+                    if (recentArticles.length > 0) {
+                        const articlesHtml = recentArticles.map(article => `
+                            <a href="articles.html?id=${article.id}" class="article-item">
+                                <div class="article-icon">📝</div>
+                                <div class="article-info">
+                                    <div class="article-title">${article.title || 'Untitled'}</div>
+                                    <div class="article-meta">${article.keyword || 'No keyword'} • ${new Date(article.created_at).toLocaleDateString()}</div>
+                                </div>
+                                <span class="article-status status-${article.status}">${article.status}</span>
+                            </a>
+                        `).join('');
+                        document.getElementById('recentArticles').innerHTML = articlesHtml;
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load dashboard:', err);
+            }
+        }
+
+        // Load business profile completion for sidebar
+        async function loadProfileCompletion() {
+            try {
+                const response = await fetch(`${API_URL}/api/business-profile/completion`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const completion = data.data.completion || 0;
+                    const badge = document.getElementById('sidebarCompletion');
+                    
+                    if (completion >= 100) {
+                        badge.textContent = '✓ 100%';
+                        badge.style.background = '#4caf50';
+                    } else {
+                        badge.textContent = `⚠️ ${completion}%`;
+                        badge.style.background = '#ff9800';
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load profile completion:', err);
+            }
+        }
+
+        // Initialize ClawBot session
+        async function initClawBot() {
+            try {
+                const response = await fetch(`${API_URL}/api/clawbot/session`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    clawbotSessionKey = data.data.sessionKey;
+                }
+            } catch (err) {
+                console.error('Failed to init ClawBot:', err);
+            }
+        }
+
+        // Send ClawBot message
+        async function sendClawBotMessage() {
+            const input = document.getElementById('clawbotInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // Add user message
+            const messagesContainer = document.getElementById('clawbotMessages');
+            messagesContainer.innerHTML += `
+                <div class="clawbot-message" style="justify-content: flex-end;">
+                    <div class="clawbot-message-content" style="background: var(--primary); color: white; border-bottom-right-radius: 4px;">
+                        ${escapeHtml(message)}
+                    </div>
+                </div>
+            `;
+            input.value = '';
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            try {
+                const response = await fetch(`${API_URL}/api/clawbot/message`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message, sessionKey: clawbotSessionKey })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    clawbotSessionKey = data.data.sessionKey;
+                    messagesContainer.innerHTML += `
+                        <div class="clawbot-message assistant">
+                            <div class="clawbot-message-content">
+                                ${escapeHtml(data.data.message)}
+                            </div>
+                        </div>
+                    `;
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            } catch (err) {
+                console.error('ClawBot error:', err);
+            }
+        }
+
+        // Allow Enter key to send
+        document.getElementById('clawbotInput')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendClawBotMessage();
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            document.querySelector('.sidebar').classList.toggle('show');
+            document.querySelector('.sidebar-overlay').classList.toggle('show');
+        }
+
+        // Load data
+        loadDashboard();
+        loadProfileCompletion();
+        initClawBot();
+    </script>
+</body>
+</html>

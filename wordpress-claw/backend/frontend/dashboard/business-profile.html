@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Profile - WordPress Claw Brand Settings</title>
+    <meta name="description" content="Configure your business profile, content preferences, and brand voice for AI-generated articles.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://wordpress-claw.com/dashboard/business-profile.html">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E53935;
+            --primary-dark: #C62828;
+            --text: #1a1a1a;
+            --text-secondary: #666;
+            --bg: #f8f9fa;
+            --bg-card: #ffffff;
+            --border: #e5e5e5;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--bg);
+        }
+
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-logo img {
+            height: 72px;
+            width: auto;
+            max-width: 220px;
+            object-fit: contain;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: rgba(229, 57, 53, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-item .completion-badge {
+            margin-left: auto;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: var(--warning);
+            color: white;
+        }
+
+        .nav-item .completion-badge.complete {
+            background: var(--success);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .user-menu:hover {
+            background: var(--bg);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-tier {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: capitalize;
+        }
+
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+        }
+
+        /* Progress Card */
+        .progress-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .progress-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .progress-percentage {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.complete {
+            background: var(--success);
+        }
+
+        .progress-missing {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .progress-missing strong {
+            color: var(--warning);
+        }
+
+        /* Form Styles */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .form-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .form-section.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .icon {
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        label .optional {
+            font-weight: 400;
+            color: var(--text-secondary);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Toggle Switch */
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: var(--bg);
+            border-radius: 8px;
+        }
+
+        .toggle-info h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .toggle-info p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .toggle {
+            position: relative;
+            width: 48px;
+            height: 24px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border);
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        /* Image Style Options */
+        .style-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .style-option {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .style-option input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .style-card {
+            padding: 16px 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .style-option input:checked + .style-card {
+            border-color: var(--primary);
+            background: rgba(229, 57, 53, 0.05);
+        }
+
+        .style-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .style-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Save Button */
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #4caf50;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef5350;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 101;
+            width: 44px;
+            height: 44px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        @media (max-width: 1100px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .style-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle { display: flex; }
+            .sidebar { 
+                transform: translateX(-100%); 
+                transition: transform 0.3s ease;
+            }
+            .sidebar.show { transform: translateX(0); }
+            .main { margin-left: 0; padding-top: 80px; }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+    <div class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+    
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <img src="../assets/logo.png" alt="WordPress Claw Logo - Your Content Command Center">
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="index.html" class="nav-item">
+                        <span class="nav-icon">📊</span>
+                        Dashboard
+                    </a>
+                    <a href="articles.html" class="nav-item">
+                        <span class="nav-icon">📝</span>
+                        Articles
+                    </a>
+                    <a href="clawbot.html" class="nav-item">
+                        <span class="nav-icon">🤖</span>
+                        ClawBot
+                    </a>
+                    <a href="/content-queue" class="nav-item">
+                        <span class="nav-icon">📋</span>
+                        Content Queue
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a href="business-profile.html" class="nav-item active" id="businessProfileLink">
+                        <span class="nav-icon">🏢</span>
+                        Business Profile
+                        <span class="completion-badge" id="sidebarCompletion">⚠️ 0%</span>
+                    </a>
+                    <a href="connections.html" class="nav-item">
+                        <span class="nav-icon">🔗</span>
+                        Connections
+                    </a>
+                    <a href="billing.html" class="nav-item">
+                        <span class="nav-icon">💳</span>
+                        Billing
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Help</div>
+                    <a href="../docs.html" class="nav-item" target="_blank">
+                        <span class="nav-icon">📚</span>
+                        Documentation
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-menu" onclick="logout()">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">User</div>
+                        <div class="user-tier" id="userTier">Free</div>
+                    </div>
+                    <span>🚪</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="page-header">
+                <h1>Business Profile</h1>
+                <p>Tell us about your business so we can create content that matches your brand.</p>
+            </div>
+
+            <!-- Alert -->
+            <div class="alert alert-success" id="successAlert">
+                ✅ Business profile saved successfully!
+            </div>
+            <div class="alert alert-error" id="errorAlert">
+                ❌ Failed to save profile. Please try again.
+            </div>
+
+            <!-- Progress Card -->
+            <div class="progress-card">
+                <div class="progress-header">
+                    <span class="progress-title">Profile Completion</span>
+                    <span class="progress-percentage" id="completionPercentage">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="progress-missing" id="progressMissing">
+                    Complete your profile to unlock all features. Missing: <strong>company name, industry, description</strong>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="businessProfileForm">
+                <div class="form-grid">
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <span class="icon">🏢</span>
+                            Basic Information
+                        </h2>
+                        
+                        <div class="form-group">
+                            <label for="companyName">Company Name *</label>
+                            <input type="text" id="companyName" name="companyName" placeholder="Your Company Name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="industry">Industry *</label>
+                            <input type="text" id="industry" name="industry" placeholder="e.g., Technology, Healthcare, Retail">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">Location <span class="optional">(optional)</span></label>
+                            <input type="text" id="location" name="location" placeholder="e.g., Manila, Philippines">
+                            <p class="help-text">Used for local SEO targeting</p>
+                        </div>
+                    </div>
+
+                    <!-- Content Preferences -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <span class="icon">✍️</span>
+                            Content Preferences
+                        </h2>
+                        
+                        <div class="form-group">
+                            <label for="tone">Content Tone</label>
+                            <select id="tone" name="tone">
+                                <option value="professional">Professional</option>
+                                <option value="casual">Casual</option>
+                                <option value="friendly">Friendly</option>
+                                <option value="formal">Formal</option>
+                                <option value="witty">Witty</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="wordCount">Target Word Count</label>
+                            <input type="number" id="wordCount" name="wordCount" min="300" max="3000" value="1500">
+                            <p class="help-text">Between 300-3000 words</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contentType">Content Type</label>
+                            <select id="contentType" name="contentType">
+                                <option value="blog_post">Blog Post</option>
+                                <option value="article">Article</option>
+                                <option value="news">News</option>
+                                <option value="tutorial">Tutorial</option>
+                                <option value="review">Review</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Image Settings -->
+                    <div class="form-section full-width">
+                        <h2 class="section-title">
+                            <span class="icon">🎨</span>
+                            Image Settings
+                        </h2>
+                        
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 24px;">
+                            <div class="form-group">
+                                <label for="imageCount">Images per Article</label>
+                                <select id="imageCount" name="imageCount">
+                                    <option value="1">1 image</option>
+                                    <option value="2">2 images</option>
+                                    <option value="3">3 images</option>
+                                </select>
+                                <p class="help-text">Number of featured images to generate for each article</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Image Style</label>
+                                <div class="style-options">
+                                    <label class="style-option">
+                                        <input type="radio" name="imageStyle" value="photorealistic" checked>
+                                        <div class="style-card">
+                                            <div class="style-icon">📷</div>
+                                            <div class="style-name">Photorealistic</div>
+                                        </div>
+                                    </label>
+                                    <label class="style-option">
+                                        <input type="radio" name="imageStyle" value="illustration">
+                                        <div class="style-card">
+                                            <div class="style-icon">🎨</div>
+                                            <div class="style-name">Illustration</div>
+                                        </div>
+                                    </label>
+                                    <label class="style-option">
+                                        <input type="radio" name="imageStyle" value="3d">
+                                        <div class="style-card">
+                                            <div class="style-icon">🎲</div>
+                                            <div class="style-name">3D Render</div>
+                                        </div>
+                                    </label>
+                                    <label class="style-option">
+                                        <input type="radio" name="imageStyle" value="photo">
+                                        <div class="style-card">
+                                            <div class="style-icon">🖼️</div>
+                                            <div class="style-name">Photo</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 20px;">
+                            <div class="toggle-group">
+                                <div class="toggle-info">
+                                    <h4>Auto-publish Articles</h4>
+                                    <p>Automatically publish articles to WordPress after generation</p>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" id="autoPublish" name="autoPublish">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Target Audience -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <span class="icon">🎯</span>
+                            Target Audience
+                        </h2>
+                        
+                        <div class="form-group">
+                            <label for="targetAudience">Target Audience <span class="optional">(optional)</span></label>
+                            <textarea id="targetAudience" name="targetAudience" placeholder="Describe your ideal customer - demographics, interests, pain points..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="keywords">Target Keywords <span class="optional">(optional)</span></label>
+                            <textarea id="keywords" name="keywords" placeholder="e.g., digital marketing, SEO services, content strategy"></textarea>
+                            <p class="help-text">Comma-separated list of keywords you want to rank for</p>
+                        </div>
+                    </div>
+
+                    <!-- Competitive Info -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <span class="icon">🏆</span>
+                            Competitive Info
+                        </h2>
+                        
+                        <div class="form-group">
+                            <label for="competitors">Main Competitors <span class="optional">(optional)</span></label>
+                            <textarea id="competitors" name="competitors" placeholder="List your main competitors..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="uniqueSellingPoints">Unique Selling Points <span class="optional">(optional)</span></label>
+                            <textarea id="uniqueSellingPoints" name="uniqueSellingPoints" placeholder="What makes your business unique?"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Company Description <span class="optional">(optional)</span></label>
+                            <textarea id="description" name="description" placeholder="Brief description of what your company does..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="loadProfile()">Reset</button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">Save Profile</button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = '';
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'User';
+        document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
+        document.getElementById('userAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
+
+        let completionData = { completion: 0, missing: [] };
+
+        // Load profile completion status
+        async function loadCompletion() {
+            try {
+                const response = await fetch(`${API_URL}/api/business-profile/completion`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    completionData = data.data;
+                    updateProgressUI();
+                }
+            } catch (err) {
+                console.error('Failed to load completion:', err);
+            }
+        }
+
+        // Update progress UI
+        function updateProgressUI() {
+            const percentage = completionData.completion || 0;
+            const missing = completionData.missing || [];
+            
+            document.getElementById('completionPercentage').textContent = percentage + '%';
+            document.getElementById('progressFill').style.width = percentage + '%';
+            
+            if (percentage >= 100) {
+                document.getElementById('progressFill').classList.add('complete');
+                document.getElementById('progressMissing').innerHTML = '✅ Your profile is complete! You can now generate content.';
+            } else {
+                document.getElementById('progressFill').classList.remove('complete');
+                const missingText = missing.slice(0, 3).join(', ');
+                document.getElementById('progressMissing').innerHTML = 
+                    `Complete your profile to unlock all features. Missing: <strong>${missingText}</strong>`;
+            }
+
+            // Update sidebar badge
+            const badge = document.getElementById('sidebarCompletion');
+            if (percentage >= 100) {
+                badge.textContent = '✓ 100%';
+                badge.classList.add('complete');
+            } else {
+                badge.textContent = `⚠️ ${percentage}%`;
+                badge.classList.remove('complete');
+            }
+        }
+
+        // Load profile data
+        async function loadProfile() {
+            try {
+                const response = await fetch(`${API_URL}/api/business-profile`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                if (data.success && data.data.profile) {
+                    const profile = data.data.profile;
+                    
+                    document.getElementById('companyName').value = profile.company_name || '';
+                    document.getElementById('industry').value = profile.industry || '';
+                    document.getElementById('description').value = profile.description || '';
+                    document.getElementById('targetAudience').value = profile.target_audience || '';
+                    document.getElementById('location').value = profile.location || '';
+                    document.getElementById('tone').value = profile.tone || 'professional';
+                    document.getElementById('wordCount').value = profile.word_count || 1500;
+                    document.getElementById('contentType').value = profile.content_type || 'blog_post';
+                    document.getElementById('keywords').value = profile.keywords || '';
+                    document.getElementById('competitors').value = profile.competitors || '';
+                    document.getElementById('uniqueSellingPoints').value = profile.unique_selling_points || '';
+                    document.getElementById('imageCount').value = profile.image_count || 1;
+                    document.getElementById('autoPublish').checked = profile.auto_publish === 1;
+                    
+                    // Set image style radio
+                    const imageStyle = profile.image_style || 'photorealistic';
+                    document.querySelector(`input[name="imageStyle"][value="${imageStyle}"]`).checked = true;
+                }
+            } catch (err) {
+                console.error('Failed to load profile:', err);
+            }
+        }
+
+        // Save profile
+        document.getElementById('businessProfileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            
+            const formData = {
+                companyName: document.getElementById('companyName').value,
+                industry: document.getElementById('industry').value,
+                description: document.getElementById('description').value,
+                targetAudience: document.getElementById('targetAudience').value,
+                location: document.getElementById('location').value,
+                tone: document.getElementById('tone').value,
+                wordCount: parseInt(document.getElementById('wordCount').value),
+                contentType: document.getElementById('contentType').value,
+                keywords: document.getElementById('keywords').value,
+                competitors: document.getElementById('competitors').value,
+                uniqueSellingPoints: document.getElementById('uniqueSellingPoints').value,
+                imageCount: parseInt(document.getElementById('imageCount').value),
+                imageStyle: document.querySelector('input[name="imageStyle"]:checked').value,
+                autoPublish: document.getElementById('autoPublish').checked
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/api/business-profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('successAlert').classList.add('show');
+                    document.getElementById('errorAlert').classList.remove('show');
+                    setTimeout(() => {
+                        document.getElementById('successAlert').classList.remove('show');
+                    }, 3000);
+                    
+                    // Reload completion status
+                    await loadCompletion();
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (err) {
+                console.error('Save error:', err);
+                document.getElementById('errorAlert').textContent = '❌ ' + (err.message || 'Failed to save profile');
+                document.getElementById('errorAlert').classList.add('show');
+                document.getElementById('successAlert').classList.remove('show');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Profile';
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            document.querySelector('.sidebar').classList.toggle('show');
+            document.querySelector('.sidebar-overlay').classList.toggle('show');
+        }
+
+        // Initialize
+        loadProfile();
+        loadCompletion();
+    </script>
+</body>
+</html>

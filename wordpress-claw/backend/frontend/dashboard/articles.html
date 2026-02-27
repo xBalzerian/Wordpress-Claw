@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articles - WordPress Claw Content Library</title>
+    <meta name="description" content="View, manage, and publish your AI-generated articles. Track content status and publish directly to WordPress.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://wordpress-claw.com/dashboard/articles.html">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E53935;
+            --primary-dark: #C62828;
+            --text: #1a1a1a;
+            --text-secondary: #666;
+            --bg: #f8f9fa;
+            --bg-card: #ffffff;
+            --border: #e5e5e5;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--bg);
+        }
+
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-logo img {
+            height: 72px;
+            width: auto;
+            max-width: 220px;
+            object-fit: contain;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: rgba(229, 57, 53, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .user-menu:hover {
+            background: var(--bg);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-tier {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: capitalize;
+        }
+
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .filter-group select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Articles Table */
+        .articles-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .articles-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .articles-table th {
+            text-align: left;
+            padding: 16px 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .articles-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .articles-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .articles-table tr:hover {
+            background: var(--bg);
+        }
+
+        .article-title-cell {
+            font-weight: 500;
+        }
+
+        .article-title-cell a {
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .article-title-cell a:hover {
+            color: var(--primary);
+        }
+
+        .article-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .status-draft { background: #f5f5f5; color: #666; }
+        .status-published { background: #e8f5e9; color: #2e7d32; }
+        .status-review { background: #fff3e0; color: #ef6c00; }
+        .status-generating { background: #e3f2fd; color: #1565c0; }
+        .status-failed { background: #ffebee; color: #c62828; }
+
+        .article-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .action-btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .action-btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 80px 24px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            margin-bottom: 24px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .pagination button:hover {
+            background: var(--bg);
+        }
+
+        .pagination button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 101;
+            width: 44px;
+            height: 44px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle { display: flex; }
+            .sidebar { 
+                transform: translateX(-100%); 
+                transition: transform 0.3s ease;
+            }
+            .sidebar.show { transform: translateX(0); }
+            .main { margin-left: 0; padding-top: 80px; }
+            .articles-table { font-size: 12px; }
+            .articles-table th:nth-child(3),
+            .articles-table td:nth-child(3) { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+    <div class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+    
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <img src="../assets/logo.png" alt="WordPress Claw Logo - Your Content Command Center">
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="index.html" class="nav-item">
+                        <span class="nav-icon">📊</span>
+                        Dashboard
+                    </a>
+                    <a href="articles.html" class="nav-item active">
+                        <span class="nav-icon">📝</span>
+                        Articles
+                    </a>
+                    <a href="clawbot.html" class="nav-item">
+                        <span class="nav-icon">🤖</span>
+                        ClawBot
+                    </a>
+                    <a href="/content-queue" class="nav-item">
+                        <span class="nav-icon">📋</span>
+                        Content Queue
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a href="business-profile.html" class="nav-item">
+                        <span class="nav-icon">🏢</span>
+                        Business Profile
+                    </a>
+                    <a href="connections.html" class="nav-item">
+                        <span class="nav-icon">🔗</span>
+                        Connections
+                    </a>
+                    <a href="billing.html" class="nav-item">
+                        <span class="nav-icon">💳</span>
+                        Billing
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Help</div>
+                    <a href="../docs.html" class="nav-item" target="_blank">
+                        <span class="nav-icon">📚</span>
+                        Documentation
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-menu" onclick="logout()">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">User</div>
+                        <div class="user-tier" id="userTier">Free</div>
+                    </div>
+                    <span>🚪</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="page-header">
+                <div>
+                    <h1>Articles</h1>
+                </div>
+                <button class="btn btn-primary" onclick="openGenerateModal()">
+                    ✨ Generate Article
+                </button>
+            </div>
+
+            <div class="filters">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search articles..." onkeyup="searchArticles()">
+                </div>
+                <div class="filter-group">
+                    <label>Status:</label>
+                    <select id="statusFilter" onchange="filterArticles()">
+                        <option value="">All</option>
+                        <option value="draft">Draft</option>
+                        <option value="review">Review</option>
+                        <option value="published">Published</option>
+                        <option value="generating">Generating</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="articles-card">
+                <div id="articlesContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <h3>No articles yet</h3>
+                        <p>Generate your first AI-powered article to get started.</p>
+                        <button class="btn btn-primary" onclick="openGenerateModal()">Generate Article</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Generate Article Modal -->
+    <div class="modal-overlay" id="generateModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>✨ Generate Article</h2>
+                <button class="modal-close" onclick="closeGenerateModal()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <div id="generateAlert" class="alert" style="display: none; padding: 12px; border-radius: 8px; margin-bottom: 16px;"></div>
+                
+                <div class="form-group">
+                    <label for="keyword">Keyword or Topic *</label>
+                    <input type="text" id="keyword" placeholder="e.g., digital marketing strategies">
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">This will be the main focus of your article</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customPrompt">Custom Instructions (Optional)</label>
+                    <textarea id="customPrompt" placeholder="Any specific requirements, tone preferences, or points to cover..."></textarea>
+                </div>
+                
+                <p style="font-size: 13px; color: var(--text-secondary);">
+                    💡 This will use 1 credit. Your article will be generated based on your business profile settings.
+                </p>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeGenerateModal()">Cancel</button>
+                <button class="btn btn-primary" id="generateBtn" onclick="generateArticle()">Generate Article</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'User';
+        document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
+        document.getElementById('userAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
+
+        let articles = [];
+        let currentPage = 0;
+        const limit = 20;
+
+        async function loadArticles() {
+            try {
+                const status = document.getElementById('statusFilter').value;
+                let url = `${API_URL}/api/articles?limit=${limit}&offset=${currentPage * limit}`;
+                if (status) url += `&status=${status}`;
+
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    articles = data.data.articles;
+                    renderArticles();
+                }
+            } catch (err) {
+                console.error('Failed to load articles:', err);
+            }
+        }
+
+        function renderArticles() {
+            const container = document.getElementById('articlesContainer');
+            
+            if (articles.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <h3>No articles found</h3>
+                        <p>${document.getElementById('statusFilter').value ? 'Try changing your filters.' : 'Generate your first AI-powered article to get started.'}</p>
+                        <button class="btn btn-primary" onclick="openGenerateModal()">Generate Article</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const rows = articles.map(article => `
+                <tr>
+                    <td class="article-title-cell">
+                        <a href="#" onclick="viewArticle(${article.id})">${article.title || 'Untitled'}</a>
+                        <div class="article-meta">${article.keyword || 'No keyword'}</div>
+                    </td>
+                    <td>
+                        <span class="status-badge status-${article.status}">${article.status}</span>
+                    </td>
+                    <td>${new Date(article.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <div class="article-actions">
+                            ${article.status === 'review' ? `
+                                <button class="action-btn action-btn-primary" onclick="publishArticle(${article.id})">Publish</button>
+                            ` : ''}
+                            ${article.wp_url ? `
+                                <a href="${article.wp_url}" target="_blank" class="action-btn action-btn-secondary">View</a>
+                            ` : ''}
+                            <button class="action-btn action-btn-secondary" onclick="deleteArticle(${article.id})">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `
+                <table class="articles-table">
+                    <thead>
+                        <tr>
+                            <th>Article</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function openGenerateModal() {
+            document.getElementById('generateModal').classList.add('active');
+            document.getElementById('keyword').focus();
+        }
+
+        function closeGenerateModal() {
+            document.getElementById('generateModal').classList.remove('active');
+            document.getElementById('keyword').value = '';
+            document.getElementById('customPrompt').value = '';
+            document.getElementById('generateAlert').style.display = 'none';
+        }
+
+        async function generateArticle() {
+            const keyword = document.getElementById('keyword').value.trim();
+            const customPrompt = document.getElementById('customPrompt').value.trim();
+            const alert = document.getElementById('generateAlert');
+            const btn = document.getElementById('generateBtn');
+
+            if (!keyword) {
+                alert.textContent = 'Please enter a keyword or topic';
+                alert.style.cssText = 'display: block; background: #ffebee; color: #c62828; padding: 12px; border-radius: 8px; margin-bottom: 16px;';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+
+            try {
+                const response = await fetch(`${API_URL}/api/articles/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ keyword, customPrompt })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert.textContent = 'Article generation started! This may take a minute.';
+                    alert.style.cssText = 'display: block; background: #e8f5e9; color: #2e7d32; padding: 12px; border-radius: 8px; margin-bottom: 16px;';
+                    setTimeout(() => {
+                        closeGenerateModal();
+                        loadArticles();
+                    }, 1500);
+                } else {
+                    alert.textContent = data.error || 'Failed to start generation';
+                    alert.style.cssText = 'display: block; background: #ffebee; color: #c62828; padding: 12px; border-radius: 8px; margin-bottom: 16px;';
+                    btn.disabled = false;
+                    btn.textContent = 'Generate Article';
+                }
+            } catch (err) {
+                alert.textContent = 'Network error. Please try again.';
+                alert.style.cssText = 'display: block; background: #ffebee; color: #c62828; padding: 12px; border-radius: 8px; margin-bottom: 16px;';
+                btn.disabled = false;
+                btn.textContent = 'Generate Article';
+            }
+        }
+
+        async function publishArticle(id) {
+            if (!confirm('Publish this article to WordPress?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/articles/${id}/publish`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Article published successfully!');
+                    loadArticles();
+                } else {
+                    alert(data.error || 'Failed to publish');
+                }
+            } catch (err) {
+                alert('Network error. Please try again.');
+            }
+        }
+
+        async function deleteArticle(id) {
+            if (!confirm('Are you sure you want to delete this article?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/articles/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    loadArticles();
+                }
+            } catch (err) {
+                alert('Failed to delete article');
+            }
+        }
+
+        function viewArticle(id) {
+            // TODO: Open article editor modal
+            alert('Article editor coming soon!');
+        }
+
+        function filterArticles() {
+            currentPage = 0;
+            loadArticles();
+        }
+
+        function searchArticles() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('.articles-table tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            document.querySelector('.sidebar').classList.toggle('show');
+            document.querySelector('.sidebar-overlay').classList.toggle('show');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('generateModal').addEventListener('click', (e) => {
+            if (e.target.id === 'generateModal') closeGenerateModal();
+        });
+
+        loadArticles();
+    </script>
+</body>
+</html>
