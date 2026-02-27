@@ -142,7 +142,14 @@ class GoogleSheetsService {
         try {
             await this.initialize();
 
-            const range = `${sheetName}!A1:Z1000`;
+            // Get first sheet name if not specified
+            let targetSheetName = sheetName;
+            if (!targetSheetName || targetSheetName === 'Sheet1') {
+                const spreadsheet = await this.sheets.spreadsheets.get({ spreadsheetId });
+                targetSheetName = spreadsheet.data.sheets[0].properties.title;
+            }
+            
+            const range = `${targetSheetName}!A1:Z1000`;
             
             const response = await this.sheets.spreadsheets.values.get({
                 spreadsheetId,
