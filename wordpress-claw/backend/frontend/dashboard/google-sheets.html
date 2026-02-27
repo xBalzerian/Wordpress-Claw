@@ -1,144 +1,95 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Google Sheets</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Google Sheets - WordPress Claw</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-body{font-family:Inter,sans-serif;margin:0;padding:0;background:#f8f9fa}
+:root{--primary:#E53935;--text:#1a1a1a;--text-secondary:#666;--bg:#f8f9fa;--bg-card:#fff;--border:#e5e5e5}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;color:var(--text);background:var(--bg)}
 .dashboard{display:flex;min-height:100vh}
-.sidebar{width:260px;background:#fff;border-right:1px solid #e5e5e5;position:fixed;height:100vh}
-.sidebar-header{padding:20px 24px;border-bottom:1px solid #e5e5e5}
-.sidebar-header img{height:72px}
-.sidebar-nav{padding:16px 12px}
+.sidebar{width:260px;background:var(--bg-card);border-right:1px solid var(--border);position:fixed;height:100vh;z-index:100}
+.sidebar-header{padding:20px 24px;border-bottom:1px solid var(--border)}
+.sidebar-logo{display:flex;align-items:center;gap:12px}
+.sidebar-logo img{height:72px;width:auto;max-width:220px;object-fit:contain}
+.sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
 .nav-section{margin-bottom:24px}
-.nav-section-title{font-size:11px;font-weight:600;text-transform:uppercase;color:#666;padding:0 12px;margin-bottom:8px}
-.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;text-decoration:none;color:#666;font-size:14px;font-weight:500}
-.nav-item:hover{background:#f8f9fa;color:#1a1a1a}
-.nav-item.active{background:rgba(229,57,53,0.1);color:#E53935}
+.nav-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);padding:0 12px;margin-bottom:8px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;text-decoration:none;color:var(--text-secondary);font-size:14px;font-weight:500;transition:all .2s}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:rgba(229,57,53,.1);color:var(--primary)}
+.nav-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center}
 .main{flex:1;margin-left:260px;padding:32px}
 h1{font-size:28px;margin-bottom:8px}
-.subtitle{color:#666;margin-bottom:24px}
-.card{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.subtitle{color:var(--text-secondary);margin-bottom:24px}
+.card{background:var(--bg-card);border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .card h2{font-size:18px;margin-bottom:16px}
-.btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
-.btn-primary{background:#E53935;color:white}
-.btn-danger{background:#f44336;color:white;margin-left:8px}
-.hidden{display:none !important}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{padding:12px;text-align:left;border-bottom:1px solid #e5e5e5}
-th{background:#f8f9fa;font-weight:600;font-size:12px;text-transform:uppercase}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:#C62828}
+.btn-danger{background:var(--error);color:#fff;margin-left:8px}
+.btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border);margin-left:8px}
+.hidden{display:none!important}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:16px}
+th,td{padding:12px;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--bg);font-weight:600;font-size:12px;text-transform:uppercase}
+tr:hover{background:var(--bg)}
+input[type=text]{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:8px;font-size:14px;margin:8px 0}
+.empty-state{text-align:center;padding:40px;color:var(--text-secondary)}
+.error-box{background:#ffebee;color:#c62828;padding:16px;border-radius:8px;margin:16px 0}
 </style>
 </head>
 <body>
 <div class="dashboard">
 <aside class="sidebar">
-<div class="sidebar-header"><a href="/"><img src="/assets/logo.png" alt="WordPress Claw"></a></div>
+<div class="sidebar-header"><a href="/" class="sidebar-logo"><img src="/assets/logo.png" alt="WordPress Claw"></a></div>
 <nav class="sidebar-nav">
 <div class="nav-section">
 <div class="nav-section-title">Main</div>
-<a href="index.html" class="nav-item">📊 Dashboard</a>
-<a href="articles.html" class="nav-item">📝 Articles</a>
-<a href="clawbot.html" class="nav-item">🤖 ClawBot</a>
+<a href="index.html" class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+<a href="articles.html" class="nav-item"><span class="nav-icon">📝</span>Articles</a>
+<a href="clawbot.html" class="nav-item"><span class="nav-icon">🤖</span>ClawBot</a>
 </div>
 <div class="nav-section">
 <div class="nav-section-title">Integrations</div>
-<a href="google-sheets.html" class="nav-item active">📊 Google Sheets</a>
-<a href="connections.html" class="nav-item">🔗 Connections</a>
+<a href="google-sheets.html" class="nav-item active"><span class="nav-icon">📊</span>Google Sheets</a>
+<a href="connections.html" class="nav-item"><span class="nav-icon">🔗</span>Connections</a>
 </div>
 <div class="nav-section">
 <div class="nav-section-title">Settings</div>
-<a href="business-profile.html" class="nav-item">🏢 Business Profile</a>
-<a href="billing.html" class="nav-item">💳 Billing</a>
+<a href="business-profile.html" class="nav-item"><span class="nav-icon">🏢</span>Business Profile</a>
+<a href="billing.html" class="nav-item"><span class="nav-icon">💳</span>Billing</a>
 </div>
 </nav>
 </aside>
 <main class="main">
 <h1>Google Sheets</h1>
 <p class="subtitle">View your spreadsheet data</p>
-<div id="loading">Loading...</div>
-<div id="notConnected" class="card hidden">
+<div id="notConnected" class="card">
 <h2>Connect Google Sheet</h2>
-<p>Enter your spreadsheet URL:</p>
-<input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." style="width:100%;padding:12px;margin:12px 0;border:1px solid #e5e5e5;border-radius:8px">
-<br>
+<p>Share your sheet with the service account email, then paste the URL below:</p>
+<input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/...">
+<br><br>
 <button class="btn btn-primary" onclick="connect()">Connect</button>
+<div id="connectError" class="error-box hidden"></div>
 </div>
-<div id="connected" class="hidden">
-<div class="card">
+<div id="connected" class="card hidden">
 <h2>Connected Sheet</h2>
-<p id="sheetTitle"></p>
+<p id="sheetTitle" style="color:var(--text-secondary);word-break:break-all;margin:12px 0"></p>
 <button class="btn btn-primary" onclick="loadData()">🔄 Load Data</button>
 <button class="btn btn-danger" onclick="disconnect()">Disconnect</button>
-</div>
-<div class="card">
-<h2>Sheet Data</h2>
-<div id="dataContainer"></div>
-</div>
+<div id="dataArea" style="margin-top:24px"></div>
 </div>
 </main>
 </div>
 <script>
 const API=window.location.origin;
-async function init(){
-  try{
-    const r=await fetch(API+"/api/sheets/status",{headers:{"Authorization":"Bearer "+localStorage.getItem("token")}});
-    const d=await r.json();
-    document.getElementById("loading").classList.add("hidden");
-    if(d.success&&d.data.connected){
-      document.getElementById("connected").classList.remove("hidden");
-      document.getElementById("sheetTitle").textContent=d.data.spreadsheetUrl||"Connected";
-      loadData();
-    }else{
-      document.getElementById("notConnected").classList.remove("hidden");
-    }
-  }catch(e){
-    document.getElementById("loading").textContent="Error: "+e.message;
-  }
-}
-async function connect(){
-  const url=document.getElementById("sheetUrl").value;
-  if(!url)return alert("Enter URL");
-  try{
-    const r=await fetch(API+"/api/sheets/connect",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+localStorage.getItem("token")},body:JSON.stringify({spreadsheetUrl:url})});
-    const d=await r.json();
-    if(d.success){init();}else{alert(d.error||"Failed");}
-  }catch(e){alert("Error: "+e.message);}
-}
-async function disconnect(){
-  try{
-    const r=await fetch(API+"/api/connections",{headers:{"Authorization":"Bearer "+localStorage.getItem("token")}});
-    const d=await r.json();
-    if(d.success){
-      const conn=d.data.connections.find(c=>c.type==="googlesheets");
-      if(conn){
-        await fetch(API+"/api/connections/"+conn.id,{method:"DELETE",headers:{"Authorization":"Bearer "+localStorage.getItem("token")}});
-      }
-    }
-    init();
-  }catch(e){alert("Error: "+e.message);}
-}
-async function loadData(){
-  const container=document.getElementById("dataContainer");
-  container.innerHTML="Loading...";
-  try{
-    const r=await fetch(API+"/api/sheets/data",{headers:{"Authorization":"Bearer "+localStorage.getItem("token")}});
-    const d=await r.json();
-    if(!d.success){container.innerHTML="Error: "+(d.error||"Unknown");return;}
-    const headers=d.data.headers||[];
-    const rows=d.data.data||[];
-    if(rows.length===0){container.innerHTML="<p>No data found</p>";return;}
-    let html="<table><thead><tr>";
-    headers.forEach(h=>html+="<th>"+h+"</th>");
-    html+="</tr></thead><tbody>";
-    rows.forEach(row=>{
-      html+="<tr>";
-      headers.forEach(h=>html+="<td>"+(row[h]||"")+"</td>");
-      html+="</tr>";
-    });
-    html+="</tbody></table>";
-    container.innerHTML=html;
-  }catch(e){container.innerHTML="Error: "+e.message;}
-}
+async function init(){try{const r=await fetch(API+"/api/sheets/status",{headers:{"Authorization":"Bearer "+localStorage.getItem("token")}});const d=await r.json();if(d.success&&d.data.connected){document.getElementById("notConnected").classList.add("hidden");document.getElementById("connected").classList.remove("hidden");document.getElementById("sheetTitle").textContent=d.data.spreadsheetUrl||"Connected";loadData()}}catch(e){console.error(e)}}
+async function connect(){const url=document.getElementById("sheetUrl").value;if(!url)return alert("Please enter a spreadsheet URL");const btn=document.querySelector("#notConnected .btn-primary");btn.disabled=true;btn.textContent="Connecting...";try{const r=await fetch(API+"/api/sheets/connect",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+localStorage.getItem("token")},body:JSON.stringify({spreadsheetUrl:url})});const d=await r.json();if(d.success){init()}else{document.getElementById("connectError").classList.remove("hidden");document.getElementById("connectError").textContent=d.error||"Failed to connect"}}catch(e){document.getElementById("connectError").classList.remove("hidden");document.getElementById("connectError").textContent="Error: "+e.message}finally{btn.disabled=false;btn.textContent="Connect"}}
+async function disconnect(){if(!confirm("Disconnect this spreadsheet?"))return;try{const r=await fetch(API+"/api/connections",{headers:{"Authorization":"Bearer "+localStorage.getItem("token")}});const d=await r.json();if(d.success){const conn=d.data.connections.find(c=>c.type==="googlesheets");if(conn){await fetch(API+"/api/connections/"+conn.id,{method:"DELETE",headers:{"Authorization":"Bearer "+localStorage.getItem("token")}})}}location.reload()}catch(e){alert("Error: "+e.message)}}
+async function loadData(){const area=document.getElementById("dataArea");area.innerHTML="Loading...";try{const r=await fetch(API+"/api/sheets/data",{headers:{"Authorization":"Bearer "+localStorage.getItem("token")}});const d=await r.json();if(!d.success){area.innerHTML="Error: "+(d.error||"Unknown error");return}const headers=d.data.headers||[];const rows=d.data.data||[];if(rows.length===0){area.innerHTML="No data found. Make sure your sheet has data rows below the header.";return}let html="<table><thead><tr>";headers.forEach(h=>html+="<th>"+h+"</th>");html+="</tr></thead><tbody>";rows.forEach(row=>{html+="<tr>";headers.forEach(h=>html+="<td>"+(row[h]||"")+"</td>");html+="</tr>"});html+="</tbody></table>";area.innerHTML=html}catch(e){area.innerHTML="Error loading data: "+e.message}}
 init();
 </script>
 </body>
