@@ -171,8 +171,7 @@ class GoogleSheetsService {
             const dataRows = rows.slice(1).map((row, index) => {
                 const obj = { _rowIndex: index + 2 }; // 1-based with header
                 headers.forEach((header, colIndex) => {
-                    const key = this.sanitizeColumnName(header);
-                    obj[key] = row[colIndex] || '';
+                    obj[header] = row[colIndex] || ''; // Use original header as key
                 });
                 return obj;
             });
@@ -180,7 +179,7 @@ class GoogleSheetsService {
             return {
                 success: true,
                 data: dataRows,
-                headers,
+                headers: headers, // Return original headers
                 totalRows: dataRows.length,
                 raw: rows
             };
