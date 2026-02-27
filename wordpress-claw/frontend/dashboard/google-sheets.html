@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Sheets Integration - WordPress Claw</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>Google Sheets - WordPress Claw</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -17,761 +15,371 @@
             --bg-card: #ffffff;
             --border: #e5e5e5;
             --success: #4caf50;
-            --warning: #ff9800;
             --error: #f44336;
-            --info: #2196f3;
-            --shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: var(--text);
-            line-height: 1.6;
+            font-family: 'Inter', sans-serif;
             background: var(--bg);
+            color: var(--text);
         }
         .dashboard { display: flex; min-height: 100vh; }
         .sidebar {
             width: 260px;
             background: var(--bg-card);
             border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
             position: fixed;
             height: 100vh;
-            z-index: 100;
         }
         .sidebar-header { padding: 20px 24px; border-bottom: 1px solid var(--border); }
-        .sidebar-logo { display: flex; align-items: center; gap: 12px; }
-        .sidebar-logo img { height: 72px; width: auto; max-width: 220px; object-fit: contain; }
-        .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+        .sidebar-header img { height: 40px; }
+        .sidebar-nav { padding: 16px 12px; }
         .nav-section { margin-bottom: 24px; }
         .nav-section-title {
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-            padding: 0 12px;
-            margin-bottom: 8px;
+            font-size: 11px; font-weight: 600; text-transform: uppercase;
+            color: var(--text-secondary); padding: 0 12px; margin-bottom: 8px;
         }
         .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 12px; border-radius: 8px;
+            text-decoration: none; color: var(--text-secondary);
+            font-size: 14px; font-weight: 500;
         }
         .nav-item:hover { background: var(--bg); color: var(--text); }
         .nav-item.active { background: rgba(229, 57, 53, 0.1); color: var(--primary); }
-        .nav-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
-        .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.2s;
+        .main {
+            flex: 1; margin-left: 260px; padding: 32px;
+            max-width: 900px;
         }
-        .user-menu:hover { background: var(--bg); }
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .user-info { flex: 1; overflow: hidden; }
-        .user-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .user-tier { font-size: 12px; color: var(--text-secondary); text-transform: capitalize; }
-        .main { flex: 1; margin-left: 260px; padding: 32px; }
-        .page-header { margin-bottom: 32px; }
-        .page-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
-        .page-header p { color: var(--text-secondary); }
-        
+        h1 { font-size: 28px; margin-bottom: 8px; }
+        .subtitle { color: var(--text-secondary); margin-bottom: 24px; }
         .card {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: var(--shadow);
-            margin-bottom: 24px;
+            background: var(--bg-card); border-radius: 12px;
+            padding: 24px; margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
-        .card h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
-        .card h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
-        
+        .card h2 { font-size: 18px; margin-bottom: 16px; }
+        .status {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 16px; border-radius: 20px;
+            font-size: 14px; font-weight: 500;
+        }
+        .status.connected { background: #e8f5e9; color: #2e7d32; }
+        .status.disconnected { background: #ffebee; color: #c62828; }
         .form-group { margin-bottom: 16px; }
         .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
+            display: block; font-size: 13px; font-weight: 500;
+            color: var(--text-secondary); margin-bottom: 6px;
         }
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+        .form-group input {
+            width: 100%; padding: 12px 16px;
+            border: 1px solid var(--border); border-radius: 8px;
             font-size: 14px;
-            font-family: inherit;
-            transition: border-color 0.2s;
         }
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        
         .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
+            padding: 12px 24px; border: none; border-radius: 8px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
         }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-dark); }
-        .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
-        .btn-secondary:hover { background: var(--border); }
-        .btn-success { background: var(--success); color: white; }
-        .btn-success:hover { background: #388e3c; }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+        .btn-danger { background: var(--error); color: white; }
+        .btn-danger:hover { background: #d32f2f; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .instructions {
+            background: #e3f2fd; border: 1px solid #90caf9;
+            border-radius: 8px; padding: 16px; margin-bottom: 16px;
         }
-        .status-connected { background: #e8f5e9; color: #2e7d32; }
-        .status-disconnected { background: #ffebee; color: #c62828; }
-        .status-pending { background: #fff3e0; color: #ef6c00; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
-        .status-dot.connected { background: var(--success); }
-        .status-dot.disconnected { background: var(--error); }
-        .status-dot.pending { background: var(--warning); }
-        
-        .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 14px;
+        .instructions ol { margin-left: 20px; }
+        .instructions li { margin-bottom: 8px; }
+        .email-box {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px 16px;
+            font-family: monospace; font-size: 14px;
+            margin: 12px 0; cursor: pointer;
         }
-        .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
-        .alert-error { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
-        .alert-info { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
-        .alert-warning { background: #fff3e0; color: #ef6c00; border: 1px solid #ffcc80; }
-        
-        .sheet-data {
-            overflow-x: auto;
-            margin-top: 16px;
-        }
-        .sheet-data table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        .sheet-data th,
-        .sheet-data td {
-            padding: 10px 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-        .sheet-data th {
-            background: var(--bg);
-            font-weight: 600;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-        }
-        .sheet-data tr:hover { background: var(--bg); }
-        
-        .action-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
-        }
-        .action-card {
-            background: var(--bg);
-            border-radius: 8px;
-            padding: 20px;
-            border: 1px solid var(--border);
-        }
-        .action-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-        .action-card p { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
-        
-        .loading {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
         .hidden { display: none !important; }
-        
-        .oauth-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 24px;
-            border-radius: 12px;
-            margin-bottom: 24px;
+        .alert {
+            padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;
         }
-        .oauth-section h3 { margin-bottom: 8px; }
-        .oauth-section p { opacity: 0.9; font-size: 14px; }
-        
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .main { margin-left: 0; padding: 80px 16px 16px; }
+        .alert-success { background: #e8f5e9; color: #2e7d32; }
+        .alert-error { background: #ffebee; color: #c62828; }
+        .sheet-data { overflow-x: auto; margin-top: 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background: var(--bg); font-weight: 600; }
+        .badge {
+            padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500;
         }
+        .badge-pending { background: #fff3e0; color: #ef6c00; }
+        .badge-done { background: #e8f5e9; color: #2e7d32; }
+        .badge-processing { background: #e3f2fd; color: #1565c0; }
     </style>
 </head>
 <body>
     <div class="dashboard">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="/" class="sidebar-logo">
+                <a href="/">
                     <img src="/assets/logo.png" alt="WordPress Claw">
                 </a>
             </div>
             <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">Main</div>
-                    <a href="/dashboard/" class="nav-item">
-                        <span class="nav-icon">📊</span>
-                        Dashboard
-                    </a>
-                    <a href="/dashboard/articles.html" class="nav-item">
-                        <span class="nav-icon">📝</span>
-                        Articles
-                    </a>
-                    <a href="/dashboard/clawbot.html" class="nav-item">
-                        <span class="nav-icon">🤖</span>
-                        ClawBot
-                    </a>
-                    <a href="/content-queue" class="nav-item">
-                        <span class="nav-icon">📋</span>
-                        Content Queue
-                    </a>
+                    <a href="/dashboard/" class="nav-item">📊 Dashboard</a>
+                    <a href="/dashboard/articles.html" class="nav-item">📝 Articles</a>
+                    <a href="/dashboard/clawbot.html" class="nav-item">🤖 ClawBot</a>
                 </div>
                 <div class="nav-section">
                     <div class="nav-section-title">Integrations</div>
-                    <a href="/dashboard/google-sheets.html" class="nav-item active">
-                        <span class="nav-icon">📊</span>
-                        Google Sheets
-                    </a>
-                    <a href="/dashboard/connections.html" class="nav-item">
-                        <span class="nav-icon">🔗</span>
-                        Connections
-                    </a>
-                </div>
-                <div class="nav-section">
-                    <div class="nav-section-title">Settings</div>
-                    <a href="/dashboard/business-profile.html" class="nav-item">
-                        <span class="nav-icon">🏢</span>
-                        Business Profile
-                    </a>
-                    <a href="/dashboard/billing.html" class="nav-item">
-                        <span class="nav-icon">💳</span>
-                        Billing
-                    </a>
+                    <a href="/dashboard/google-sheets.html" class="nav-item active">📊 Google Sheets</a>
+                    <a href="/dashboard/connections.html" class="nav-item">🔗 Connections</a>
                 </div>
             </nav>
-            <div class="sidebar-footer">
-                <div class="user-menu" id="userMenu">
-                    <div class="user-avatar" id="userAvatar">U</div>
-                    <div class="user-info">
-                        <div class="user-name" id="userName">User</div>
-                        <div class="user-tier" id="userTier">Free Plan</div>
-                    </div>
-                </div>
-            </div>
         </aside>
-        
+
         <main class="main">
-            <div class="page-header">
-                <h1>📊 Google Sheets Integration</h1>
-                <p>Connect and sync your Google Sheets with Content Queue using Maton AI.</p>
-            </div>
-            
-            <!-- Status Card -->
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-                    <div>
-                        <h2>Connection Status</h2>
-                        <p style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;">
-                            Use Maton AI to connect with Google Sheets
-                        </p>
+            <h1>Google Sheets</h1>
+            <p class="subtitle">Connect your spreadsheet to batch process content</p>
+
+            <!-- Not Connected State -->
+            <div id="notConnected" class="card">
+                <h2>Connect Google Sheet</h2>
+                
+                <div class="instructions">
+                    <strong>Setup Instructions:</strong>
+                    <ol>
+                        <li>Open your Google Sheet</li>
+                        <li>Click "Share" in the top right</li>
+                        <li>Add this email as <strong>Editor</strong>:</li>
+                    </ol>
+                    <div class="email-box" id="serviceEmail" onclick="copyEmail()">
+                        Loading...
                     </div>
-                    <div id="connectionStatus">
-                        <span class="status-badge status-disconnected">
-                            <span class="status-dot disconnected"></span>
-                            Not Connected
-                        </span>
-                    </div>
+                    <small>Click to copy</small>
                 </div>
-                
-                <div id="connectSection" style="margin-top: 20px;">
-                    <button class="btn btn-primary" id="connectBtn" onclick="connectGoogleSheets()">
-                        🔌 Connect Google Sheets
-                    </button>
-                    <p style="font-size: 13px; color: var(--text-secondary); margin-top: 12px;">
-                        This will start OAuth authentication with Google. 
-                        Requires <code>MATON_API_KEY</code> environment variable.
-                    </p>
-                </div>
-                
-                <div id="oauthSection" class="hidden oauth-section">
-                    <h3>🔗 Complete OAuth</h3>
-                    <p>Click the button below to open Google authentication:</p>
-                    <a id="oauthLink" href="#" target="_blank" class="btn btn-success" style="margin-top: 12px;">
-                        Open Google Auth
-                    </a>
-                    <p style="margin-top: 12px; font-size: 13px;">
-                        After completing OAuth, click "Check Status" below.
-                    </p>
-                    <button class="btn" onclick="checkConnectionStatus()" style="margin-top: 8px; background: rgba(255,255,255,0.2); color: white;">
-                        Check Status
-                    </button>
-                </div>
-                
-                <div id="disconnectSection" class="hidden" style="margin-top: 20px;">
-                    <button class="btn btn-secondary" onclick="disconnectGoogleSheets()">
-                        🔌 Disconnect
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Actions Card (shown when connected) -->
-            <div id="actionsCard" class="card hidden">
-                <h2>Sheet Actions</h2>
-                
+
                 <div class="form-group">
-                    <label for="spreadsheetUrl">Google Sheets URL</label>
-                    <input type="url" id="spreadsheetUrl" placeholder="https://docs.google.com/spreadsheets/d/...">
+                    <label>Spreadsheet URL</label>
+                    <input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/...">
                 </div>
-                
-                <div class="action-grid">
-                    <div class="action-card">
-                        <h4>📖 Read Sheet</h4>
-                        <p>View data from your Google Sheet</p>
-                        <button class="btn btn-secondary" onclick="readSheet()">Read Data</button>
-                    </div>
-                    
-                    <div class="action-card">
-                        <h4>📥 Import to Queue</h4>
-                        <p>Import topics from sheet to Content Queue</p>
-                        <button class="btn btn-primary" onclick="syncToQueue()">Import Topics</button>
-                    </div>
-                    
-                    <div class="action-card">
-                        <h4>📤 Export to Sheet</h4>
-                        <p>Export Content Queue to Google Sheet</p>
-                        <button class="btn btn-secondary" onclick="exportToSheet()">Export Data</button>
-                    </div>
-                </div>
+
+                <button class="btn btn-primary" onclick="connectSheet()">Connect Spreadsheet</button>
+                <div id="connectMessage"></div>
             </div>
-            
-            <!-- Results Card -->
-            <div id="resultsCard" class="card hidden">
-                <h2>Sheet Data</h2>
-                <div id="resultsContent"></div>
-            </div>
-            
-            <!-- Instructions Card -->
-            <div class="card">
-                <h2>How It Works</h2>
-                
-                <div style="display: grid; gap: 16px; margin-top: 16px;">
-                    <div style="display: flex; gap: 12px; align-items: flex-start;">
-                        <div style="background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0;">1</div>
-                        <div>
-                            <strong>Connect</strong>
-                            <p style="font-size: 14px; color: var(--text-secondary);">Click "Connect Google Sheets" to start OAuth</p>
-                        </div>
+
+            <!-- Connected State -->
+            <div id="connected" class="hidden">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h2>Connected Sheet</h2>
+                        <span class="status connected">● Connected</span>
                     </div>
-                    
-                    <div style="display: flex; gap: 12px; align-items: flex-start;">
-                        <div style="background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0;">2</div>
-                        <div>
-                            <strong>Authorize</strong>
-                            <p style="font-size: 14px; color: var(--text-secondary);">Open the OAuth link and authorize access to your Google Sheets</p>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 12px; align-items: flex-start;">
-                        <div style="background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0;">3</div>
-                        <div>
-                            <strong>Sync</strong>
-                            <p style="font-size: 14px; color: var(--text-secondary);">Enter your Google Sheets URL and sync with Content Queue</p>
-                        </div>
+                    <p id="sheetTitle">Loading...</p>
+                    <div style="margin-top:16px;">
+                        <button class="btn btn-primary" onclick="checkSheet()" style="margin-right:8px;">Check for Topics</button>
+                        <button class="btn btn-danger" onclick="disconnectSheet()">Disconnect</button>
                     </div>
                 </div>
-                
-                <div style="margin-top: 24px; padding: 16px; background: #fff3e0; border-radius: 8px; border: 1px solid #ffcc80;">
-                    <strong style="color: #ef6c00;">📋 Expected Sheet Format</strong>
-                    <p style="font-size: 14px; color: var(--text-secondary); margin-top: 8px;">
-                        Your sheet should have these columns: <strong>Main Keyword</strong> (required), 
-                        <strong>Service URL</strong> (optional), <strong>Cluster Keywords</strong> (optional), 
-                        <strong>Status</strong> (optional)
-                    </p>
+
+                <div class="card">
+                    <h2>Sheet Data</h2>
+                    <div id="sheetStats"></div>
+                    <div class="sheet-data">
+                        <table id="sheetTable">
+                            <thead><tr><th>Status</th><th>Keyword</th><th>Actions</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
-    
+
     <script>
-        const API_BASE = '/api';
-        let isConnected = false;
-        let pendingRedirectUrl = null;
-        
-        // Load user info on page load
+        const API_URL = window.location.origin;
+        let serviceAccountEmail = '';
+
+        // Load on page start
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadUserInfo();
-            await checkConnectionStatus();
+            await loadSetupInfo();
+            await checkStatus();
         });
-        
-        async function loadUserInfo() {
+
+        // Get service account email
+        async function loadSetupInfo() {
             try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    window.location.href = '/login.html';
-                    return;
-                }
-                
-                const response = await fetch(`${API_BASE}/user/profile`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const res = await fetch(`${API_URL}/api/sheets/setup-info`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success && result.data) {
-                        const user = result.data;
-                        document.getElementById('userName').textContent = user.name || 'User';
-                        document.getElementById('userTier').textContent = (user.tier || 'free') + ' Plan';
-                        document.getElementById('userAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
-                    }
+                const data = await res.json();
+                if (data.success) {
+                    serviceAccountEmail = data.data.serviceAccountEmail;
+                    document.getElementById('serviceEmail').textContent = serviceAccountEmail;
                 }
-            } catch (err) {
-                console.error('Failed to load user info:', err);
+            } catch (e) {
+                console.error('Failed to load setup info', e);
             }
         }
-        
-        async function checkConnectionStatus() {
+
+        // Copy email to clipboard
+        function copyEmail() {
+            if (serviceAccountEmail) {
+                navigator.clipboard.writeText(serviceAccountEmail);
+                alert('Email copied!');
+            }
+        }
+
+        // Check connection status
+        async function checkStatus() {
             try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE}/sheets/status`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const res = await fetch(`${API_URL}/api/sheets/status`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
+                const data = await res.json();
                 
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        updateConnectionUI(result.data.connected);
-                    }
+                if (data.success && data.data.connected) {
+                    document.getElementById('notConnected').classList.add('hidden');
+                    document.getElementById('connected').classList.remove('hidden');
+                    document.getElementById('sheetTitle').textContent = data.data.spreadsheetUrl || 'Connected';
+                } else {
+                    document.getElementById('notConnected').classList.remove('hidden');
+                    document.getElementById('connected').classList.add('hidden');
                 }
-            } catch (err) {
-                console.error('Failed to check connection status:', err);
+            } catch (e) {
+                console.error('Status check failed', e);
             }
         }
-        
-        function updateConnectionUI(connected) {
-            isConnected = connected;
-            const statusEl = document.getElementById('connectionStatus');
-            const connectSection = document.getElementById('connectSection');
-            const oauthSection = document.getElementById('oauthSection');
-            const disconnectSection = document.getElementById('disconnectSection');
-            const actionsCard = document.getElementById('actionsCard');
-            
-            if (connected) {
-                statusEl.innerHTML = `
-                    <span class="status-badge status-connected">
-                        <span class="status-dot connected"></span>
-                        Connected
-                    </span>
-                `;
-                connectSection.classList.add('hidden');
-                oauthSection.classList.add('hidden');
-                disconnectSection.classList.remove('hidden');
-                actionsCard.classList.remove('hidden');
-            } else {
-                statusEl.innerHTML = `
-                    <span class="status-badge status-disconnected">
-                        <span class="status-dot disconnected"></span>
-                        Not Connected
-                    </span>
-                `;
-                connectSection.classList.remove('hidden');
-                oauthSection.classList.add('hidden');
-                disconnectSection.classList.add('hidden');
-                actionsCard.classList.add('hidden');
+
+        // Connect spreadsheet
+        async function connectSheet() {
+            const url = document.getElementById('sheetUrl').value.trim();
+            if (!url) {
+                showMessage('Please enter a spreadsheet URL', 'error');
+                return;
             }
-        }
-        
-        function showOAuthSection(redirectUrl) {
-            pendingRedirectUrl = redirectUrl;
-            const oauthSection = document.getElementById('oauthSection');
-            const oauthLink = document.getElementById('oauthLink');
-            const connectSection = document.getElementById('connectSection');
-            
-            oauthLink.href = redirectUrl;
-            connectSection.classList.add('hidden');
-            oauthSection.classList.remove('hidden');
-            
-            document.getElementById('connectionStatus').innerHTML = `
-                <span class="status-badge status-pending">
-                    <span class="status-dot pending"></span>
-                    OAuth Pending
-                </span>
-            `;
-        }
-        
-        async function connectGoogleSheets() {
-            const btn = document.getElementById('connectBtn');
+
+            const btn = document.querySelector('#notConnected .btn-primary');
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> Connecting...';
-            
+            btn.textContent = 'Connecting...';
+
             try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE}/sheets/connect`, {
+                const res = await fetch(`${API_URL}/api/sheets/connect`, {
                     method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ spreadsheetUrl: url })
                 });
-                
-                const result = await response.json();
-                
-                if (result.success && result.data?.redirectUrl) {
-                    showOAuthSection(result.data.redirectUrl);
-                    showAlert('OAuth started! Please complete authorization.', 'info');
+                const data = await res.json();
+
+                if (data.success) {
+                    showMessage('Connected successfully!', 'success');
+                    setTimeout(checkStatus, 500);
                 } else {
-                    showAlert(result.error || 'Failed to connect', 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = '🔌 Connect Google Sheets';
+                    showMessage(data.error || 'Failed to connect', 'error');
                 }
-            } catch (err) {
-                showAlert('Failed to connect: ' + err.message, 'error');
+            } catch (e) {
+                showMessage('Connection failed', 'error');
+            } finally {
                 btn.disabled = false;
-                btn.innerHTML = '🔌 Connect Google Sheets';
+                btn.textContent = 'Connect Spreadsheet';
             }
         }
-        
-        async function disconnectGoogleSheets() {
+
+        // Disconnect spreadsheet
+        async function disconnectSheet() {
+            if (!confirm('Disconnect this spreadsheet?')) return;
+
             try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE}/sheets/disconnect`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
+                // Call connections API to delete the googlesheets connection
+                const res = await fetch(`${API_URL}/api/connections`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
+                const data = await res.json();
                 
-                if (response.ok) {
-                    showAlert('Disconnected from Google Sheets', 'success');
-                    updateConnectionUI(false);
-                }
-            } catch (err) {
-                showAlert('Failed to disconnect', 'error');
-            }
-        }
-        
-        async function readSheet() {
-            const url = document.getElementById('spreadsheetUrl').value.trim();
-            if (!url) {
-                showAlert('Please enter a Google Sheets URL', 'error');
-                return;
-            }
-            
-            showResults('<div class="loading"><span class="spinner"></span> Reading sheet...</div>');
-            
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE}/sheets/read`, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ spreadsheetUrl: url })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success && result.data) {
-                    displaySheetData(result.data);
-                } else {
-                    showResults(`<div class="alert alert-error">${result.error || 'Failed to read sheet'}</div>`);
-                }
-            } catch (err) {
-                showResults(`<div class="alert alert-error">Error: ${err.message}</div>`);
-            }
-        }
-        
-        function displaySheetData(data) {
-            if (!data.rows || data.rows.length === 0) {
-                showResults('<p>No data found in sheet</p>');
-                return;
-            }
-            
-            let html = `<p style="margin-bottom: 12px; color: var(--text-secondary);">Found ${data.totalRows} rows</p>`;
-            html += '<div class="sheet-data"><table><thead><tr>';
-            
-            data.headers.forEach(header => {
-                html += `<th>${escapeHtml(header)}</th>`;
-            });
-            html += '</tr></thead><tbody>';
-            
-            data.rows.slice(0, 20).forEach(row => {
-                html += '<tr>';
-                data.headers.forEach(header => {
-                    const value = row[header] || '';
-                    html += `<td>${escapeHtml(String(value))}</td>`;
-                });
-                html += '</tr>';
-            });
-            
-            html += '</tbody></table></div>';
-            
-            if (data.rows.length > 20) {
-                html += `<p style="margin-top: 12px; color: var(--text-secondary);">... and ${data.rows.length - 20} more rows</p>`;
-            }
-            
-            showResults(html);
-        }
-        
-        async function syncToQueue() {
-            const url = document.getElementById('spreadsheetUrl').value.trim();
-            if (!url) {
-                showAlert('Please enter a Google Sheets URL', 'error');
-                return;
-            }
-            
-            showResults('<div class="loading"><span class="spinner"></span> Importing to Content Queue...</div>');
-            
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE}/sheets/sync`, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ spreadsheetUrl: url })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    let html = `<div class="alert alert-success">${result.message}</div>`;
-                    if (result.data?.imported?.length > 0) {
-                        html += '<h3 style="margin-top: 16px; margin-bottom: 8px;">Imported Items:</h3><ul style="padding-left: 20px;">';
-                        result.data.imported.forEach(item => {
-                            html += `<li>${escapeHtml(item.main_keyword)} (${item.status})</li>`;
+                if (data.success) {
+                    const sheetConn = data.data.connections.find(c => c.type === 'googlesheets');
+                    if (sheetConn) {
+                        await fetch(`${API_URL}/api/connections/${sheetConn.id}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                         });
-                        html += '</ul>';
                     }
-                    if (result.data?.errors?.length > 0) {
-                        html += `<p style="margin-top: 12px; color: var(--error);">${result.data.errors.length} errors occurred</p>`;
-                    }
-                    showResults(html);
-                } else {
-                    showResults(`<div class="alert alert-error">${result.error || 'Failed to import'}</div>`);
                 }
-            } catch (err) {
-                showResults(`<div class="alert alert-error">Error: ${err.message}</div>`);
+                
+                showMessage('Disconnected', 'success');
+                setTimeout(checkStatus, 500);
+            } catch (e) {
+                showMessage('Disconnect failed', 'error');
             }
         }
-        
-        async function exportToSheet() {
-            const url = document.getElementById('spreadsheetUrl').value.trim();
-            if (!url) {
-                showAlert('Please enter a Google Sheets URL', 'error');
-                return;
-            }
-            
-            showResults('<div class="loading"><span class="spinner"></span> Exporting to sheet...</div>');
-            
+
+        // Check sheet for topics
+        async function checkSheet() {
             try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE}/sheets/export`, {
+                const res = await fetch(`${API_URL}/api/sheets/clawbot/check`, {
                     method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ spreadsheetUrl: url })
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showResults(`<div class="alert alert-success">${result.message}</div>`);
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('sheetStats').innerHTML = `
+                        <p>Total: ${data.data.totalRows} | Pending: ${data.data.pendingCount}</p>
+                    `;
+                    
+                    const tbody = document.querySelector('#sheetTable tbody');
+                    tbody.innerHTML = '';
+                    
+                    data.data.pendingRows.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><span class="badge badge-pending">PENDING</span></td>
+                            <td>${row.main_keyword || row.keyword || 'N/A'}</td>
+                            <td><button class="btn btn-primary" onclick="processRow(${row._rowIndex})">Process</button></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
                 } else {
-                    showResults(`<div class="alert alert-error">${result.error || 'Failed to export'}</div>`);
+                    showMessage(data.error || 'Failed to check sheet', 'error');
                 }
-            } catch (err) {
-                showResults(`<div class="alert alert-error">Error: ${err.message}</div>`);
+            } catch (e) {
+                showMessage('Check failed', 'error');
             }
         }
-        
-        function showResults(html) {
-            const card = document.getElementById('resultsCard');
-            const content = document.getElementById('resultsContent');
-            content.innerHTML = html;
-            card.classList.remove('hidden');
+
+        // Process a row
+        async function processRow(rowIndex) {
+            try {
+                const res = await fetch(`${API_URL}/api/sheets/clawbot/process-row`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ rowIndex })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showMessage('Processing started!', 'success');
+                    checkSheet();
+                } else {
+                    showMessage(data.error || 'Failed to process', 'error');
+                }
+            } catch (e) {
+                showMessage('Process failed', 'error');
+            }
         }
-        
-        function showAlert(message, type) {
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.textContent = message;
-            alert.style.position = 'fixed';
-            alert.style.top = '20px';
-            alert.style.right = '20px';
-            alert.style.zIndex = '1000';
-            alert.style.maxWidth = '400px';
-            document.body.appendChild(alert);
-            
-            setTimeout(() => {
-                alert.remove();
-            }, 5000);
-        }
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+
+        // Show message
+        function showMessage(msg, type) {
+            const div = document.getElementById('connectMessage');
+            div.className = `alert alert-${type}`;
+            div.textContent = msg;
+            setTimeout(() => div.textContent = '', 3000);
         }
     </script>
 </body>
