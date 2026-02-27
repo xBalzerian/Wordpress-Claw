@@ -16,49 +16,63 @@
             --border: #e5e5e5;
             --success: #4caf50;
             --error: #f44336;
+            --warning: #ff9800;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             color: var(--text);
+            background: var(--bg);
         }
         .dashboard { display: flex; min-height: 100vh; }
+        
+        /* Sidebar - Matching main dashboard */
         .sidebar {
             width: 260px;
             background: var(--bg-card);
             border-right: 1px solid var(--border);
             position: fixed;
             height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
         }
-        .sidebar-header { padding: 20px 24px; border-bottom: 1px solid var(--border); }
-        .sidebar-header img { height: 40px; }
-        .sidebar-nav { padding: 16px 12px; }
+        .sidebar-header { 
+            padding: 20px 24px; 
+            border-bottom: 1px solid var(--border);
+        }
+        .sidebar-header img { height: 72px; width: auto; max-width: 220px; object-fit: contain; }
+        .sidebar-nav { 
+            flex: 1; 
+            padding: 16px 12px; 
+            overflow-y: auto;
+        }
         .nav-section { margin-bottom: 24px; }
         .nav-section-title {
             font-size: 11px; font-weight: 600; text-transform: uppercase;
-            color: var(--text-secondary); padding: 0 12px; margin-bottom: 8px;
+            letter-spacing: 0.5px; color: var(--text-secondary);
+            padding: 0 12px; margin-bottom: 8px;
         }
         .nav-item {
             display: flex; align-items: center; gap: 12px;
             padding: 10px 12px; border-radius: 8px;
             text-decoration: none; color: var(--text-secondary);
-            font-size: 14px; font-weight: 500;
+            font-size: 14px; font-weight: 500; transition: all 0.2s;
         }
         .nav-item:hover { background: var(--bg); color: var(--text); }
         .nav-item.active { background: rgba(229, 57, 53, 0.1); color: var(--primary); }
-        .main {
-            flex: 1; margin-left: 260px; padding: 32px;
-            max-width: 900px;
-        }
+        
+        .main { flex: 1; margin-left: 260px; padding: 32px; }
         h1 { font-size: 28px; margin-bottom: 8px; }
         .subtitle { color: var(--text-secondary); margin-bottom: 24px; }
+        
         .card {
             background: var(--bg-card); border-radius: 12px;
             padding: 24px; margin-bottom: 24px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
         .card h2 { font-size: 18px; margin-bottom: 16px; }
+        
         .status {
             display: inline-flex; align-items: center; gap: 8px;
             padding: 8px 16px; border-radius: 20px;
@@ -66,6 +80,7 @@
         }
         .status.connected { background: #e8f5e9; color: #2e7d32; }
         .status.disconnected { background: #ffebee; color: #c62828; }
+        
         .form-group { margin-bottom: 16px; }
         .form-group label {
             display: block; font-size: 13px; font-weight: 500;
@@ -76,6 +91,7 @@
             border: 1px solid var(--border); border-radius: 8px;
             font-size: 14px;
         }
+        
         .btn {
             padding: 12px 24px; border: none; border-radius: 8px;
             font-size: 14px; font-weight: 600; cursor: pointer;
@@ -84,56 +100,71 @@
         .btn-primary:hover { background: var(--primary-dark); }
         .btn-danger { background: var(--error); color: white; }
         .btn-danger:hover { background: #d32f2f; }
+        .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); margin-left: 8px; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
         .instructions {
             background: #e3f2fd; border: 1px solid #90caf9;
             border-radius: 8px; padding: 16px; margin-bottom: 16px;
         }
         .instructions ol { margin-left: 20px; }
         .instructions li { margin-bottom: 8px; }
+        
         .email-box {
             background: var(--bg); border: 1px solid var(--border);
             border-radius: 8px; padding: 12px 16px;
             font-family: monospace; font-size: 14px;
             margin: 12px 0; cursor: pointer;
         }
+        
         .hidden { display: none !important; }
-        .alert {
-            padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;
-        }
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
         .alert-success { background: #e8f5e9; color: #2e7d32; }
         .alert-error { background: #ffebee; color: #c62828; }
+        
         .sheet-data { overflow-x: auto; margin-top: 16px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
         th { background: var(--bg); font-weight: 600; }
+        tr:hover { background: var(--bg); }
+        
         .badge {
             padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500;
         }
         .badge-pending { background: #fff3e0; color: #ef6c00; }
         .badge-done { background: #e8f5e9; color: #2e7d32; }
         .badge-processing { background: #e3f2fd; color: #1565c0; }
+        .badge-error { background: #ffebee; color: #c62828; }
+        
+        .empty-state { text-align: center; padding: 40px; color: var(--text-secondary); }
+        .stats { display: flex; gap: 24px; margin-bottom: 16px; }
+        .stat { font-size: 14px; }
+        .stat strong { color: var(--text); }
     </style>
 </head>
 <body>
     <div class="dashboard">
+        <!-- Sidebar matching main dashboard -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="/">
-                    <img src="/assets/logo.png" alt="WordPress Claw">
-                </a>
+                <a href="/"><img src="/assets/logo.png" alt="WordPress Claw"></a>
             </div>
             <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">Main</div>
-                    <a href="/dashboard/" class="nav-item">📊 Dashboard</a>
-                    <a href="/dashboard/articles.html" class="nav-item">📝 Articles</a>
-                    <a href="/dashboard/clawbot.html" class="nav-item">🤖 ClawBot</a>
+                    <a href="index.html" class="nav-item">📊 Dashboard</a>
+                    <a href="articles.html" class="nav-item">📝 Articles</a>
+                    <a href="clawbot.html" class="nav-item">🤖 ClawBot</a>
                 </div>
                 <div class="nav-section">
                     <div class="nav-section-title">Integrations</div>
-                    <a href="/dashboard/google-sheets.html" class="nav-item active">📊 Google Sheets</a>
-                    <a href="/dashboard/connections.html" class="nav-item">🔗 Connections</a>
+                    <a href="google-sheets.html" class="nav-item active">📊 Google Sheets</a>
+                    <a href="connections.html" class="nav-item">🔗 Connections</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a href="business-profile.html" class="nav-item">🏢 Business Profile</a>
+                    <a href="billing.html" class="nav-item">💳 Billing</a>
                 </div>
             </nav>
         </aside>
@@ -153,9 +184,7 @@
                         <li>Click "Share" in the top right</li>
                         <li>Add this email as <strong>Editor</strong>:</li>
                     </ol>
-                    <div class="email-box" id="serviceEmail" onclick="copyEmail()">
-                        Loading...
-                    </div>
+                    <div class="email-box" id="serviceEmail" onclick="copyEmail()">Loading...</div>
                     <small>Click to copy</small>
                 </div>
 
@@ -175,21 +204,32 @@
                         <h2>Connected Sheet</h2>
                         <span class="status connected">● Connected</span>
                     </div>
-                    <p id="sheetTitle">Loading...</p>
+                    <p id="sheetTitle" style="color:var(--text-secondary); word-break:break-all;">Loading...</p>
                     <div style="margin-top:16px;">
-                        <button class="btn btn-primary" onclick="checkSheet()" style="margin-right:8px;">Check for Topics</button>
+                        <button class="btn btn-primary" onclick="loadSheetData()">🔄 Refresh Data</button>
+                        <button class="btn btn-secondary" onclick="processAllPending()">⚡ Process All Pending</button>
                         <button class="btn btn-danger" onclick="disconnectSheet()">Disconnect</button>
                     </div>
                 </div>
 
                 <div class="card">
                     <h2>Sheet Data</h2>
-                    <div id="sheetStats"></div>
+                    <div id="sheetStats" class="stats"></div>
                     <div class="sheet-data">
                         <table id="sheetTable">
-                            <thead><tr><th>Status</th><th>Keyword</th><th>Actions</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Keyword/Topic</th>
+                                    <th>Priority</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
                             <tbody></tbody>
                         </table>
+                    </div>
+                    <div id="emptyState" class="empty-state hidden">
+                        No data found. Make sure your sheet has columns: Status, Keyword, Priority
                     </div>
                 </div>
             </div>
@@ -199,14 +239,13 @@
     <script>
         const API_URL = window.location.origin;
         let serviceAccountEmail = '';
+        let currentSheetData = null;
 
-        // Load on page start
         document.addEventListener('DOMContentLoaded', async () => {
             await loadSetupInfo();
             await checkStatus();
         });
 
-        // Get service account email
         async function loadSetupInfo() {
             try {
                 const res = await fetch(`${API_URL}/api/sheets/setup-info`, {
@@ -222,15 +261,13 @@
             }
         }
 
-        // Copy email to clipboard
         function copyEmail() {
             if (serviceAccountEmail) {
                 navigator.clipboard.writeText(serviceAccountEmail);
-                alert('Email copied!');
+                alert('Email copied to clipboard!');
             }
         }
 
-        // Check connection status
         async function checkStatus() {
             try {
                 const res = await fetch(`${API_URL}/api/sheets/status`, {
@@ -242,6 +279,7 @@
                     document.getElementById('notConnected').classList.add('hidden');
                     document.getElementById('connected').classList.remove('hidden');
                     document.getElementById('sheetTitle').textContent = data.data.spreadsheetUrl || 'Connected';
+                    await loadSheetData();
                 } else {
                     document.getElementById('notConnected').classList.remove('hidden');
                     document.getElementById('connected').classList.add('hidden');
@@ -251,7 +289,6 @@
             }
         }
 
-        // Connect spreadsheet
         async function connectSheet() {
             const url = document.getElementById('sheetUrl').value.trim();
             if (!url) {
@@ -288,12 +325,10 @@
             }
         }
 
-        // Disconnect spreadsheet
         async function disconnectSheet() {
-            if (!confirm('Disconnect this spreadsheet?')) return;
+            if (!confirm('Are you sure you want to disconnect this spreadsheet?')) return;
 
             try {
-                // Call connections API to delete the googlesheets connection
                 const res = await fetch(`${API_URL}/api/connections`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
@@ -309,49 +344,87 @@
                     }
                 }
                 
-                showMessage('Disconnected', 'success');
+                showMessage('Disconnected successfully', 'success');
                 setTimeout(checkStatus, 500);
             } catch (e) {
                 showMessage('Disconnect failed', 'error');
             }
         }
 
-        // Check sheet for topics
-        async function checkSheet() {
+        async function loadSheetData() {
             try {
-                const res = await fetch(`${API_URL}/api/sheets/clawbot/check`, {
-                    method: 'POST',
+                const res = await fetch(`${API_URL}/api/sheets/data`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 const data = await res.json();
 
-                if (data.success) {
-                    document.getElementById('sheetStats').innerHTML = `
-                        <p>Total: ${data.data.totalRows} | Pending: ${data.data.pendingCount}</p>
-                    `;
-                    
-                    const tbody = document.querySelector('#sheetTable tbody');
-                    tbody.innerHTML = '';
-                    
-                    data.data.pendingRows.forEach(row => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td><span class="badge badge-pending">PENDING</span></td>
-                            <td>${row.main_keyword || row.keyword || 'N/A'}</td>
-                            <td><button class="btn btn-primary" onclick="processRow(${row._rowIndex})">Process</button></td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                } else {
-                    showMessage(data.error || 'Failed to check sheet', 'error');
+                if (!data.success) {
+                    document.getElementById('emptyState').classList.remove('hidden');
+                    return;
                 }
+
+                currentSheetData = data.data;
+                const rows = data.data.data || [];
+                
+                // Calculate stats
+                let pending = 0, done = 0, processing = 0, error = 0;
+                rows.forEach(row => {
+                    const status = (row.status || '').toLowerCase();
+                    if (status === 'pending' || status === '') pending++;
+                    else if (status === 'done' || status === 'completed') done++;
+                    else if (status === 'processing') processing++;
+                    else if (status === 'error') error++;
+                });
+
+                document.getElementById('sheetStats').innerHTML = `
+                    <div class="stat"><strong>${rows.length}</strong> Total Rows</div>
+                    <div class="stat" style="color:#ef6c00;"><strong>${pending}</strong> Pending</div>
+                    <div class="stat" style="color:#1565c0;"><strong>${processing}</strong> Processing</div>
+                    <div class="stat" style="color:#2e7d32;"><strong>${done}</strong> Done</div>
+                    ${error > 0 ? `<div class="stat" style="color:#c62828;"><strong>${error}</strong> Error</div>` : ''}
+                `;
+
+                const tbody = document.querySelector('#sheetTable tbody');
+                tbody.innerHTML = '';
+
+                if (rows.length === 0) {
+                    document.getElementById('emptyState').classList.remove('hidden');
+                    return;
+                }
+                document.getElementById('emptyState').classList.add('hidden');
+
+                rows.forEach(row => {
+                    const status = (row.status || 'PENDING').toUpperCase();
+                    let badgeClass = 'badge-pending';
+                    if (status === 'DONE' || status === 'COMPLETED') badgeClass = 'badge-done';
+                    else if (status === 'PROCESSING') badgeClass = 'badge-processing';
+                    else if (status === 'ERROR') badgeClass = 'badge-error';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><span class="badge ${badgeClass}">${status}</span></td>
+                        <td>${row.main_keyword || row.keyword || row.topic || 'N/A'}</td>
+                        <td>${row.priority || '-'}</td>
+                        <td>
+                            ${status === 'PENDING' || status === '' ? 
+                                `<button class="btn btn-primary" style="padding:6px 12px; font-size:12px;" onclick="processRow(${row._rowIndex})">Process</button>` : 
+                                '<span style="color:#999;">- Done -</span>'
+                            }
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
             } catch (e) {
-                showMessage('Check failed', 'error');
+                console.error('Failed to load sheet data', e);
+                document.getElementById('emptyState').classList.remove('hidden');
             }
         }
 
-        // Process a row
         async function processRow(rowIndex) {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+
             try {
                 const res = await fetch(`${API_URL}/api/sheets/clawbot/process-row`, {
                     method: 'POST',
@@ -364,8 +437,33 @@
                 const data = await res.json();
                 
                 if (data.success) {
-                    showMessage('Processing started!', 'success');
-                    checkSheet();
+                    showMessage(`Processed: ${data.data.title || 'Article created'}`, 'success');
+                    await loadSheetData();
+                } else {
+                    showMessage(data.error || 'Failed to process', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Process';
+                }
+            } catch (e) {
+                showMessage('Process failed', 'error');
+                btn.disabled = false;
+                btn.textContent = 'Process';
+            }
+        }
+
+        async function processAllPending() {
+            if (!confirm('Process all pending rows? This may take a while.')) return;
+
+            try {
+                const res = await fetch(`${API_URL}/api/sheets/clawbot/process-all`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showMessage(`Processed ${data.data.processed} rows`, 'success');
+                    await loadSheetData();
                 } else {
                     showMessage(data.error || 'Failed to process', 'error');
                 }
@@ -374,12 +472,12 @@
             }
         }
 
-        // Show message
         function showMessage(msg, type) {
             const div = document.getElementById('connectMessage');
+            if (!div) return;
             div.className = `alert alert-${type}`;
             div.textContent = msg;
-            setTimeout(() => div.textContent = '', 3000);
+            setTimeout(() => div.textContent = '', 5000);
         }
     </script>
 </body>
