@@ -120,6 +120,11 @@ app.use('/api/content-queue', contentQueueRoutes.apiRouter);
 // Serve static files from frontend directory
 app.use(express.static(path.join(__dirname, 'frontend')));
 
+// Serve dashboard pages at root paths (for sidebar navigation)
+app.get('/google-sheets', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/dashboard/google-sheets.html'));
+});
+
 // Serve dashboard routes (catch-all for other dashboard pages)
 app.get('/dashboard/*', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/dashboard/index.html'));
